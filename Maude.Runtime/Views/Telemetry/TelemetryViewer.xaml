@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ui:Component
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="Maude.Runtime.Views.Telemetry.TelemetryViewer"
+    xmlns:ui="clr-namespace:Ansight.Studio.UI"
+    xmlns:telemetry="clr-namespace:Maude.Runtime.Views.Telemetry">
+
+    <StackLayout Orientation="Vertical">
+
+        <telemetry:TelemetryChartCollection x:Name="telemetryChartCollection"
+                                            TelemetrySource="{Binding TelemetrySource}"
+                                            TimeZone="{Binding TimeZone}"
+                                            Position="{Binding Position}"
+                                            IsChartClickEnabled="{Binding IsChartInteractionEnabled}"
+                                            IsChartDoubleClickEnabled="{Binding IsChartInteractionEnabled}"
+                                            ChartClickedCommand="{Binding SelectChartPositionCommand}"
+                                            ChartDoubleClickedCommand="{Binding InspectChartPositionCommand}"
+                                            ShouldShowPosition="{Binding ShowPosition}"
+                                            DateTimeFormatString="{Binding DateTimeFormatString}"
+                                            TelemetryStartTimeUtc="{Binding TelemetryStartTimeUtc}"
+                                            TelemetryTimeDisplayMode="{Binding TimeDisplayMode}"/>
+
+        <Label IsVisible="{Binding ShowApplicationUnavailableMessage}"
+               Text="{Binding ApplicationUnavailableMessage}"
+               FontSize="Micro"/>
+
+    </StackLayout>
+
+</ui:Component>
