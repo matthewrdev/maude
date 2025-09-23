@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maude", "Maude.csproj", "{43F5CCF0-DB41-417F-9731-65E7C0098BAF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maude.Runtime", "Maude.Runtime\Maude.Runtime.csproj", "{308A6E08-A8C5-4279-9E66-AF795D487B0B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maude", "Maude\Maude.csproj", "{308A6E08-A8C5-4279-9E66-AF795D487B0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
