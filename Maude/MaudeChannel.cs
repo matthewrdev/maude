@@ -1,5 +1,10 @@
 namespace Maude;
 
-public class MaudeChannel
+public struct MaudeChannel
 {
+    public required byte Id { get; init; }
+    
+    public required string Name { get; init; }
+    
+    public required Color Color { get; init; }
 }

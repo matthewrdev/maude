@@ -49,9 +49,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Platforms\Android\MaudeRuntime.Android.cs">
-        <ExcludeFromCurrentConfiguration>true</ExcludeFromCurrentConfiguration>
-      </Compile>
       <Compile Update="Platforms\iOS\SlideSheetPopup.cs">
         <ExcludeFromCurrentConfiguration>true</ExcludeFromCurrentConfiguration>
       </Compile>

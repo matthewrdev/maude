@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Maude;
 
-public partial class MaudeView : ContentView
+public partial class MaudeChartView : ContentView
 {
-    public MaudeView()
+    public MaudeChartView()
     {
         InitializeComponent();
     }

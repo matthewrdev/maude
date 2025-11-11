@@ -1,7 +1,14 @@
 namespace Maude;
 
-public class MaudeOptions
+public struct MaudeOptions
 {
-    // Buffer limit.
-    // Sampling frequency.
+    public static readonly MaudeOptions Default = new MaudeOptions()
+    {
+        SampleFrequencyMilliseconds = MaudeConstants.DefaultSampleFrequencyMilliseconds,
+        RetentionPeriodSeconds = MaudeConstants.DefaultRetentionPeriodSeconds,
+    };
+    
+    public required ushort SampleFrequencyMilliseconds { get; init; }
+        
+    public required ushort RetentionPeriodSeconds { get; init; }
 }

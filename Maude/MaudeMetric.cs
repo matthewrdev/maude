@@ -1,11 +1,15 @@
 namespace Maude;
 
-public struct MaudeMetric
+public readonly struct MaudeMetric : IComparable<MaudeMetric>
 {
-    public ulong Value { get; }
+    public required ulong Value { get; init; }
     
-    public DateTime CapturedAtUtc { get; }
+    public required DateTime CapturedAtUtc { get; init;}
     
-    public int Channel { get; }
-    
+    public required byte Channel { get; init; }
+
+    public int CompareTo(MaudeMetric other)
+    {
+        return DateTime.Compare(CapturedAtUtc, other.CapturedAtUtc);
+    }
 }

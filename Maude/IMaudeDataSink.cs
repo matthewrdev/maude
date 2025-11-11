@@ -5,18 +5,26 @@ namespace Maude;
 /// </summary>
 public interface IMaudeDataSink
 {
-    // Events for addition of channels, metrics, events.
+    event EventHandler OnUpdated;
     
-    IReadOnlyList<MaudeChannel> Channels { get; }
-    
-    IReadOnlyList<MaudeMetric> Metrics { get; }
-    
-    IReadOnlyList<MaudeEvent> Events { get; }
+    IReadOnlyList<MaudeChannel> GetChannels();
     
     IReadOnlyList<MaudeMetric> GetMetricsForChannel(MaudeChannel channel);
-    IReadOnlyList<MaudeMetric> GetMetricsForChannel(int channelId);
+    
+    IReadOnlyList<MaudeMetric> GetMetricsForChannel(byte channelId);
+    
+    IReadOnlyList<MaudeMetric> GetMetricsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc);
+    
+    IReadOnlyList<MaudeMetric> GetMetricsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
     
     
-    IReadOnlyList<MaudeMetric> GetEventsForChannel(MaudeChannel channel);
-    IReadOnlyList<MaudeMetric> GetEventsForChannel(int channelId);
+    IReadOnlyList<MaudeEvent> GetEventsForChannel(MaudeChannel channel);
+    
+    IReadOnlyList<MaudeEvent> GetEventsForChannel(byte channelId);
+    
+    IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(MaudeChannel channel);
+    
+    IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
+    
+    IReadOnlyList<MaudeEvent> GetChannellessEventsInRange(DateTime fromUtc, DateTime toUtc);
 }

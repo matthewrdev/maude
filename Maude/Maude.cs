@@ -49,8 +49,6 @@ public static class Maude
 
     public static void Present()
     {
-        
-        Runtime.Clear();
     }
 
     public static void Dismiss()
@@ -63,7 +61,12 @@ public static class Maude
         
     }
 
-    public static void Event(string label, string iconCode)
+    public static void Event(string label)
+    {
+        
+    }
+    
+    public static void Event(string label, string icon)
     {
         
     }

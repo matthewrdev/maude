@@ -1,13 +1,10 @@
 namespace Maude;
 
-public class MaudeEvent
+public struct MaudeEvent
 {
-    private readonly int? channel;
-
     public MaudeEvent(string label, string icon, DateTime capturedAtUtc, object externalId, int? channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
-        this.channel = channel;
 
         Label = label;
         Icon = icon;
@@ -22,9 +19,15 @@ public class MaudeEvent
     
     public DateTime CapturedAtUtc {get; }
     
+    /// <summary>
+    /// The Maude ID of this event.
+    /// </summary>
     public Guid Id {get;}
     
-    public object ExternalId {get;}
+    /// <summary>
+    /// An optional, typeless 
+    /// </summary>
+    public object ExternalId { get;}
     
     /// <summary>
     /// The <see cref="MaudeChannel"/> that this event is connected to.
