@@ -27,7 +27,6 @@ internal static class GCNotification
     public static void Start()
     {
         new ReRegister(0);
-        new ReRegister(2);
     }
 }
 //

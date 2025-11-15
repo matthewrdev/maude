@@ -1,3 +1,4 @@
+using SkiaSharp;
 using SkiaSharp.Views.Maui;
 
 namespace Maude;
@@ -6,11 +7,15 @@ public partial class MaudeChartView : VerticalStackLayout
 {
     private IMaudeDataSink dataSink;
     private IDispatcherTimer redrawTimer;
+    private float? probeRatio;
+    private SKRect? chartBounds;
 
     public MaudeChartView()
     {
         InitializeComponent();
         titleLabel.TextColor = MaudeConstants.MaudeBrandColor;
+        canvasView.EnableTouchEvents = true;
+        canvasView.Touch += OnCanvasTouch;
         InitialiseTimer();
         UpdateWindowLabel();
         UpdateModeVisuals();
@@ -88,15 +93,18 @@ public partial class MaudeChartView : VerticalStackLayout
 
     private void UpdateModeVisuals()
     {
-        if (RenderMode == MaudeChartRenderMode.Overlay)
+        var isOverlay = RenderMode == MaudeChartRenderMode.Overlay;
+        this.Opacity = isOverlay ? 0.85 : 1;
+        this.Scale = isOverlay ? 0.5f : 1f;
+
+        if (canvasView != null)
         {
-            this.Opacity = 0.85;
-            this.Scale = 0.5f;
+            canvasView.EnableTouchEvents = !isOverlay;
         }
-        else
+
+        if (isOverlay)
         {
-            this.Opacity = 1;
-            this.Scale = 1;
+            probeRatio = null;
         }
     }
 
@@ -178,6 +186,7 @@ public partial class MaudeChartView : VerticalStackLayout
         if (sink == null)
         {
             e.Surface.Canvas.Clear();
+            chartBounds = null;
             return;
         }
 
@@ -194,10 +203,60 @@ public partial class MaudeChartView : VerticalStackLayout
             FromUtc = now - WindowDuration,
             ToUtc = now,
             CurrentUtc = now,
-            Mode = RenderMode
+            Mode = RenderMode,
+            ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null
         };
 
-        MaudeChartRenderer.Render(e.Surface.Canvas, e.Info, sink, renderOptions);
+        var renderResult = MaudeChartRenderer.Render(e.Surface.Canvas, e.Info, sink, renderOptions);
+        UpdateChartBounds(renderResult);
+    }
+
+    private void UpdateChartBounds(MaudeRenderResult renderResult)
+    {
+        if (renderResult.HasChartArea && renderResult.ChartBounds.Width > 0 && renderResult.ChartBounds.Height > 0)
+        {
+            chartBounds = renderResult.ChartBounds;
+        }
+        else
+        {
+            chartBounds = null;
+        }
+    }
+
+    private void OnCanvasTouch(object? sender, SKTouchEventArgs e)
+    {
+        if (RenderMode != MaudeChartRenderMode.Inline)
+        {
+            probeRatio = null;
+            return;
+        }
+
+        switch (e.ActionType)
+        {
+            case SKTouchAction.Pressed:
+            case SKTouchAction.Moved:
+                var chartRect = chartBounds;
+                if (!chartRect.HasValue || chartRect.Value.Width <= 0)
+                {
+                    break;
+                }
+
+                var relativeX = (e.Location.X - chartRect.Value.Left) / chartRect.Value.Width;
+                var ratio = (float)Math.Clamp(relativeX, 0d, 1d);
+                if (!float.IsNaN(ratio))
+                {
+                    probeRatio = ratio;
+                    e.Handled = true;
+                    RequestRedraw();
+                }
+                break;
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
+                probeRatio = null;
+                e.Handled = true;
+                RequestRedraw();
+                break;
+        }
     }
 
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
@@ -217,6 +276,13 @@ public partial class MaudeChartView : VerticalStackLayout
             {
                 Unsubscribe(dataSink);
             }
+
+            if (canvasView != null)
+            {
+                canvasView.Touch -= OnCanvasTouch;
+            }
+
+            chartBounds = null;
         }
     }
 }

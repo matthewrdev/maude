@@ -177,7 +177,8 @@ internal sealed class MaudeChartOverlayElement : IWindowOverlayElement, IDisposa
             FromUtc = now - windowDuration,
             ToUtc = now,
             CurrentUtc = now,
-            Mode = MaudeChartRenderMode.Overlay
+            Mode = MaudeChartRenderMode.Overlay,
+            ProbePosition = null
         };
 
         MaudeChartRenderer.Render(renderCanvas, renderInfo, sink, renderOptions);

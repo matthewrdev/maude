@@ -14,5 +14,5 @@ public static class CustomMaudeConfiguration
                 new MaudeChannel(CustomMetricChannelId, "Custom Metric", new Color(255, 149, 0)),
                 new MaudeChannel(CustomEventChannelId, "Custom Events", new Color(50, 173, 230)),
             }
-        };
+        };   
 }

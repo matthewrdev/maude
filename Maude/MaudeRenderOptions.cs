@@ -10,5 +10,7 @@ public struct MaudeRenderOptions
     
     public required DateTime? CurrentUtc { get; init; }
     
-    public MaudeChartRenderMode Mode { get; init; }
+    public required MaudeChartRenderMode Mode { get; init; }
+
+    public required float? ProbePosition { get; init; }
 }

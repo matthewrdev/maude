@@ -1,7 +1,3 @@
-using System.Linq;
-using System.Threading;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Controls;
 using Microsoft.Maui.Platform;
 
 namespace Maude;
@@ -17,9 +13,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     
     private MemorySamplerThread samplerThread;
     private readonly object samplerLock = new object();
-    private bool gcNotificationsStarted;
+    private bool gcNotificationsStarted = false;
 
-    public readonly MaudeMutableDataSink MutableDataSink;
+    private readonly MaudeMutableDataSink MutableDataSink;
 
     public IMaudeDataSink DataSink => MutableDataSink;
 
@@ -54,7 +50,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             if (!gcNotificationsStarted)
             {
                 gcNotificationsStarted = true;
+                GCNotification.GCDone += OnGcDone;
                 GCNotification.Start();
+                
             }
             
             samplerThread = new MemorySamplerThread(options.SampleFrequencyMilliseconds, snapshot =>
@@ -66,6 +64,11 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         }
 
         OnActivated?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnGcDone(int obj)
+    {
+        Event($"GC GEN {obj}", MaterialSymbols.Delete, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
     }
 
     public void Deactivate()
