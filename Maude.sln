@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maude", "Maude.csproj", "{43F5CCF0-DB41-417F-9731-65E7C0098BAF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maude", "Maude\Maude.csproj", "{308A6E08-A8C5-4279-9E66-AF795D487B0B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maude.TestHarness", "Maude.TestHarness\Maude.TestHarness.csproj", "{7B689F82-DD15-4CA1-8E4D-5F27E77352D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,13 +10,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{43F5CCF0-DB41-417F-9731-65E7C0098BAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{43F5CCF0-DB41-417F-9731-65E7C0098BAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{43F5CCF0-DB41-417F-9731-65E7C0098BAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{43F5CCF0-DB41-417F-9731-65E7C0098BAF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{308A6E08-A8C5-4279-9E66-AF795D487B0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{308A6E08-A8C5-4279-9E66-AF795D487B0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{308A6E08-A8C5-4279-9E66-AF795D487B0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{308A6E08-A8C5-4279-9E66-AF795D487B0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B689F82-DD15-4CA1-8E4D-5F27E77352D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B689F82-DD15-4CA1-8E4D-5F27E77352D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B689F82-DD15-4CA1-8E4D-5F27E77352D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B689F82-DD15-4CA1-8E4D-5F27E77352D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

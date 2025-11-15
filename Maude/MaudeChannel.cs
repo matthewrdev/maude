@@ -1,10 +1,18 @@
 namespace Maude;
 
-public struct MaudeChannel
+public class MaudeChannel
 {
-    public required byte Id { get; init; }
+    public MaudeChannel(byte id, string name, Color color)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+        Id = id;
+        Name = name;
+        Color = color;
+    }
+
+    public byte Id { get; }
     
-    public required string Name { get; init; }
+    public string Name { get; }
     
-    public required Color Color { get; init; }
+    public Color Color { get; }
 }

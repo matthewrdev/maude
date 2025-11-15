@@ -3,34 +3,32 @@ using Android.Content;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using AndroidX.AppCompat.View;
-using AndroidX.Core.Content;
 using Google.Android.Material.BottomSheet;
 
-namespace Redpoint.Mobile;
+namespace Maude;
 
 /// <summary>
 /// Material Design bottom-sheet dialog that plugs into the shared IPopup abstraction.
 /// </summary>
-public class BottomSheetPopup : BottomSheetDialog
+public class MaudePopup : BottomSheetDialog, IMaudePopup
 {
     private bool isClosed;
 
-    protected BottomSheetPopup(IntPtr javaReference, JniHandleOwnership transfer)
+    protected MaudePopup(IntPtr javaReference, JniHandleOwnership transfer)
         : base(javaReference, transfer) { }
     
-    public BottomSheetPopup(Context context)
+    public MaudePopup(Context context)
         : base(context)
     {
     }
 
-    protected BottomSheetPopup(Context context, bool cancelable,
+    protected MaudePopup(Context context, bool cancelable,
         IDialogInterfaceOnCancelListener? cancelListener)
         : base(context, cancelable, cancelListener) { }
 
-    public BottomSheetPopup(Context context, int theme) : base(context, theme) { }
+    public MaudePopup(Context context, int theme) : base(context, theme) { }
     
-    public PopupView PopupView { get; set; }
+    public MaudeView PopupView { get; set; }
 
     /// <inheritdoc />
     public void Close()
@@ -75,7 +73,6 @@ public class BottomSheetPopup : BottomSheetDialog
             }
             catch (Exception e)
             {
-                log.Exception(e);
             }
 
         });
@@ -83,18 +80,13 @@ public class BottomSheetPopup : BottomSheetDialog
 
     public override void Dismiss()
     {
-        if (isClosed || !this.IsAlive())
+        if (isClosed || this.Handle == IntPtr.Zero)
         {
             return;
         }
 
         isClosed = true;
         base.Dismiss();
-        
-        if (PopupView is IPopupAware popupAware)
-        {
-            popupAware.OnPopupClosed();
-        }
         
         OnClosed?.Invoke(this, EventArgs.Empty);
     }

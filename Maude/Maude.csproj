@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
        
-        <OutputType>Exe</OutputType>
         <RootNamespace>Maude</RootNamespace>
         <UseMaui>true</UseMaui>
         <SingleProject>true</SingleProject>
@@ -25,13 +24,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- App Icon -->
-
-        <!-- Splash Screen -->
-
         <!-- Images -->
         <MauiImage Include="Resources\Images\*"/>
-        <MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185"/>
 
         <!-- Custom Fonts -->
         <MauiFont Include="Resources\Fonts\*"/>
@@ -46,39 +40,6 @@
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Platforms\iOS\SlideSheetPopup.cs">
-        <ExcludeFromCurrentConfiguration>true</ExcludeFromCurrentConfiguration>
-      </Compile>
-      <Compile Update="Platforms\Android\BottomSheetPopup.cs">
-        <ExcludeFromCurrentConfiguration>false</ExcludeFromCurrentConfiguration>
-      </Compile>
-      <Compile Update="Views\MaudeChartLegend.xaml.cs">
-        <DependentUpon>MaudeChartLegend.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\MaudeChart.xaml.cs">
-        <DependentUpon>MaudeChart.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\MaudeView.xaml.cs">
-        <DependentUpon>MaudeView.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-      <MauiXaml Update="Views\MaudeChartLegend.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\MaudeChart.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\MaudeView.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
     </ItemGroup>
 
 </Project>

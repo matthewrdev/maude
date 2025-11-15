@@ -6,14 +6,3 @@ public enum MaudePresentationMode
     
     Sheet
 }
-
-public enum MaudeOverlayPosition
-{
-    TopLeft,
-    
-    TopRight,
-    
-    BottomLeft,
-    
-    BottomRight
-}

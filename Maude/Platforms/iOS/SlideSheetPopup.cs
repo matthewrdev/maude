@@ -1,21 +1,21 @@
 using UIKit;
 using Foundation;
-using Redpoint.Mobile.Navigation;
-using Redpoint.Mobile.Popups;
+using Maude;
 using UIModalPresentationStyle = UIKit.UIModalPresentationStyle;
 
-namespace Redpoint.Mobile;
+namespace Maude;
 
-public sealed class MaudePopup : NSObject
+public sealed class MaudePopup : NSObject, IMaudePopup
 {
     private readonly UIViewController hostViewController; 
     private readonly UIViewController sheetViewController;
     private readonly SheetDelegate sheetDelegate;
+    private readonly MaudeView  maudeView;
     private bool isClosed;
 
-    public MaudePopup(PopupView popupContent, UIView platformView, UIViewController hostController)
+    public MaudePopup(MaudeView maudeView, UIView platformView, UIViewController hostController)
     {
-        this.popupContent = popupContent ?? throw new ArgumentNullException(nameof(popupContent));
+        this.maudeView = maudeView ?? throw new ArgumentNullException(nameof(maudeView));
         hostViewController   = hostController ?? throw new ArgumentNullException(nameof(hostController));
         sheetDelegate         = new SheetDelegate(this);
 
@@ -88,8 +88,8 @@ public sealed class MaudePopup : NSObject
     // Internal delegate that bridges UIKit’s dismissal callback back to us.
     private sealed class SheetDelegate : UISheetPresentationControllerDelegate
     {
-        private readonly SlideSheetPopup _owner;
-        internal SheetDelegate(SlideSheetPopup owner) => _owner = owner;
+        private readonly MaudePopup _owner;
+        internal SheetDelegate(MaudePopup owner) => _owner = owner;
 
         public override void WillPresent(UIPresentationController presentationController, UIModalPresentationStyle style, IUIViewControllerTransitionCoordinator transitionCoordinator)
         {
@@ -104,20 +104,14 @@ public sealed class MaudePopup : NSObject
 
     private void NotifyOpened()
     {
-        if (this.popupContent is IPopupAware popupAware)
-        {
-            popupAware.OnPopupOpened();
-        }
+        // TODO: @Codex: Inform the view it has opened and can bind to runtime events.
         
         this.OnOpened?.Invoke(this, EventArgs.Empty);
     }
 
     private void NotifyClosed()
     {
-        if (this.popupContent is IPopupAware popupAware)
-        {
-            popupAware.OnPopupClosed();
-        }
+        // TODO: @Codex: Inform the view it has closed and should unbind from runtime events.
         
         this.OnClosed?.Invoke(this, EventArgs.Empty);
     }

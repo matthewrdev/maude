@@ -1,3 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
+using SkiaSharp.Views.Maui.Controls.Hosting;
+
 namespace Maude;
 
 public static class MaudeAppBuilderExtensions
@@ -8,9 +11,8 @@ public static class MaudeAppBuilderExtensions
     /// </summary>
     /// <typeparam name="TApp">The type to use as the application.</typeparam>
     /// <param name="builder">The <see cref="MauiAppBuilder"/> to configure.</param>
-    /// <param name="implementationFactory">A factory to create the specified <typeparamref name="TApp"/> using the services provided in a <see cref="IServiceProvider"/>.</param>
     /// <returns>The configured <see cref="MauiAppBuilder"/>.</returns>
-    public static MauiAppBuilder UseMaude<TApp>(this MauiAppBuilder builder, Func<IServiceProvider, TApp> implementationFactory)
+    public static MauiAppBuilder UseMaude<TApp>(this MauiAppBuilder builder)
         where TApp : class, IApplication
     {
         builder.ConfigureFonts(fonts =>
@@ -18,9 +20,15 @@ public static class MaudeAppBuilderExtensions
             fonts.AddFont("MaterialSymbolsOutlined.ttf", MaudeConstants.MaterialSymbolsFontName);
         });
 
-        builder.Services.AddSingleton(Maude.Runtime);
+        if (!MaudeRuntime.IsInitialized)
+        {
+            MaudeRuntime.Initialize();
+        }
         
-        return builder;
+        builder.Services.AddSingleton<IMaudeRuntime>(_ => MaudeRuntime.Instance);
+        builder.Services.AddSingleton<IMaudeDataSink>(_ => MaudeRuntime.Instance.DataSink);
+        
+        return builder.UseSkiaSharp();
     }
 
     

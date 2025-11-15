@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Maude;
@@ -25,7 +22,7 @@ internal static class MemorySampler
         long javaUsedBytes = (long)(rt.TotalMemory() - rt.FreeMemory());
         long javaMaxBytes  = (long)rt.MaxMemory();
 
-        long nativeAllocatedBytes = global::Android.OS.Debug.NativeHeapAllocatedSize();
+        long nativeAllocatedBytes = global::Android.OS.Debug.NativeHeapAllocatedSize;
 
         long managedBytes = GC.GetTotalMemory(false);
 

@@ -1,11 +1,10 @@
 namespace Maude;
 
-internal static class MaudeLogger
+public static class MaudeLogger
 {
     private static readonly Lock LoggerLock = new Lock();
 
     private static readonly List<IMaudeLogCallback> Callbacks = new List<IMaudeLogCallback>();
-
 
     public static void RegisterCallback(IMaudeLogCallback callback)
     {

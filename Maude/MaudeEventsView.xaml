@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Name="self"
+             x:Class="Maude.MaudeEventsView">
+
+    <CollectionView x:Name="eventsCollection"
+                    ItemsSource="{Binding VisibleEvents, Source={x:Reference self}}"
+                    SelectionMode="None"
+                    Margin="0,8,0,0">
+        <CollectionView.EmptyView>
+            <Label Text="No events captured yet."
+                   HorizontalTextAlignment="Center"
+                   Margin="0,12"
+                   TextColor="{AppThemeBinding Light=#747474' Dark=#c5c5c5'}"/>
+        </CollectionView.EmptyView>
+        
+        <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <Grid ColumnDefinitions="Auto,*,Auto"
+                      Padding="0,12"
+                      ColumnSpacing="12">
+                    <Label Text="{Binding Icon}"
+                           FontFamily="Maude-MaterialSymbols"
+                           FontSize="20"
+                           TextColor="{Binding ChannelColor}"
+                           VerticalOptions="Center"/>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="{Binding Label}"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1a1a1a Dark=#f2f2f2}"/>
+                        <Label Text="{Binding Timestamp}"
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#6b6b6b Dark=#b0b0b0}"/>
+                        <Label Text="{Binding RelativeTime}"
+                               FontSize="11"
+                               TextColor="{AppThemeBinding Light=#8b8b8b Dark=#8b8b8b}"/>
+                    </VerticalStackLayout>
+
+                    <Border Grid.Column="2"
+                            BackgroundColor="{Binding ChannelColor}"
+                            Padding="8,4"
+                            VerticalOptions="Start">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <Label Text="{Binding ChannelName}"
+                               FontSize="12"
+                               TextColor="White"/>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</ContentView>

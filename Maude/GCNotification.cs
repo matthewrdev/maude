@@ -11,7 +11,10 @@ internal static class GCNotification
         ~ReRegister()
         {
             if (GCDone != null)
+            {
                 GCDone(gen);
+            }
+            
             // Re-register to keep getting callbacks
             if (!AppDomain.CurrentDomain.IsFinalizingForUnload() &&
                 !Environment.HasShutdownStarted)
