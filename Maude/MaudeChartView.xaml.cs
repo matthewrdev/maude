@@ -10,28 +10,9 @@ public partial class MaudeChartView : VerticalStackLayout
     public MaudeChartView()
     {
         InitializeComponent();
+        titleLabel.TextColor = MaudeConstants.MaudeBrandColor;
         InitialiseTimer();
         UpdateWindowLabel();
-    }
-
-    public static readonly BindableProperty TitleProperty = BindableProperty.Create(nameof(Title),
-                                                                                    typeof(string),
-                                                                                    typeof(MaudeChartView),
-                                                                                    "Memory overview",
-                                                                                    propertyChanged: OnTitleChanged);
-
-    public string Title
-    {
-        get => (string)GetValue(TitleProperty);
-        set => SetValue(TitleProperty, value);
-    }
-
-    private static void OnTitleChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (bindable is MaudeChartView view && newValue is string text)
-        {
-            view.titleLabel.Text = text;
-        }
     }
 
     public static readonly BindableProperty WindowDurationProperty = BindableProperty.Create(nameof(WindowDuration),
@@ -132,7 +113,7 @@ public partial class MaudeChartView : VerticalStackLayout
     private void UpdateWindowLabel()
     {
         var seconds = Math.Max(1, (int)Math.Round(WindowDuration.TotalSeconds));
-        windowLabel.Text = $"Last {seconds}s";
+        titleLabel.Text = $"MEMORY OVERVIEW (Last {seconds}s)";
     }
 
     private void InitialiseTimer()

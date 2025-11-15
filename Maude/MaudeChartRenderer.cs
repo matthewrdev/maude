@@ -76,7 +76,6 @@ public static class MaudeChartRenderer
         // Add a 10% buffer on top so lines never touch the top edge.
         var maxDisplayValue = Math.Max(1d, maxValue * 1.1d);
 
-        var chartRect = new SKRect(60, 24, info.Width - 24, info.Height - 48);
         var totalMilliseconds = (toUtc - fromUtc).TotalMilliseconds;
         if (totalMilliseconds <= 0)
         {
@@ -120,20 +119,52 @@ public static class MaudeChartRenderer
             IsAntialias = true
         };
 
+        var gridLines = 4;
+        var labelSamples = new List<string>(gridLines + 1);
+        for (int i = 0; i <= gridLines; i++)
+        {
+            var valueRatio = 1f - (float)i / gridLines;
+            var value = (long)Math.Ceiling(maxDisplayValue * valueRatio);
+            labelSamples.Add(FormatBytes(value));
+        }
+
+        var maxLabelWidth = labelSamples.Count > 0
+            ? labelSamples.Max(label => textPaint.MeasureText(label))
+            : 0f;
+
+        var legendChannels = visibleChannels
+            .Select(id => channelLookup.TryGetValue(id, out var channelInfo) ? channelInfo : null)
+            .OfType<MaudeChannel>()
+            .ToList();
+
+        const float baseTopMargin = 24f;
+        const float bottomMargin = 48f;
+        const float rightMargin = 24f;
+        const float legendSpacing = 18f;
+        var legendHeight = legendChannels.Count * legendSpacing;
+        var leftMargin = Math.Max(60f, maxLabelWidth + 22f);
+
+        var chartRect = new SKRect(leftMargin,
+                                   baseTopMargin + legendHeight + (legendHeight > 0 ? 8f : 0f),
+                                   info.Width - rightMargin,
+                                   info.Height - bottomMargin);
+
+        if (chartRect.Width <= 0 || chartRect.Height <= 0)
+        {
+            return;
+        }
+
         // Axes
         canvas.DrawLine(chartRect.Left, chartRect.Bottom, chartRect.Right, chartRect.Bottom, axisPaint);
         canvas.DrawLine(chartRect.Left, chartRect.Top, chartRect.Left, chartRect.Bottom, axisPaint);
 
         // Horizontal grid lines & labels
-        var gridLines = 4;
         for (int i = 0; i <= gridLines; i++)
         {
             var y = chartRect.Top + (chartRect.Height / gridLines) * i;
             canvas.DrawLine(chartRect.Left, y, chartRect.Right, y, gridPaint);
 
-            var valueRatio = 1f - (float)i / gridLines;
-            var value = (long)Math.Ceiling(maxDisplayValue * valueRatio);
-            var label = FormatBytes(value);
+            var label = labelSamples[i];
             canvas.DrawText(label, chartRect.Left - 10 - textPaint.MeasureText(label), y + (textPaint.TextSize / 3), textPaint);
         }
 
@@ -146,14 +177,9 @@ public static class MaudeChartRenderer
         canvas.DrawText(endLabel, chartRect.Right - textPaint.MeasureText(endLabel), chartRect.Bottom + textPaint.TextSize + 4, textPaint);
 
         // Legend
-        var legendY = chartRect.Top - 10;
-        foreach (var channel in visibleChannels)
+        var legendY = baseTopMargin + legendTextPaint.TextSize;
+        foreach (var channelInfo in legendChannels)
         {
-            if (!channelLookup.TryGetValue(channel, out var channelInfo))
-            {
-                continue;
-            }
-
             var channelColor = ToSkColor(channelInfo.Color);
             using var legendPaint = new SKPaint
             {
@@ -162,9 +188,9 @@ public static class MaudeChartRenderer
                 IsAntialias = true
             };
 
-            canvas.DrawCircle(chartRect.Left + 6, legendY, 4, legendPaint);
-            canvas.DrawText(channelInfo.Name, chartRect.Left + 14, legendY + 4, legendTextPaint);
-            legendY -= 18;
+            canvas.DrawCircle(chartRect.Left + 6, legendY - (legendTextPaint.TextSize / 3), 4, legendPaint);
+            canvas.DrawText(channelInfo.Name, chartRect.Left + 14, legendY, legendTextPaint);
+            legendY += legendSpacing;
         }
 
         // Lines

@@ -21,6 +21,8 @@ public static class MaudeConstants
     public const ushort MaxRetentionPeriodSeconds = 60 * 60;
     
     internal const string MaterialSymbolsFontName = "Maude-MaterialSymbols";
+    
+    public static readonly Color MaudeBrandColor = new Color(91, 58, 150);
 
     public static class ReservedChannels
     {

@@ -5,20 +5,20 @@
                      xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
                      x:Class="Maude.MaudeChartView"
                      Spacing="8">
-        
-    <Grid ColumnDefinitions="*,Auto">
-        <Label x:Name="titleLabel"
-               Text="Memory overview"
-               FontSize="16"
-               FontAttributes="Bold"
-               TextColor="{AppThemeBinding Light=#222222 Dark=#f4f4f4}"/>
-        <Label x:Name="windowLabel"
-               Grid.Column="1"
-               Text="Last 60s"
-               FontSize="12"
-               TextColor="{AppThemeBinding Light=#555555 Dark=#cccccc}"
-               HorizontalTextAlignment="End"/>
-    </Grid>
+        <HorizontalStackLayout Spacing="8">
+            
+            <Image Source="maude_small.png" 
+                   WidthRequest="24" 
+                   HeightRequest="24"
+                   VerticalOptions="Center"/>
+            
+            <Label x:Name="titleLabel"
+                   VerticalTextAlignment="Center"
+                   VerticalOptions="Center"
+                   Text="MEMORY OVERVIEW (60s)"
+                   FontSize="16"
+                   FontAttributes="Bold"/>
+        </HorizontalStackLayout>
 
     <skia:SKCanvasView x:Name="canvasView"
                        HeightRequest="220"

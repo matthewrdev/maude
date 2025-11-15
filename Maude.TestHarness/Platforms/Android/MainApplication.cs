@@ -9,7 +9,7 @@ public class MainApplication : MauiApplication
     public MainApplication(IntPtr handle, JniHandleOwnership ownership)
         : base(handle, ownership)
     {
-        MaudeRuntime.Initialize();
+        MaudeHarnessConfiguration.EnsureInitialized();
         MaudeRuntime.Activate();
     }
 
