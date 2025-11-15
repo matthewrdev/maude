@@ -9,4 +9,6 @@ public struct MaudeRenderOptions
     public required DateTime ToUtc { get; init; }
     
     public required DateTime? CurrentUtc { get; init; }
+    
+    public MaudeChartRenderMode Mode { get; init; }
 }

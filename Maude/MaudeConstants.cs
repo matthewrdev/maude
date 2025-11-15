@@ -8,7 +8,7 @@ public static class MaudeConstants
 
     public const string DefaultEventIcon = MaterialSymbols.Info;
 
-    public const ushort DefaultSampleFrequencyMilliseconds = 300;
+    public const ushort DefaultSampleFrequencyMilliseconds = 500;
     
     public const ushort MinSampleFrequencyMilliseconds = 200;
     

@@ -12,6 +12,8 @@ public interface IMaudeRuntime
     bool IsPresented { get; }
     
     bool IsPresentationEnabled { get;  }
+    
+    bool IsChartOverlayPresented { get; }
 
     event EventHandler OnActivated;
     

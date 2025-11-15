@@ -59,7 +59,15 @@ public partial class MainPage : ContentPage
 
     private void OnPresentChartOverlayClicked(object? sender, EventArgs e)
     {
-        MaudeRuntime.PresentChartOverlay(MaudeOverlayPosition.TopRight);
+        if (MaudeRuntime.IsChartOverlayPresented)
+        {
+            MaudeRuntime.DismissChartOverlay();
+        }
+        else
+        {
+            MaudeRuntime.PresentChartOverlay(MaudeOverlayPosition.TopRight);
+        }
+
         UpdateRuntimeStatus();
     }
 

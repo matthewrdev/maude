@@ -20,9 +20,13 @@ public static class MaudeChartRenderer
         canvas.Clear(SKColors.Transparent);
 
         var bounds = new SKRect(0, 0, info.Width, info.Height);
+        var backgroundColor = renderOptions.Mode == MaudeChartRenderMode.Overlay
+            ? new SKColor(18, 18, 26, 190)
+            : new SKColor(18, 18, 26);
+
         using var surfaceBackground = new SKPaint
         {
-            Color = new SKColor(18, 18, 26),
+            Color = backgroundColor,
             Style = SKPaintStyle.Fill
         };
         canvas.DrawRect(bounds, surfaceBackground);
@@ -303,6 +307,7 @@ public static class MaudeChartRenderer
 
             canvas.DrawLine(x, chartRect.Top, x, chartRect.Bottom, nowPaint);
         }
+
     }
 
     private static void DrawEmptyState(SKCanvas canvas, SKImageInfo info)

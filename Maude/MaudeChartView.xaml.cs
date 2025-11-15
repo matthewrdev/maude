@@ -13,6 +13,7 @@ public partial class MaudeChartView : VerticalStackLayout
         titleLabel.TextColor = MaudeConstants.MaudeBrandColor;
         InitialiseTimer();
         UpdateWindowLabel();
+        UpdateModeVisuals();
     }
 
     public static readonly BindableProperty WindowDurationProperty = BindableProperty.Create(nameof(WindowDuration),
@@ -42,10 +43,22 @@ public partial class MaudeChartView : VerticalStackLayout
                                                                                        null,
                                                                                        propertyChanged: OnDataSinkChanged);
 
+    public static readonly BindableProperty RenderModeProperty = BindableProperty.Create(nameof(RenderMode),
+                                                                                         typeof(MaudeChartRenderMode),
+                                                                                         typeof(MaudeChartView),
+                                                                                         MaudeChartRenderMode.Inline,
+                                                                                         propertyChanged: OnRenderModeChanged);
+
     public IMaudeDataSink DataSink
     {
         get => (IMaudeDataSink)GetValue(DataSinkProperty);
         set => SetValue(DataSinkProperty, value);
+    }
+
+    public MaudeChartRenderMode RenderMode
+    {
+        get => (MaudeChartRenderMode)GetValue(RenderModeProperty);
+        set => SetValue(RenderModeProperty, value);
     }
 
     private static void OnDataSinkChanged(BindableObject bindable, object oldValue, object newValue)
@@ -61,6 +74,29 @@ public partial class MaudeChartView : VerticalStackLayout
             {
                 view.Subscribe(newDataSink);
             }
+        }
+    }
+
+    private static void OnRenderModeChanged(BindableObject bindable, object oldvalue, object newvalue)
+    {
+        if (bindable is MaudeChartView view)
+        {
+            view.UpdateModeVisuals();
+            view.RequestRedraw();
+        }
+    }
+
+    private void UpdateModeVisuals()
+    {
+        if (RenderMode == MaudeChartRenderMode.Overlay)
+        {
+            this.Opacity = 0.85;
+            this.Scale = 0.5f;
+        }
+        else
+        {
+            this.Opacity = 1;
+            this.Scale = 1;
         }
     }
 
@@ -157,7 +193,8 @@ public partial class MaudeChartView : VerticalStackLayout
             Channels = channels,
             FromUtc = now - WindowDuration,
             ToUtc = now,
-            CurrentUtc = now
+            CurrentUtc = now,
+            Mode = RenderMode
         };
 
         MaudeChartRenderer.Render(e.Surface.Canvas, e.Info, sink, renderOptions);

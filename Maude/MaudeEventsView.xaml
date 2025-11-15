@@ -37,17 +37,6 @@
                                TextColor="{AppThemeBinding Light=#6b6b6b Dark=#b0b0b0}"/>
                     </VerticalStackLayout>
 
-                    <Border Grid.Column="2"
-                            BackgroundColor="{Binding ChannelColor}"
-                            Padding="8,4"
-                            VerticalOptions="Start">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="12"/>
-                        </Border.StrokeShape>
-                        <Label Text="{Binding ChannelName}"
-                               FontSize="12"
-                               TextColor="White"/>
-                    </Border>
                 </Grid>
             </DataTemplate>
         </CollectionView.ItemTemplate>

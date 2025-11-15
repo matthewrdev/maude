@@ -37,17 +37,25 @@
                                FontSize="12"
                                TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
                         
-                        <HorizontalStackLayout Spacing="10">
-                            <Button Text="Activate" Clicked="OnActivateClicked" />
-                            <Button Text="Deactivate" Clicked="OnDeactivateClicked" />
-                            <Button Text="Trigger .NET GC" Clicked="OnTriggerGcClicked" />
-                        </HorizontalStackLayout>
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Activate" Clicked="OnActivateClicked" Margin="0,0,10,10"/>
+                            <Button Text="Deactivate" Clicked="OnDeactivateClicked" Margin="0,0,10,10"/>
+                            <Button Text="Trigger .NET GC" Clicked="OnTriggerGcClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
 
-                        <HorizontalStackLayout Spacing="10">
-                            <Button Text="Present sheet" Clicked="OnPresentSheetClicked" />
-                            <Button Text="Chart overlay (window)" Clicked="OnPresentChartOverlayClicked" />
-                            <Button Text="Dismiss overlays" Clicked="OnDismissClicked" />
-                        </HorizontalStackLayout>
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Present sheet" Clicked="OnPresentSheetClicked" Margin="0,0,10,10"/>
+                            <Button Text="Toggle chart overlay" Clicked="OnPresentChartOverlayClicked" Margin="0,0,10,10"/>
+                            <Button Text="Dismiss overlays" Clicked="OnDismissClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
 
@@ -93,15 +101,23 @@
                                FontSize="12"
                                TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
 
-                        <HorizontalStackLayout Spacing="10">
-                            <Button Text="Record custom metric" Clicked="OnRecordCustomMetricClicked" />
-                            <Button Text="Record custom event" Clicked="OnRecordCustomEventClicked" />
-                        </HorizontalStackLayout>
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Record custom metric" Clicked="OnRecordCustomMetricClicked" Margin="0,0,10,10"/>
+                            <Button Text="Record custom event" Clicked="OnRecordCustomEventClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
 
-                        <HorizontalStackLayout Spacing="10">
-                            <Button Text="Channel detached event" Clicked="OnRecordDetachedEventClicked" />
-                            <Button Text="Clear data" Clicked="OnClearDataClicked" />
-                        </HorizontalStackLayout>
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Channel detached event" Clicked="OnRecordDetachedEventClicked" Margin="0,0,10,10"/>
+                            <Button Text="Clear data" Clicked="OnClearDataClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>

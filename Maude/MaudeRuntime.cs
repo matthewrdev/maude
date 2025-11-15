@@ -76,6 +76,8 @@ public static class MaudeRuntime
     public static bool IsPresented => Instance.IsPresented;
 
     public static bool IsPresentationEnabled => Instance.IsPresentationEnabled;
+    
+    public static bool IsChartOverlayPresented => Instance.IsChartOverlayPresented;
 
     public static void Present()
     {

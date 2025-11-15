@@ -10,12 +10,12 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 {
     private readonly MaudeOptions options;
     private readonly SemaphoreSlim presentationSemaphore = new SemaphoreSlim(1, 1);
-#if ANDROID || IOS
+    private WeakReference<IMaudePopup> presentedMaudeViewReference;
+    
     private readonly SemaphoreSlim chartOverlaySemaphore = new SemaphoreSlim(1, 1);
     private WeakReference<MaudeChartWindowOverlay> chartOverlayReference;
-#endif
+    
     private MemorySamplerThread samplerThread;
-    private WeakReference<IMaudePopup> presentedMaudeViewReference;
     private readonly object samplerLock = new object();
     private bool gcNotificationsStarted;
 
@@ -36,9 +36,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     public bool IsPresented => presentedMaudeViewReference != null && presentedMaudeViewReference.TryGetTarget(out _);
 
     public bool IsPresentationEnabled => true;
-#if ANDROID || IOS
-    private bool IsChartOverlayPresented => chartOverlayReference != null && chartOverlayReference.TryGetTarget(out _);
-#endif
+    public bool IsChartOverlayPresented => chartOverlayReference != null && chartOverlayReference.TryGetTarget(out _);
     
     public event EventHandler? OnActivated;
     

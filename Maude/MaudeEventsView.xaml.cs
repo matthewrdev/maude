@@ -51,13 +51,21 @@ public partial class MaudeEventsView : ContentView
     private void Subscribe(IMaudeDataSink sink)
     {
         dataSink = sink;
-        dataSink.OnEventsUpdated += HandleEventsUpdated;
+        if (sink != null)
+        {
+            dataSink.OnEventsUpdated += HandleEventsUpdated;
+        }
+
         RefreshEvents();
     }
 
     private void Unsubscribe(IMaudeDataSink sink)
     {
-        sink.OnEventsUpdated -= HandleEventsUpdated;
+        if (sink != null)
+        {
+            sink.OnEventsUpdated -= HandleEventsUpdated;
+        }
+
         if (ReferenceEquals(dataSink, sink))
         {
             dataSink = null;
@@ -97,7 +105,6 @@ public partial class MaudeEventsView : ContentView
             {
                 Label = maudeEvent.Label,
                 Icon = string.IsNullOrWhiteSpace(maudeEvent.Icon) ? MaterialSymbols.Info : maudeEvent.Icon,
-                ChannelName = channel.Name,
                 ChannelColor = channel.Color,
                 Timestamp = maudeEvent.CapturedAtUtc.ToLocalTime().ToString("HH:mm:ss")
             });
@@ -107,7 +114,7 @@ public partial class MaudeEventsView : ContentView
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
     {
         base.OnHandlerChanging(args);
-        if (args.NewHandler == null && dataSink != null)
+        if (args.NewHandler == null)
         {
             Unsubscribe(dataSink);
         }
@@ -117,7 +124,6 @@ public partial class MaudeEventsView : ContentView
     {
         public string Icon { get; init; }
         public string Label { get; init; }
-        public string ChannelName { get; init; }
         public Color ChannelColor { get; init; }
         public string Timestamp { get; init; }
     }
