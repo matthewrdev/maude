@@ -19,8 +19,9 @@
         <CollectionView.ItemTemplate>
             <DataTemplate>
                 <Grid ColumnDefinitions="Auto,*,Auto"
-                      Padding="0,12"
+                      Padding="4,12"
                       ColumnSpacing="12">
+                    
                     <Label Text="{Binding Icon}"
                            FontFamily="Maude-MaterialSymbols"
                            FontSize="20"
@@ -34,9 +35,6 @@
                         <Label Text="{Binding Timestamp}"
                                FontSize="12"
                                TextColor="{AppThemeBinding Light=#6b6b6b Dark=#b0b0b0}"/>
-                        <Label Text="{Binding RelativeTime}"
-                               FontSize="11"
-                               TextColor="{AppThemeBinding Light=#8b8b8b Dark=#8b8b8b}"/>
                     </VerticalStackLayout>
 
                     <Border Grid.Column="2"

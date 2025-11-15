@@ -99,8 +99,7 @@ public partial class MaudeEventsView : ContentView
                 Icon = string.IsNullOrWhiteSpace(maudeEvent.Icon) ? MaterialSymbols.Info : maudeEvent.Icon,
                 ChannelName = channel.Name,
                 ChannelColor = channel.Color,
-                Timestamp = maudeEvent.CapturedAtUtc.ToLocalTime().ToString("HH:mm:ss"),
-                RelativeTime = FormatRelative(maudeEvent.CapturedAtUtc)
+                Timestamp = maudeEvent.CapturedAtUtc.ToLocalTime().ToString("HH:mm:ss")
             });
         }
     }
@@ -114,28 +113,6 @@ public partial class MaudeEventsView : ContentView
         }
     }
 
-    private static string FormatRelative(DateTime capturedUtc)
-    {
-        var delta = DateTime.UtcNow - capturedUtc;
-
-        if (delta.TotalSeconds < 60)
-        {
-            return $"{Math.Max(1, (int)delta.TotalSeconds)}s ago";
-        }
-
-        if (delta.TotalMinutes < 60)
-        {
-            return $"{Math.Max(1, (int)delta.TotalMinutes)}m ago";
-        }
-
-        if (delta.TotalHours < 24)
-        {
-            return $"{Math.Max(1, (int)delta.TotalHours)}h ago";
-        }
-
-        return $"{Math.Max(1, (int)delta.TotalDays)}d ago";
-    }
-
     public class MaudeEventDisplay
     {
         public string Icon { get; init; }
@@ -143,6 +120,5 @@ public partial class MaudeEventsView : ContentView
         public string ChannelName { get; init; }
         public Color ChannelColor { get; init; }
         public string Timestamp { get; init; }
-        public string RelativeTime { get; init; }
     }
 }
