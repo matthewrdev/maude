@@ -40,11 +40,13 @@
         
         <!-- TODO: Record a channel detached event -->
         
-        <!-- TODO: Start, stop -->
+        <!-- TODO: Activate, Deactivate -->
         
         <!-- TODO: Present sheet -->
         
         <!-- TODO: Present Overlay -->
+        
+        <!-- TODO: Trigger .net GC -->
         
     </ScrollView>
 

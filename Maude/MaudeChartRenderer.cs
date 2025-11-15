@@ -39,13 +39,12 @@ public static class MaudeChartRenderer
         var channelLookup = dataSink.Channels?.ToDictionary(c => c.Id) ?? new Dictionary<byte, MaudeChannel>();
         var metricsByChannel = new Dictionary<byte, IReadOnlyList<MaudeMetric>>();
         var eventsByChannel = new Dictionary<byte, IReadOnlyList<MaudeEvent>>();
-        long maxValue = 0;
+        double maxValue = 0;
 
         foreach (var channelId in visibleChannels)
         {
-            var metrics = dataSink.GetMetricsForChannelInRange(channelId, fromUtc, toUtc)
-                                  .OrderBy(m => m.CapturedAtUtc)
-                                  .ToList();
+            var metrics = dataSink.GetMetricsForChannelInRange(channelId, fromUtc, toUtc);
+            
             if (metrics.Count > 0)
             {
                 metricsByChannel[channelId] = metrics;
@@ -56,9 +55,7 @@ public static class MaudeChartRenderer
                 }
             }
 
-            var events = dataSink.GetEventsForChannelInRange(channelId, fromUtc, toUtc)
-                                 .OrderBy(e => e.CapturedAtUtc)
-                                 .ToList();
+            var events = dataSink.GetEventsForChannelInRange(channelId, fromUtc, toUtc);
             if (events.Count > 0)
             {
                 eventsByChannel[channelId] = events;
@@ -75,6 +72,9 @@ public static class MaudeChartRenderer
         {
             maxValue = 1;
         }
+        
+        // Add a 10% buffer on top so lines never touch the top edge.
+        var maxDisplayValue = Math.Max(1d, maxValue * 1.1d);
 
         var chartRect = new SKRect(60, 24, info.Width - 24, info.Height - 48);
         var totalMilliseconds = (toUtc - fromUtc).TotalMilliseconds;
@@ -132,7 +132,7 @@ public static class MaudeChartRenderer
             canvas.DrawLine(chartRect.Left, y, chartRect.Right, y, gridPaint);
 
             var valueRatio = 1f - (float)i / gridLines;
-            var value = (long)(maxValue * valueRatio);
+            var value = (long)Math.Ceiling(maxDisplayValue * valueRatio);
             var label = FormatBytes(value);
             canvas.DrawText(label, chartRect.Left - 10 - textPaint.MeasureText(label), y + (textPaint.TextSize / 3), textPaint);
         }
@@ -196,7 +196,7 @@ public static class MaudeChartRenderer
             foreach (var metric in kv.Value)
             {
                 var x = chartRect.Left + (float)((metric.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                var y = chartRect.Bottom - (float)((double)metric.Value / maxValue) * chartRect.Height;
+                var y = chartRect.Bottom - (float)(metric.Value / maxDisplayValue) * chartRect.Height;
 
                 if (firstPoint)
                 {
@@ -247,7 +247,7 @@ public static class MaudeChartRenderer
                 var metricForEvent = channelMetrics.LastOrDefault(m => m.CapturedAtUtc <= maudeEvent.CapturedAtUtc) ?? channelMetrics[^1];
 
                 var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                var y = chartRect.Bottom - (float)((double)metricForEvent.Value / maxValue) * chartRect.Height;
+                var y = chartRect.Bottom - (float)(metricForEvent.Value / maxDisplayValue) * chartRect.Height;
 
                 canvas.DrawCircle(x, y, 6, eventFill);
                 canvas.DrawCircle(x, y, 6, eventStroke);

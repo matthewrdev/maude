@@ -97,8 +97,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                 }
 
                 var maudeView = new MaudeView();
-                var popupView = await CreateAndOpenPopup(maudeView);
                 
+                var popupView = await CreateAndOpenPopup(maudeView);
+                WirePopupLifecycle(popupView);
                 this.presentedMaudeViewReference = new  WeakReference<IMaudePopup>(popupView);
             }
             catch (Exception ex)
@@ -155,6 +156,33 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 #endif
 
         return popup;
+    }
+
+    private void WirePopupLifecycle(IMaudePopup popup)
+    {
+        if (popup == null)
+        {
+            return;
+        }
+
+        void Handler(object sender, EventArgs args)
+        {
+            popup.OnClosed -= Handler;
+            
+            if (ReferenceEquals(presentedMaudeViewReference, null))
+            {
+                return;
+            }
+            
+            presentedMaudeViewReference = null;
+
+            if (popup is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+
+        popup.OnClosed += Handler;
     }
 
     public void Dismiss()

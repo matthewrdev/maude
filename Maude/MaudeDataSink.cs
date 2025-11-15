@@ -53,18 +53,19 @@ internal class MaudeMutableDataSink : IMaudeDataSink
     public event EventHandler<MaudeMetricsUpdatedEventArgs>? OnMetricsUpdated;
     public event EventHandler<MaudeEventsUpdatedEventArgs>? OnEventsUpdated;
     
-    public IReadOnlyCollection<MaudeChannel> Channels
+    public IReadOnlyList<MaudeChannel> Channels
     {
         get
         {
             lock (channelLock)
             {
-                return channels.Values;
+                // Intentional 'ToList' to not pass around a reference to a thread safe value.
+                return channels.Values.ToList();
             }
         }
     }
     
-    public IReadOnlyCollection<MaudeMetric> Metrics
+    public IReadOnlyList<MaudeMetric> Metrics
     {
         get
         {
@@ -85,7 +86,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         }
     }
     
-    public IReadOnlyCollection<MaudeEvent> Events
+    public IReadOnlyList<MaudeEvent> Events
     {
         get
         {
@@ -104,14 +105,14 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         }
     }
     
-    public IReadOnlyCollection<MaudeMetric> GetMetricsForChannel(MaudeChannel channel)
+    public IReadOnlyList<MaudeMetric> GetMetricsForChannel(MaudeChannel channel)
     {
         if (channel == null) throw new ArgumentNullException(nameof(channel));
         
         return GetMetricsForChannel(channel.Id);
     }
 
-    public IReadOnlyCollection<MaudeMetric> GetMetricsForChannel(byte channelId)
+    public IReadOnlyList<MaudeMetric> GetMetricsForChannel(byte channelId)
     {
         lock (metricsLock)
         {
@@ -120,19 +121,19 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 return  Array.Empty<MaudeMetric>();
             }
 
-            // Intentional by-reference copy of inner values
+            // Intentional 'ToList' to not pass around a reference to a thread safe value.
             return channelData.ToList();
         }
     }
 
-    public IReadOnlyCollection<MaudeMetric> GetMetricsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc)
+    public IReadOnlyList<MaudeMetric> GetMetricsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc)
     {
         if (channel == null) throw new ArgumentNullException(nameof(channel));
         
         return GetMetricsForChannelInRange(channel.Id, fromUtc, toUtc);
     }
 
-    public IReadOnlyCollection<MaudeMetric> GetMetricsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc)
+    public IReadOnlyList<MaudeMetric> GetMetricsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc)
     {
         if (fromUtc > toUtc)
         {
@@ -196,14 +197,14 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         return estimatedCount;
     }
 
-    public IReadOnlyCollection<MaudeEvent> GetEventsForChannel(MaudeChannel channel)
+    public IReadOnlyList<MaudeEvent> GetEventsForChannel(MaudeChannel channel)
     {
         if (channel == null) throw new ArgumentNullException(nameof(channel));
         
         return GetEventsForChannel(channel.Id);
     }
 
-    public IReadOnlyCollection<MaudeEvent> GetEventsForChannel(byte channelId)
+    public IReadOnlyList<MaudeEvent> GetEventsForChannel(byte channelId)
     {
         lock (metricsLock)
         {
@@ -212,19 +213,19 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 return  Array.Empty<MaudeEvent>();
             }
 
-            // Intentional by-reference copy of inner values
+            // Intentional 'ToList' to not pass around a reference to a thread safe value.
             return channelData.ToList();
         }
     }
 
-    public IReadOnlyCollection<MaudeEvent> GetEventsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc)
+    public IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc)
     {
         if (channel == null) throw new ArgumentNullException(nameof(channel));
         
         return GetEventsForChannelInRange(channel.Id, fromUtc, toUtc);
     }
 
-    public IReadOnlyCollection<MaudeEvent> GetEventsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc)
+    public IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc)
     {
         if (fromUtc > toUtc)
         {
@@ -249,7 +250,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
             if (fromUtc < this.minMetricsDateTime
                 && toUtc > this.maxMetricsDateTime)
             {
-                // Intentional by-reference copy of inner values
+                // Intentional 'ToList' to not pass around a reference to a thread safe value.
                 return channelData.ToList();
             }
             
@@ -300,7 +301,6 @@ internal class MaudeMutableDataSink : IMaudeDataSink
             }
             
 #if IOS || ANDROID
-        platform = snapshot.TotalPssBytes;
             
             if (metrics.TryGetValue(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, 
                                     out var platformMetrics))

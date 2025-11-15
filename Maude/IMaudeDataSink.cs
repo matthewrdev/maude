@@ -5,7 +5,7 @@ namespace Maude;
 /// </summary>
 public interface IMaudeDataSink
 {
-    public IReadOnlyCollection<MaudeChannel> Channels { get; }
+    public IReadOnlyList<MaudeChannel> Channels { get; }
     
     /// <summary>
     /// Occurs when a new set of metrics is added to the data sink or existing values are removed or both.
@@ -20,26 +20,26 @@ public interface IMaudeDataSink
     /// <summary>
     /// Returns all metrics across all channels.
     /// </summary>
-    IReadOnlyCollection<MaudeMetric> Metrics { get; }
+    IReadOnlyList<MaudeMetric> Metrics { get; }
     
     /// <summary>
     /// 
     /// </summary>
-    IReadOnlyCollection<MaudeEvent> Events { get; }
+    IReadOnlyList<MaudeEvent> Events { get; }
     
-    IReadOnlyCollection<MaudeMetric> GetMetricsForChannel(MaudeChannel channel);
+    IReadOnlyList<MaudeMetric> GetMetricsForChannel(MaudeChannel channel);
     
-    IReadOnlyCollection<MaudeMetric> GetMetricsForChannel(byte channelId);
+    IReadOnlyList<MaudeMetric> GetMetricsForChannel(byte channelId);
     
-    IReadOnlyCollection<MaudeMetric> GetMetricsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc);
+    IReadOnlyList<MaudeMetric> GetMetricsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc);
     
-    IReadOnlyCollection<MaudeMetric> GetMetricsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
+    IReadOnlyList<MaudeMetric> GetMetricsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
     
-    IReadOnlyCollection<MaudeEvent> GetEventsForChannel(MaudeChannel channel);
+    IReadOnlyList<MaudeEvent> GetEventsForChannel(MaudeChannel channel);
     
-    IReadOnlyCollection<MaudeEvent> GetEventsForChannel(byte channelId);
+    IReadOnlyList<MaudeEvent> GetEventsForChannel(byte channelId);
     
-    IReadOnlyCollection<MaudeEvent> GetEventsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc);
+    IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc);
     
-    IReadOnlyCollection<MaudeEvent> GetEventsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
+    IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
 }

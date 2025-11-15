@@ -37,7 +37,7 @@ public class MaudePopup : BottomSheetDialog, IMaudePopup
     }
 
     public event EventHandler? OnOpened;
-    public event EventHandler? OnClosed;
+    public event EventHandler OnClosed;
 
     public override void Show()
     {
@@ -87,7 +87,8 @@ public class MaudePopup : BottomSheetDialog, IMaudePopup
 
         isClosed = true;
         base.Dismiss();
-        
+
+        PopupView = null;
         OnClosed?.Invoke(this, EventArgs.Empty);
     }
     

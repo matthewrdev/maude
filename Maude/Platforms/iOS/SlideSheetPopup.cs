@@ -104,15 +104,11 @@ public sealed class MaudePopup : NSObject, IMaudePopup
 
     private void NotifyOpened()
     {
-        // TODO: @Codex: Inform the view it has opened and can bind to runtime events.
-        
         this.OnOpened?.Invoke(this, EventArgs.Empty);
     }
 
     private void NotifyClosed()
     {
-        // TODO: @Codex: Inform the view it has closed and should unbind from runtime events.
-        
         this.OnClosed?.Invoke(this, EventArgs.Empty);
     }
 }

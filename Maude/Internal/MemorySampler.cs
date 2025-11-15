@@ -64,66 +64,19 @@ internal static class MemorySampler
     public static MemorySnapshot Sample()
     {
         // --- RSS via mach_task_basic_info ---
-        long rssBytes = GetResidentSizeBytes();
+        var rssBytes = IosMemoryHelper.GetPhysFootprint();
 
         // iOS has no Java/ART or Android-style native heap counters.
         long managedBytes = GC.GetTotalMemory(false);
 
         return new MemorySnapshot(
             TotalPssBytes: 0,                 // PSS not available on iOS
-            RssBytes: rssBytes,               // Resident set size (includes shared pages)
+            RssBytes: (long)rssBytes,               // Resident set size (includes shared pages)
             JavaHeapUsedBytes: 0,
             JavaHeapMaxBytes: 0,
             NativeHeapAllocatedBytes: 0,
             ManagedHeapBytes: managedBytes,
             CapturedAtUtc: DateTime.UtcNow);
-    }
-
-    static long GetResidentSizeBytes()
-    {
-        var info = new mach_task_basic_info();
-        uint count = MACH_TASK_BASIC_INFO_COUNT;
-
-        // KERN_SUCCESS == 0
-        int kerr = task_info(mach_task_self(), MACH_TASK_BASIC_INFO, ref info, ref count);
-        if (kerr == 0)
-        {
-            // resident_size is a pointer-sized integer; convert safely.
-            return info.resident_size.ToInt64();
-        }
-        return 0;
-    }
-
-    // ---- mach imports ----
-    const int MACH_TASK_BASIC_INFO = 20;
-
-    // task_info expects "count" in 32-bit "natural_t" units; compute as sizeof(struct)/sizeof(uint)
-    static readonly uint MACH_TASK_BASIC_INFO_COUNT = (uint)(Marshal.SizeOf<mach_task_basic_info>() / sizeof(uint));
-
-    [DllImport("/usr/lib/libSystem.dylib")]
-    static extern int task_info(IntPtr target_task, int flavor, ref mach_task_basic_info task_info_out, ref uint task_info_outCnt);
-
-    [DllImport("/usr/lib/libSystem.dylib")]
-    static extern IntPtr mach_task_self();
-
-    // Matches the Darwin definition; fields sized for 64-bit iOS
-    [StructLayout(LayoutKind.Sequential)]
-    struct time_value_t
-    {
-        public int seconds;
-        public int microseconds;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct mach_task_basic_info
-    {
-        public IntPtr virtual_size;       // mach_vm_size_t
-        public IntPtr resident_size;      // mach_vm_size_t
-        public IntPtr resident_size_max;  // mach_vm_size_t
-        public time_value_t user_time;    // time_value_t
-        public time_value_t system_time;  // time_value_t
-        public int policy;                // policy_t
-        public int suspend_count;         // integer_t
     }
 #else
     public static Snapshot Sample()

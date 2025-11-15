@@ -2,7 +2,7 @@ namespace Maude;
 
 public struct MaudeRenderOptions
 {
-    public required IReadOnlyCollection<byte> Channels { get; init; }
+    public required IReadOnlyList<byte> Channels { get; init; }
     
     public required DateTime FromUtc { get; init; }
     
