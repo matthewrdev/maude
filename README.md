@@ -1,6 +1,11 @@
-# maude
+# Maude
 
-Minimal in-app observability for .NET MAUI apps. Maude samples runtime memory, captures custom metrics/events, and presents a lightweight, Skia-rendered chart plus event feed as either a slide-in sheet or an embeddable view.
+Minimal in-app observability for .NET MAUI apps.
+
+
+
+
+Maude samples runtime memory, captures custom metrics/events, and presents a lightweight, Skia-rendered chart plus event feed as either a slide-in sheet or an embeddable view.
 
 ## Capabilities
 - Runtime sampler for CLR (and platform) memory with configurable frequency/retention.
@@ -13,7 +18,22 @@ Minimal in-app observability for .NET MAUI apps. Maude samples runtime memory, c
 ## Quick integration (default setup)
 Add Maude to your MAUI app with minimal code.
 
-1) Configure the app builder:
+1) Initialise Maude in the plaform specific startups:
+
+**Android**
+```csharp
+// MainApplication.cs
+MaudeRuntime.Initialize();
+```
+
+
+**iOS**
+```csharp
+// Program.cs
+```
+
+
+2) Configure the app builder:
 ```csharp
 // MauiProgram.cs
 using Maude;
@@ -27,22 +47,23 @@ public static MauiApp CreateMauiApp()
 }
 ```
 
-2) Activate sampling early (e.g., platform entry point):
+2) Activate Sampling:
 ```csharp
 // Platforms/iOS/Program.cs (similar for Android)
 MaudeRuntime.Activate();
 ```
 
-3) Present Maude when needed (e.g., behind a debug button):
+3) Present Maude as a modal slide in sheet:
 ```csharp
-MaudeRuntime.Present();   // slide-in sheet
-// MaudeRuntime.Dismiss(); // close it
+MaudeRuntime.Present();   // Open the sheet
+MaudeRuntime.Dismiss();   // Close it.
 ```
 
-4) Send custom telemetry:
+
+3) Present Maude as a window overlay:
 ```csharp
-MaudeRuntime.Metric(valueBytes, channelId);
-MaudeRuntime.Event("A thing happened", channelId);
+MaudeRuntime.Present();   // slide-in sheet
+MaudeRuntime.Dismiss(); // close it
 ```
 
 ## Deep customization

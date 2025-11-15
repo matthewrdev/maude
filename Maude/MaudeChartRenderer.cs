@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Maui.Graphics;
 using SkiaSharp;
 
@@ -8,6 +9,8 @@ namespace Maude;
 
 public static class MaudeChartRenderer
 {
+    private static readonly ThreadLocal<RenderResources> ThreadResources = new(() => new RenderResources());
+
     public static MaudeRenderResult Render(SKCanvas canvas,
                                            SKImageInfo info, 
                                            IMaudeDataSink dataSink,
@@ -17,6 +20,8 @@ public static class MaudeChartRenderer
         if (dataSink == null) throw new ArgumentNullException(nameof(dataSink));
         if (renderOptions.Channels == null) throw new ArgumentNullException(nameof(renderOptions.Channels));
 
+        var resources = ThreadResources.Value!;
+
         canvas.Clear(SKColors.Transparent);
 
         var bounds = new SKRect(0, 0, info.Width, info.Height);
@@ -24,11 +29,8 @@ public static class MaudeChartRenderer
             ? new SKColor(18, 18, 26, 190)
             : new SKColor(18, 18, 26);
 
-        using var surfaceBackground = new SKPaint
-        {
-            Color = backgroundColor,
-            Style = SKPaintStyle.Fill
-        };
+        var surfaceBackground = resources.SurfaceBackgroundPaint;
+        surfaceBackground.Color = backgroundColor;
         canvas.DrawRect(bounds, surfaceBackground);
 
         var fromUtc = renderOptions.FromUtc;
@@ -40,9 +42,20 @@ public static class MaudeChartRenderer
             ? renderOptions.Channels
             : dataSink.Channels.Select(c => c.Id)).ToArray();
 
-        var channelLookup = dataSink.Channels?.ToDictionary(c => c.Id) ?? new Dictionary<byte, MaudeChannel>();
-        var metricsByChannel = new Dictionary<byte, IReadOnlyList<MaudeMetric>>();
-        var eventsByChannel = new Dictionary<byte, IReadOnlyList<MaudeEvent>>();
+        var channelLookup = resources.ChannelLookup;
+        channelLookup.Clear();
+        if (dataSink.Channels != null)
+        {
+            foreach (var channel in dataSink.Channels)
+            {
+                channelLookup[channel.Id] = channel;
+            }
+        }
+
+        var metricsByChannel = resources.MetricsByChannel;
+        metricsByChannel.Clear();
+        var eventsByChannel = resources.EventsByChannel;
+        eventsByChannel.Clear();
         double maxValue = 0;
 
         foreach (var channelId in visibleChannels)
@@ -98,46 +111,22 @@ public static class MaudeChartRenderer
 
         var markerUtc = probeUtc ?? renderOptions.CurrentUtc;
 
-        using var axisPaint = new SKPaint
-        {
-            Color = new SKColor(70, 70, 85),
-            StrokeWidth = 2,
-            IsStroke = true,
-            IsAntialias = true
-        };
-
-        using var gridPaint = new SKPaint
-        {
-            Color = new SKColor(40, 40, 50),
-            StrokeWidth = 1,
-            IsStroke = true,
-            IsAntialias = true
-        };
+        var axisPaint = resources.AxisPaint;
+        var gridPaint = resources.GridPaint;
 
         var layoutScale = renderOptions.Mode == MaudeChartRenderMode.Overlay ? 0.65f : 1f;
-        using var textPaint = new SKPaint
-        {
-            Color = new SKColor(210, 210, 224),
-            TextSize = 14 * layoutScale,
-            IsAntialias = true
-        };
+        var textPaint = resources.TextPaint;
+        textPaint.TextSize = 14 * layoutScale;
 
-        using var legendTextPaint = new SKPaint
-        {
-            Color = new SKColor(210, 210, 224),
-            TextSize = 12 * layoutScale,
-            IsAntialias = true
-        };
+        var legendTextPaint = resources.LegendTextPaint;
+        legendTextPaint.TextSize = 12 * layoutScale;
 
-        using var eventLabelPaint = new SKPaint
-        {
-            Color = new SKColor(230, 230, 230),
-            TextSize = 12 * layoutScale,
-            IsAntialias = true
-        };
+        var eventLabelPaint = resources.EventLabelPaint;
+        eventLabelPaint.TextSize = 12 * layoutScale;
 
         var gridLines = 4;
-        var labelSamples = new List<string>(gridLines + 1);
+        var labelSamples = resources.LabelSamples;
+        labelSamples.Clear();
         for (int i = 0; i <= gridLines; i++)
         {
             var valueRatio = 1f - (float)i / gridLines;
@@ -149,48 +138,60 @@ public static class MaudeChartRenderer
             ? labelSamples.Max(label => textPaint.MeasureText(label))
             : 0f;
 
-        var legendChannels = metricsByChannel.Keys
-            .Select(id => channelLookup.TryGetValue(id, out var channelInfo) ? channelInfo : null)
-            .OfType<MaudeChannel>()
-            .ToList();
+        var legendChannels = resources.LegendChannels;
+        legendChannels.Clear();
+        foreach (var channelId in metricsByChannel.Keys)
+        {
+            if (channelLookup.TryGetValue(channelId, out var channelInfo) && channelInfo != null)
+            {
+                legendChannels.Add(channelInfo);
+            }
+        }
 
         var baseTopMargin = 24f * layoutScale;
         var bottomMargin = 48f * layoutScale;
         var rightMargin = 24f * layoutScale;
         var leftMargin = Math.Max(60f * layoutScale, maxLabelWidth + 22f * layoutScale);
 
-        var legendEntries = legendChannels
-            .Select(channel => new LegendEntry(channel, legendTextPaint.MeasureText(channel.Name)))
-            .ToList();
+        var legendEntries = resources.LegendEntries;
+        legendEntries.Clear();
+        foreach (var channel in legendChannels)
+        {
+            legendEntries.Add(new LegendEntry(channel, legendTextPaint.MeasureText(channel.Name)));
+        }
 
         var legendLineHeight = legendTextPaint.TextSize + 8f * layoutScale;
         var legendEntrySpacing = 18f * layoutScale;
         var availableLegendWidth = Math.Max(20f, info.Width - rightMargin - leftMargin);
 
-        var legendLines = new List<List<LegendEntry>>();
-        var currentLine = new List<LegendEntry>();
-        float currentLineWidth = 0;
+        var legendLineStarts = resources.LegendLineStarts;
+        legendLineStarts.Clear();
 
-        foreach (var entry in legendEntries)
+        if (legendEntries.Count > 0)
         {
-            entry.TotalWidth = (8f * layoutScale * 2) + entry.TextWidth + legendEntrySpacing;
-            if (currentLineWidth > 0 && currentLineWidth + entry.TotalWidth > availableLegendWidth)
+            legendLineStarts.Add(0);
+            float currentLineWidth = 0;
+
+            for (var i = 0; i < legendEntries.Count; i++)
             {
-                legendLines.Add(currentLine);
-                currentLine = new List<LegendEntry>();
-                currentLineWidth = 0;
+                var entry = legendEntries[i];
+                entry.TotalWidth = (8f * layoutScale * 2) + entry.TextWidth + legendEntrySpacing;
+
+                if (currentLineWidth > 0 && currentLineWidth + entry.TotalWidth > availableLegendWidth)
+                {
+                    legendLineStarts.Add(i);
+                    currentLineWidth = 0;
+                }
+
+                currentLineWidth += entry.TotalWidth;
+                legendEntries[i] = entry;
             }
 
-            currentLine.Add(entry);
-            currentLineWidth += entry.TotalWidth;
+            legendLineStarts.Add(legendEntries.Count);
         }
 
-        if (currentLine.Count > 0)
-        {
-            legendLines.Add(currentLine);
-        }
-
-        var legendHeight = legendLines.Count * legendLineHeight;
+        var legendLineCount = legendLineStarts.Count > 0 ? legendLineStarts.Count - 1 : 0;
+        var legendHeight = legendLineCount * legendLineHeight;
 
         var chartRect = new SKRect(leftMargin,
                                    baseTopMargin + legendHeight + (legendHeight > 0 ? 8f * layoutScale : 0f),
@@ -226,21 +227,21 @@ public static class MaudeChartRenderer
 
         // Legend
         var legendY = baseTopMargin + legendTextPaint.TextSize;
-        foreach (var line in legendLines)
+        for (var lineIndex = 0; lineIndex < legendLineCount; lineIndex++)
         {
+            var startIndex = legendLineStarts[lineIndex];
+            var endIndex = legendLineStarts[lineIndex + 1];
             var legendX = leftMargin;
-            foreach (var entry in line)
-            {
-                var channelColor = ToSkColor(entry.Channel.Color);
-                using var legendPaint = new SKPaint
-                {
-                    Color = channelColor,
-                    Style = SKPaintStyle.Fill,
-                    IsAntialias = true
-                };
 
+            for (var entryIndex = startIndex; entryIndex < endIndex; entryIndex++)
+            {
+                var entry = legendEntries[entryIndex];
+                var channelColor = ToSkColor(entry.Channel.Color);
                 var iconRadius = 4f * layoutScale;
                 var iconCenterY = legendY - (legendTextPaint.TextSize / 3);
+
+                var legendPaint = resources.LegendPaint;
+                legendPaint.Color = channelColor;
                 canvas.DrawCircle(legendX + iconRadius, iconCenterY, iconRadius, legendPaint);
                 canvas.DrawText(entry.Channel.Name, legendX + iconRadius * 2 + 4f * layoutScale, legendY, legendTextPaint);
                 legendX += entry.TotalWidth;
@@ -248,6 +249,12 @@ public static class MaudeChartRenderer
 
             legendY += legendLineHeight;
         }
+
+        var linePaint = resources.LinePaint;
+        linePaint.StrokeWidth = 2f * layoutScale;
+        var pointPaint = resources.PointPaint;
+        var linePath = resources.LinePath;
+        var pointRadius = 2f * layoutScale;
 
         // Lines
         foreach (var kv in metricsByChannel)
@@ -257,23 +264,10 @@ public static class MaudeChartRenderer
                 : new MaudeChannel(kv.Key, $"Channel {kv.Key}", Colors.Purple);
             var channelColor = ToSkColor(channel.Color);
 
-            using var linePaint = new SKPaint
-            {
-                Color = channelColor,
-                StrokeWidth = 2f * layoutScale,
-                IsStroke = true,
-                IsAntialias = true,
-                Style = SKPaintStyle.Stroke
-            };
+            linePaint.Color = channelColor;
+            pointPaint.Color = channelColor;
 
-            using var pointPaint = new SKPaint
-            {
-                Color = channelColor,
-                IsAntialias = true,
-                Style = SKPaintStyle.Fill
-            };
-
-            var path = new SKPath();
+            linePath.Reset();
             var firstPoint = true;
             foreach (var metric in kv.Value)
             {
@@ -282,19 +276,22 @@ public static class MaudeChartRenderer
 
                 if (firstPoint)
                 {
-                    path.MoveTo(x, y);
+                    linePath.MoveTo(x, y);
                     firstPoint = false;
                 }
                 else
                 {
-                    path.LineTo(x, y);
+                    linePath.LineTo(x, y);
                 }
 
-                canvas.DrawCircle(x, y, 2f * layoutScale, pointPaint);
+                canvas.DrawCircle(x, y, pointRadius, pointPaint);
             }
 
-            canvas.DrawPath(path, linePaint);
+            canvas.DrawPath(linePath, linePaint);
         }
+
+        var eventFillPaint = resources.EventFillPaint;
+        var eventStrokePaint = resources.EventStrokePaint;
 
         // Events
         foreach (var kv in eventsByChannel)
@@ -309,20 +306,7 @@ public static class MaudeChartRenderer
                 : new MaudeChannel(kv.Key, $"Channel {kv.Key}", Colors.Purple);
 
             var channelColor = ToSkColor(channel.Color);
-            using var eventFill = new SKPaint
-            {
-                Color = channelColor.WithAlpha(180),
-                Style = SKPaintStyle.Fill,
-                IsAntialias = true
-            };
-
-            using var eventStroke = new SKPaint
-            {
-                Color = SKColors.White,
-                StrokeWidth = 1,
-                Style = SKPaintStyle.Stroke,
-                IsAntialias = true
-            };
+            eventFillPaint.Color = channelColor.WithAlpha(180);
 
             foreach (var maudeEvent in kv.Value)
             {
@@ -332,8 +316,8 @@ public static class MaudeChartRenderer
                 var y = chartRect.Bottom - (float)(metricForEvent.Value / maxDisplayValue) * chartRect.Height;
 
                 var eventRadius = 6f * layoutScale;
-                canvas.DrawCircle(x, y, eventRadius, eventFill);
-                canvas.DrawCircle(x, y, eventRadius, eventStroke);
+                canvas.DrawCircle(x, y, eventRadius, eventFillPaint);
+                canvas.DrawCircle(x, y, eventRadius, eventStrokePaint);
 
                 var labelOffset = eventLabelPaint.TextSize + 4 * layoutScale;
                 canvas.DrawText(maudeEvent.Label,
@@ -349,21 +333,14 @@ public static class MaudeChartRenderer
             && markerUtc.Value <= toUtc)
         {
             var x = chartRect.Left + (float)((markerUtc.Value - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-            using var markerPaint = new SKPaint
-            {
-                Color = new SKColor(255, 255, 255, 140),
-                StrokeWidth = 2,
-                Style = SKPaintStyle.Stroke,
-                PathEffect = SKPathEffect.CreateDash(new float[] { 6, 6 }, 0),
-                IsAntialias = true
-            };
-
+            var markerPaint = resources.MarkerPaint;
             canvas.DrawLine(x, chartRect.Top, x, chartRect.Bottom, markerPaint);
         }
 
         if (probeUtc.HasValue)
         {
-            var highlightLines = new List<(string Text, SKColor Color)>();
+            var highlightLines = resources.HighlightLines;
+            highlightLines.Clear();
             foreach (var channelInfo in legendChannels)
             {
                 if (!metricsByChannel.TryGetValue(channelInfo.Id, out var channelMetrics))
@@ -395,13 +372,8 @@ public static class MaudeChartRenderer
                     chartRect.Right - 4f,
                     chartRect.Top + 4f + panelHeight);
 
-                using var panelFill = new SKPaint
-                {
-                    Color = new SKColor(12, 12, 18, 200),
-                    Style = SKPaintStyle.Fill,
-                    IsAntialias = true
-                };
-
+                var panelFill = resources.HighlightPanelPaint;
+                panelFill.Color = new SKColor(12, 12, 18, 200);
                 canvas.DrawRoundRect(panelRect, 6f * layoutScale, 6f * layoutScale, panelFill);
 
                 var originalColor = textPaint.Color;
@@ -487,12 +459,136 @@ public static class MaudeChartRenderer
         return metrics[0].Value;
     }
 
-    private sealed class LegendEntry
+    private sealed class RenderResources
+    {
+        public RenderResources()
+        {
+            SurfaceBackgroundPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill
+            };
+
+            AxisPaint = new SKPaint
+            {
+                Color = new SKColor(70, 70, 85),
+                StrokeWidth = 2,
+                Style = SKPaintStyle.Stroke,
+                IsStroke = true,
+                IsAntialias = true
+            };
+
+            GridPaint = new SKPaint
+            {
+                Color = new SKColor(40, 40, 50),
+                StrokeWidth = 1,
+                Style = SKPaintStyle.Stroke,
+                IsStroke = true,
+                IsAntialias = true
+            };
+
+            TextPaint = new SKPaint
+            {
+                Color = new SKColor(210, 210, 224),
+                IsAntialias = true
+            };
+
+            LegendTextPaint = new SKPaint
+            {
+                Color = new SKColor(210, 210, 224),
+                IsAntialias = true
+            };
+
+            EventLabelPaint = new SKPaint
+            {
+                Color = new SKColor(230, 230, 230),
+                IsAntialias = true
+            };
+
+            LegendPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true
+            };
+
+            LinePaint = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                IsStroke = true,
+                IsAntialias = true
+            };
+
+            PointPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true
+            };
+
+            EventFillPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true
+            };
+
+            EventStrokePaint = new SKPaint
+            {
+                Color = SKColors.White,
+                StrokeWidth = 1,
+                Style = SKPaintStyle.Stroke,
+                IsAntialias = true
+            };
+
+            HighlightPanelPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true
+            };
+
+            MarkerPathEffect = SKPathEffect.CreateDash(new float[] { 6, 6 }, 0);
+            MarkerPaint = new SKPaint
+            {
+                Color = new SKColor(255, 255, 255, 140),
+                StrokeWidth = 2,
+                Style = SKPaintStyle.Stroke,
+                IsAntialias = true,
+                PathEffect = MarkerPathEffect
+            };
+
+            LinePath = new SKPath();
+        }
+
+        public SKPaint SurfaceBackgroundPaint { get; }
+        public SKPaint AxisPaint { get; }
+        public SKPaint GridPaint { get; }
+        public SKPaint TextPaint { get; }
+        public SKPaint LegendTextPaint { get; }
+        public SKPaint EventLabelPaint { get; }
+        public SKPaint LegendPaint { get; }
+        public SKPaint LinePaint { get; }
+        public SKPaint PointPaint { get; }
+        public SKPaint EventFillPaint { get; }
+        public SKPaint EventStrokePaint { get; }
+        public SKPaint HighlightPanelPaint { get; }
+        public SKPaint MarkerPaint { get; }
+        public SKPathEffect MarkerPathEffect { get; }
+        public SKPath LinePath { get; }
+
+        public Dictionary<byte, MaudeChannel> ChannelLookup { get; } = new();
+        public Dictionary<byte, IReadOnlyList<MaudeMetric>> MetricsByChannel { get; } = new();
+        public Dictionary<byte, IReadOnlyList<MaudeEvent>> EventsByChannel { get; } = new();
+        public List<string> LabelSamples { get; } = new();
+        public List<MaudeChannel> LegendChannels { get; } = new();
+        public List<LegendEntry> LegendEntries { get; } = new();
+        public List<int> LegendLineStarts { get; } = new();
+        public List<(string Text, SKColor Color)> HighlightLines { get; } = new();
+    }
+
+    private struct LegendEntry
     {
         public LegendEntry(MaudeChannel channel, float textWidth)
         {
             Channel = channel;
             TextWidth = textWidth;
+            TotalWidth = 0f;
         }
 
         public MaudeChannel Channel { get; }

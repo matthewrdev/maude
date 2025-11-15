@@ -47,13 +47,13 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                 return;
             }
             
-            if (!gcNotificationsStarted)
-            {
-                gcNotificationsStarted = true;
-                GCNotification.GCDone += OnGcDone;
-                GCNotification.Start();
-                
-            }
+            // TODO: Experimental GC tracking support.
+            // if (!gcNotificationsStarted)
+            // {
+            //     gcNotificationsStarted = true;
+            //     GCNotification.GCDone += OnGcDone;
+            //     GCNotification.Start();
+            // }
             
             samplerThread = new MemorySamplerThread(options.SampleFrequencyMilliseconds, snapshot =>
             {

@@ -120,6 +120,33 @@
                         </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
+
+                <Border Stroke="{AppThemeBinding Light=#dcdcdc Dark=#303030}"
+                        StrokeThickness="1"
+                        BackgroundColor="{AppThemeBinding Light=#ffffff Dark=#1c1c1c}"
+                        Padding="14,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Navigation tests"
+                               FontAttributes="Bold"
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#111111 Dark=#f5f5f5}"/>
+                        <Label Text="Exercise navigation stack interactions while Maude is active."
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
+
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Push test page" Clicked="OnPushNavigationPageClicked" Margin="0,0,10,10"/>
+                            <Button Text="Push modal test page" Clicked="OnPushModalPageClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 

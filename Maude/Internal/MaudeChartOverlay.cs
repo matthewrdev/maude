@@ -181,7 +181,7 @@ internal sealed class MaudeChartOverlayElement : IWindowOverlayElement, IDisposa
             ProbePosition = null
         };
 
-        MaudeChartRenderer.Render(renderCanvas, renderInfo, sink, renderOptions);
+        _ = MaudeChartRenderer.Render(renderCanvas, renderInfo, sink, renderOptions);
 
         if (!TryUpdatePlatformImage())
         {

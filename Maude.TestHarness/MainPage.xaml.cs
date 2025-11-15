@@ -148,4 +148,24 @@ public partial class MainPage : ContentPage
     {
         UpdateRuntimeStatus();
     }
+
+    private async void OnPushNavigationPageClicked(object? sender, EventArgs e)
+    {
+        if (Navigation == null)
+        {
+            return;
+        }
+
+        await Navigation.PushAsync(new NavigationTestPage());
+    }
+
+    private async void OnPushModalPageClicked(object? sender, EventArgs e)
+    {
+        if (Navigation == null)
+        {
+            return;
+        }
+
+        await Navigation.PushModalAsync(new ModalTestPage());
+    }
 }
