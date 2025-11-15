@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.IO;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 using SkiaSharp;
 
 namespace Maude;
@@ -122,7 +124,16 @@ public static class MaudeChartRenderer
         legendTextPaint.TextSize = 12 * layoutScale;
 
         var eventLabelPaint = resources.EventLabelPaint;
-        eventLabelPaint.TextSize = 12 * layoutScale;
+        eventLabelPaint.TextSize = 10 * layoutScale;
+
+        var eventIconPaint = resources.EventIconPaint;
+        eventIconPaint.TextSize = 18 * layoutScale;
+
+        var eventLinePaint = resources.EventLinePaint;
+        eventLinePaint.StrokeWidth = 1f * layoutScale;
+
+        var eventVisuals = resources.EventVisuals;
+        eventVisuals.Clear();
 
         var gridLines = 4;
         var labelSamples = resources.LabelSamples;
@@ -203,6 +214,47 @@ public static class MaudeChartRenderer
             return MaudeRenderResult.Empty;
         }
 
+        // Prepare event visuals so backing lines can render behind the chart data.
+        foreach (var kv in eventsByChannel)
+        {
+            var channel = channelLookup.TryGetValue(kv.Key, out var channelInfo)
+                ? channelInfo
+                : new MaudeChannel(kv.Key, $"Channel {kv.Key}", Colors.Purple);
+
+            var channelColor = ToSkColor(channel.Color);
+            var isDetached = kv.Key == MaudeConstants.ReservedChannels.ChannelNotSpecified_Id;
+            var hasMetrics = metricsByChannel.TryGetValue(kv.Key, out var channelMetrics) && channelMetrics.Count > 0;
+
+            foreach (var maudeEvent in kv.Value)
+            {
+                var icon = string.IsNullOrWhiteSpace(maudeEvent.Icon)
+                    ? MaudeConstants.DefaultEventIcon
+                    : maudeEvent.Icon;
+
+                var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                float y;
+
+                if (isDetached || !hasMetrics)
+                {
+                    y = chartRect.Bottom - (8f * layoutScale);
+                }
+                else
+                {
+                    var metricForEvent = channelMetrics!.LastOrDefault(m => m.CapturedAtUtc <= maudeEvent.CapturedAtUtc) ?? channelMetrics[^1];
+                    y = chartRect.Bottom - (float)(metricForEvent.Value / maxDisplayValue) * chartRect.Height;
+                }
+
+                eventVisuals.Add(new EventVisual
+                {
+                    X = x,
+                    Y = y,
+                    Icon = icon,
+                    Label = maudeEvent.Label,
+                    Color = channelColor
+                });
+            }
+        }
+
         // Axes
         canvas.DrawLine(chartRect.Left, chartRect.Bottom, chartRect.Right, chartRect.Bottom, axisPaint);
         canvas.DrawLine(chartRect.Left, chartRect.Top, chartRect.Left, chartRect.Bottom, axisPaint);
@@ -250,6 +302,12 @@ public static class MaudeChartRenderer
             legendY += legendLineHeight;
         }
 
+        foreach (var visual in eventVisuals)
+        {
+            eventLinePaint.Color = visual.Color.WithAlpha(120);
+            canvas.DrawLine(visual.X, chartRect.Top, visual.X, chartRect.Bottom, eventLinePaint);
+        }
+
         var linePaint = resources.LinePaint;
         linePaint.StrokeWidth = 2f * layoutScale;
         var pointPaint = resources.PointPaint;
@@ -290,41 +348,18 @@ public static class MaudeChartRenderer
             canvas.DrawPath(linePath, linePaint);
         }
 
-        var eventFillPaint = resources.EventFillPaint;
-        var eventStrokePaint = resources.EventStrokePaint;
-
         // Events
-        foreach (var kv in eventsByChannel)
+        var iconMetrics = eventIconPaint.FontMetrics;
+        foreach (var visual in eventVisuals)
         {
-            if (!metricsByChannel.TryGetValue(kv.Key, out var channelMetrics) || channelMetrics.Count == 0)
-            {
-                continue;
-            }
+            var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
+            canvas.DrawText(visual.Icon, visual.X, iconBaselineY, eventIconPaint);
 
-            var channel = channelLookup.TryGetValue(kv.Key, out var channelInfo)
-                ? channelInfo
-                : new MaudeChannel(kv.Key, $"Channel {kv.Key}", Colors.Purple);
-
-            var channelColor = ToSkColor(channel.Color);
-            eventFillPaint.Color = channelColor.WithAlpha(180);
-
-            foreach (var maudeEvent in kv.Value)
-            {
-                var metricForEvent = channelMetrics.LastOrDefault(m => m.CapturedAtUtc <= maudeEvent.CapturedAtUtc) ?? channelMetrics[^1];
-
-                var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                var y = chartRect.Bottom - (float)(metricForEvent.Value / maxDisplayValue) * chartRect.Height;
-
-                var eventRadius = 6f * layoutScale;
-                canvas.DrawCircle(x, y, eventRadius, eventFillPaint);
-                canvas.DrawCircle(x, y, eventRadius, eventStrokePaint);
-
-                var labelOffset = eventLabelPaint.TextSize + 4 * layoutScale;
-                canvas.DrawText(maudeEvent.Label,
-                                x + 8,
-                                y - labelOffset,
-                                eventLabelPaint);
-            }
+            var labelOffset = eventLabelPaint.TextSize + eventIconPaint.TextSize * 0.25f + 4 * layoutScale;
+            canvas.DrawText(visual.Label,
+                            visual.X + eventIconPaint.TextSize * 0.6f,
+                            visual.Y - labelOffset,
+                            eventLabelPaint);
         }
 
         // Current position marker or probe marker
@@ -459,6 +494,24 @@ public static class MaudeChartRenderer
         return metrics[0].Value;
     }
 
+    private static SKTypeface LoadMaterialSymbolsTypeface()
+    {
+        return LoadFontFromResources("MaterialSymbolsOutlined.ttf");
+    }
+
+    private static SKTypeface LoadFontFromResources(string fontResourceName)
+    {
+        using (var stream = FileSystem.OpenAppPackageFileAsync(fontResourceName).Result)
+        {
+            if (stream == null)
+            {
+                throw new FileNotFoundException($"Font resource '{fontResourceName}' not found.");
+            }
+
+            return SKTypeface.FromStream(stream);
+        }
+    }
+
     private sealed class RenderResources
     {
         public RenderResources()
@@ -504,6 +557,26 @@ public static class MaudeChartRenderer
                 IsAntialias = true
             };
 
+            MaterialSymbolsTypeface = LoadMaterialSymbolsTypeface();
+
+            EventIconPaint = new SKPaint
+            {
+                Color = SKColors.White,
+                IsAntialias = true,
+                TextAlign = SKTextAlign.Center,
+                Typeface = MaterialSymbolsTypeface,
+                TextEncoding = SKTextEncoding.Utf16
+            };
+
+            EventLinePaint = new SKPaint
+            {
+                Color = new SKColor(255, 255, 255, 40),
+                StrokeWidth = 1,
+                Style = SKPaintStyle.Stroke,
+                IsStroke = true,
+                IsAntialias = true
+            };
+
             LegendPaint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
@@ -520,20 +593,6 @@ public static class MaudeChartRenderer
             PointPaint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
-                IsAntialias = true
-            };
-
-            EventFillPaint = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                IsAntialias = true
-            };
-
-            EventStrokePaint = new SKPaint
-            {
-                Color = SKColors.White,
-                StrokeWidth = 1,
-                Style = SKPaintStyle.Stroke,
                 IsAntialias = true
             };
 
@@ -562,11 +621,12 @@ public static class MaudeChartRenderer
         public SKPaint TextPaint { get; }
         public SKPaint LegendTextPaint { get; }
         public SKPaint EventLabelPaint { get; }
+        public SKPaint EventIconPaint { get; }
+        public SKPaint EventLinePaint { get; }
+        public SKTypeface MaterialSymbolsTypeface { get; }
         public SKPaint LegendPaint { get; }
         public SKPaint LinePaint { get; }
         public SKPaint PointPaint { get; }
-        public SKPaint EventFillPaint { get; }
-        public SKPaint EventStrokePaint { get; }
         public SKPaint HighlightPanelPaint { get; }
         public SKPaint MarkerPaint { get; }
         public SKPathEffect MarkerPathEffect { get; }
@@ -580,6 +640,7 @@ public static class MaudeChartRenderer
         public List<LegendEntry> LegendEntries { get; } = new();
         public List<int> LegendLineStarts { get; } = new();
         public List<(string Text, SKColor Color)> HighlightLines { get; } = new();
+        public List<EventVisual> EventVisuals { get; } = new();
     }
 
     private struct LegendEntry
@@ -596,5 +657,14 @@ public static class MaudeChartRenderer
         public float TextWidth { get; }
 
         public float TotalWidth { get; set; }
+    }
+
+    private struct EventVisual
+    {
+        public float X { get; init; }
+        public float Y { get; init; }
+        public string Icon { get; init; }
+        public string Label { get; init; }
+        public SKColor Color { get; init; }
     }
 }
