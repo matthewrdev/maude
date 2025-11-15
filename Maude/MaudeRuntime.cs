@@ -89,6 +89,16 @@ public static class MaudeRuntime
     {
         Instance.Dismiss();
     }
+
+    public static void PresentChartOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
+    {
+        Instance.PresentChartOverlay(position);
+    }
+
+    public static void DismissChartOverlay()
+    {
+        Instance.DismissChartOverlay();
+    }
     
     /// <summary>
     /// Captures a new metric using the given <paramref name="value"/> against the <paramref name="channel"/>

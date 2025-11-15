@@ -24,6 +24,10 @@ public interface IMaudeRuntime
     void Present();
     
     void Dismiss();
+
+    void PresentChartOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight);
+    
+    void DismissChartOverlay();
     
     // hide/show
     // Add event

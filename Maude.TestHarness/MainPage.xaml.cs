@@ -57,14 +57,19 @@ public partial class MainPage : ContentPage
         UpdateRuntimeStatus();
     }
 
-    private void OnDismissClicked(object? sender, EventArgs e)
+    private void OnPresentChartOverlayClicked(object? sender, EventArgs e)
     {
-        MaudeRuntime.Dismiss();
+        MaudeRuntime.PresentChartOverlay(MaudeOverlayPosition.TopRight);
         UpdateRuntimeStatus();
     }
 
-    private void OnPresentOverlayClicked(object? sender, EventArgs e)
+    private void OnDismissClicked(object? sender, EventArgs e)
     {
+#if ANDROID || IOS
+        MaudeRuntime.DismissChartOverlay();
+#endif
+        
+        MaudeRuntime.Dismiss();
         UpdateRuntimeStatus();
     }
 
@@ -128,6 +133,11 @@ public partial class MainPage : ContentPage
     private void OnClearDataClicked(object? sender, EventArgs e)
     {
         MaudeRuntime.Clear();
+        UpdateRuntimeStatus();
+    }
+
+    private void OnCloseOverlayClicked(object? sender, EventArgs e)
+    {
         UpdateRuntimeStatus();
     }
 }

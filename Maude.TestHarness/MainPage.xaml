@@ -45,8 +45,8 @@
 
                         <HorizontalStackLayout Spacing="10">
                             <Button Text="Present sheet" Clicked="OnPresentSheetClicked" />
-                            <Button Text="Present overlay" Clicked="OnPresentOverlayClicked" />
-                            <Button Text="Dismiss sheet" Clicked="OnDismissClicked" />
+                            <Button Text="Chart overlay (window)" Clicked="OnPresentChartOverlayClicked" />
+                            <Button Text="Dismiss overlays" Clicked="OnDismissClicked" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>

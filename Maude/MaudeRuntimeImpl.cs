@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
@@ -9,6 +10,10 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 {
     private readonly MaudeOptions options;
     private readonly SemaphoreSlim presentationSemaphore = new SemaphoreSlim(1, 1);
+#if ANDROID || IOS
+    private readonly SemaphoreSlim chartOverlaySemaphore = new SemaphoreSlim(1, 1);
+    private WeakReference<MaudeChartWindowOverlay> chartOverlayReference;
+#endif
     private MemorySamplerThread samplerThread;
     private WeakReference<IMaudePopup> presentedMaudeViewReference;
     private readonly object samplerLock = new object();
@@ -31,6 +36,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     public bool IsPresented => presentedMaudeViewReference != null && presentedMaudeViewReference.TryGetTarget(out _);
 
     public bool IsPresentationEnabled => true;
+#if ANDROID || IOS
+    private bool IsChartOverlayPresented => chartOverlayReference != null && chartOverlayReference.TryGetTarget(out _);
+#endif
     
     public event EventHandler? OnActivated;
     
@@ -216,6 +224,84 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             finally
             {
                 presentationSemaphore.Release();
+            }
+        });
+    }
+
+    public void PresentChartOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
+    {
+        if (!IsPresentationEnabled)
+        {
+            return;
+        }
+
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            await chartOverlaySemaphore.WaitAsync();
+            try
+            {
+                if (IsChartOverlayPresented && chartOverlayReference.TryGetTarget(out var existingOverlay))
+                {
+                    existingOverlay.UpdatePosition(position);
+                    return;
+                }
+
+                var window = Application.Current?.Windows?.FirstOrDefault();
+                if (window == null)
+                {
+                    return;
+                }
+
+                var overlay = new MaudeChartWindowOverlay(window, MutableDataSink, position);
+                if (WindowOverlayHelpers.TryAddOverlay(window, overlay))
+                {
+                    chartOverlayReference = new WeakReference<MaudeChartWindowOverlay>(overlay);
+                }
+                else
+                {
+                    overlay.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                MaudeLogger.Exception(ex);
+                chartOverlayReference = null;
+            }
+            finally
+            {
+                chartOverlaySemaphore.Release();
+            }
+        });
+    }
+
+    public void DismissChartOverlay()
+    {
+        if (!IsChartOverlayPresented)
+        {
+            return;
+        }
+
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            await chartOverlaySemaphore.WaitAsync();
+            try
+            {
+                if (chartOverlayReference?.TryGetTarget(out var overlay) == true)
+                {
+                    var window = Application.Current?.Windows?.FirstOrDefault();
+                    WindowOverlayHelpers.TryRemoveOverlay(window, overlay);
+                    overlay.Dispose();
+                }
+
+                chartOverlayReference = null;
+            }
+            catch (Exception ex)
+            {
+                MaudeLogger.Exception(ex);
+            }
+            finally
+            {
+                chartOverlaySemaphore.Release();
             }
         });
     }

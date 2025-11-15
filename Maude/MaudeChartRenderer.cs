@@ -132,7 +132,7 @@ public static class MaudeChartRenderer
             ? labelSamples.Max(label => textPaint.MeasureText(label))
             : 0f;
 
-        var legendChannels = visibleChannels
+        var legendChannels = metricsByChannel.Keys
             .Select(id => channelLookup.TryGetValue(id, out var channelInfo) ? channelInfo : null)
             .OfType<MaudeChannel>()
             .ToList();
@@ -335,7 +335,7 @@ public static class MaudeChartRenderer
                            (byte)(color.Alpha * 255));
     }
 
-    private static string FormatBytes(long value)
+    internal static string FormatBytes(long value)
     {
         double bytes = value;
         string[] units = { "B", "KB", "MB", "GB", "TB" };
