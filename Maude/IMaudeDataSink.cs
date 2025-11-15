@@ -35,6 +35,10 @@ public interface IMaudeDataSink
     
     IReadOnlyList<MaudeMetric> GetMetricsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
     
+    MaudeChannelSpan GetMetricsChannelSpanForRange(byte channelId, DateTime fromUtc, DateTime toUtc);
+    
+    void UseMetricsInChannelForRange(byte channelId, DateTime fromUtc, DateTime toUtc, Action<ReadOnlySpan<MaudeMetric>> useAction);
+    
     IReadOnlyList<MaudeEvent> GetEventsForChannel(MaudeChannel channel);
     
     IReadOnlyList<MaudeEvent> GetEventsForChannel(byte channelId);
@@ -42,4 +46,6 @@ public interface IMaudeDataSink
     IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(MaudeChannel channel, DateTime fromUtc, DateTime toUtc);
     
     IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
+    
+    void UseEventsInChannelForRange(byte channelId, DateTime fromUtc, DateTime toUtc, Action<ReadOnlySpan<MaudeEvent>> useAction);
 }

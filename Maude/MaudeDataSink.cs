@@ -1,7 +1,15 @@
+using System.Runtime.InteropServices;
+
 namespace Maude;
 
 internal class MaudeMutableDataSink : IMaudeDataSink
 {
+    private static readonly Comparer<MaudeEvent> EventCapturedAtComparer =
+        Comparer<MaudeEvent>.Create((a, b) => a.CapturedAtUtc.CompareTo(b.CapturedAtUtc));
+    
+    private static readonly Comparer<MaudeMetric> MetricCapturedAtComparer =
+        Comparer<MaudeMetric>.Create((a, b) => a.CapturedAtUtc.CompareTo(b.CapturedAtUtc));
+    
     private readonly MaudeOptions options;
 
     public MaudeMutableDataSink(MaudeOptions  options)
@@ -184,6 +192,118 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         }
     }
 
+    public MaudeChannelSpan GetMetricsChannelSpanForRange(byte channelId, DateTime fromUtc, DateTime toUtc)
+    {
+        if (fromUtc > toUtc)
+        {
+            fromUtc = toUtc;
+        }
+        
+        lock (metricsLock)
+        {
+            if (!this.metricsByChannel.TryGetValue(channelId, out var channelData))
+            {
+                return MaudeChannelSpan.Invalid;
+            }
+            
+            var isBeforeBounds = toUtc < this.minMetricsDateTime;
+            var isAfterBounds = fromUtc > this.maxMetricsDateTime;
+
+            if (isBeforeBounds || isAfterBounds)
+            {
+                return MaudeChannelSpan.Invalid;
+            }
+
+            var count = 0;
+            var minValue = long.MaxValue;
+            var maxValue = long.MinValue;
+
+            foreach (var metric in channelData)
+            {
+                if (metric.CapturedAtUtc >= fromUtc 
+                    && metric.CapturedAtUtc <= toUtc)
+                {
+                    count++;
+                    if (metric.Value < minValue)
+                    {
+                        minValue = metric.Value;
+                    }
+
+                    if (metric.Value > maxValue)
+                    {
+                        maxValue = metric.Value;
+                    }
+                }
+
+                if (metric.CapturedAtUtc > toUtc)
+                {
+                    break;
+                }
+            }
+            
+            return new MaudeChannelSpan()
+            {
+                ChannelId = channelId,
+                MinValue = minValue,
+                MaxValue = maxValue,
+                FromUtc = fromUtc,
+                ToUtc = toUtc,
+                Count = count,
+                Valid = true
+            };
+        }
+    }
+
+    public void UseMetricsInChannelForRange(byte channelId, DateTime fromUtc, DateTime toUtc, Action<ReadOnlySpan<MaudeMetric>> useAction)
+    {
+        if (useAction == null) throw new ArgumentNullException(nameof(useAction));
+
+        if (fromUtc > toUtc)
+        {
+            fromUtc = toUtc;
+        }
+
+        lock (metricsLock)
+        {
+            if (!this.metricsByChannel.TryGetValue(channelId, out var channelData))
+            {
+                // Invalid or unknown channel, discard request.
+                return;
+            }
+
+            if (channelData.Count == 0)
+            {
+                // no channel content, do nothing.
+                return;
+            }
+
+            if (toUtc < this.minMetricsDateTime
+                || fromUtc > this.maxMetricsDateTime)
+            {
+                // Invalid span range, discard request.
+                return;
+            }
+
+            var start = 0;
+            var end = channelData.Count - 1;
+
+            if (fromUtc > minMetricsDateTime)
+            {
+                start = BinarySearchHelper.FindFirstIndex(channelData, fromUtc);
+            }
+            
+            if (toUtc < maxMetricsDateTime)
+            {
+                end = BinarySearchHelper.FindLastIndex(channelData, toUtc);
+            }
+            
+            ReadOnlySpan<MaudeMetric> range = CollectionsMarshal.AsSpan(channelData)
+                .Slice(start, end - start);
+            
+            useAction(range);
+        }
+    }
+
     private int CalculateBufferSize(DateTime fromUtc, DateTime toUtc)
     {
         var elapsed = toUtc - fromUtc;
@@ -272,6 +392,59 @@ internal class MaudeMutableDataSink : IMaudeDataSink
             }
             
             return values;
+        }
+    }
+
+    public void UseEventsInChannelForRange(byte channelId, 
+                                           DateTime fromUtc,
+                                           DateTime toUtc,
+                                           Action<ReadOnlySpan<MaudeEvent>> useAction)
+    {
+        if (useAction == null) throw new ArgumentNullException(nameof(useAction));
+
+        if (fromUtc > toUtc)
+        {
+            fromUtc = toUtc;
+        }
+
+        lock (eventsLock)
+        {
+            if (!this.eventsByChannel.TryGetValue(channelId, out var channelData))
+            {
+                // Invalid or unknown channel, discard request.
+                return;
+            }
+
+            if (channelData.Count == 0)
+            {
+                // no channel content, do nothing.
+                return;
+            }
+
+            if (toUtc < this.minEventsDateTime
+                || fromUtc > this.maxEventsDateTime)
+            {
+                // Invalid span range, discard request.
+                return;
+            }
+
+            var start = 0;
+            var end = channelData.Count - 1;
+
+            if (fromUtc > minEventsDateTime)
+            {
+                start = BinarySearchHelper.FindFirstIndex(channelData, fromUtc);
+            }
+            
+            if (toUtc < maxEventsDateTime)
+            {
+                end = BinarySearchHelper.FindLastIndex(channelData, toUtc);
+            }
+            
+            ReadOnlySpan<MaudeEvent> range = CollectionsMarshal.AsSpan(channelData)
+                                                                  .Slice(start, end - start);
+            
+            useAction(range);
         }
     }
 

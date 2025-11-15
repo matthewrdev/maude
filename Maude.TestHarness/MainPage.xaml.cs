@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Maude;
-
-namespace Maude.TestHarness;
+﻿namespace Maude.TestHarness;
 
 public partial class MainPage : ContentPage
 {

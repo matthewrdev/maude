@@ -1,6 +1,8 @@
 
 # In-app observability for .NET MAUI.
 
+![Maude logo](images/maude_small.png)
+
 ```
 Maude (Name, Germanic): Mighty in battle, powerful battler.
 ```
@@ -9,17 +11,13 @@ Maude (Name, Germanic): Mighty in battle, powerful battler.
 
 Maude, aka **Mau**i**de**bug, is a visualiser for observing memory usage in-app.
 
-Maude performs light-weight memory monitoring and then displays these metrics in a live-rendered chart view:
+Maude monitors your apps memory and displays it via a live-rendered chart:
 
-
-
-Using Maude, you can:
-
- * Visually monitor your apps memory usage.
- * Record custom events to corellate 
 
 
 ## Capabilities
+
+- Supprots iOS and Android memory monitoring.
 - Runtime sampler for CLR (and platform) memory with configurable frequency/retention.
 - Built-in channels for managed memory and platform memory; add your own channels for custom metrics/events.
 - Popup presentation (sheet) of the Maude dashboard, or embed `MaudeView`, `MaudeChartView`, or `MaudeEventsView` directly in your UI.

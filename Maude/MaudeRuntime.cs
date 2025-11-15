@@ -34,8 +34,10 @@ public static class MaudeRuntime
             }
         }
     }
-
-    public static void Initialize(MaudeOptions options = null)
+    
+    
+    private static void Initialize_Internal(bool activateImmediately, 
+                                            MaudeOptions options)
     {
         lock (runtimeLock)
         {
@@ -43,21 +45,56 @@ public static class MaudeRuntime
             {
                 throw new InvalidOperationException("The MaudeRuntime has already been initialized.");
             }
-            
+
             options = options ?? MaudeOptions.Default;
             
-            runtime = new  MaudeRuntimeImpl(options);
+            if (options.AdditionalLogger != null)
+            {
+                MaudeLogger.RegisterCallback(options.AdditionalLogger);
+            }
+            
+            runtime = new MaudeRuntimeImpl(options);
         }
+
+        if (activateImmediately)
+        {
+            Activate();
+        }
+    }
+
+    /// <summary>
+    /// Initialises the <see cref="IMaudeRuntime"/> using the provided <paramref name="options"/> and immediately begins monitoring memory usage.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <param name="logger"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static void InitializeAndActivate(MaudeOptions options = null)
+    {
+        Initialize_Internal(activateImmediately: true, options);
+    }
+
+    /// <summary>
+    /// Initialises the <see cref="IMaudeRuntime"/> using the provided <paramref name="options"/>.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <param name="logger"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static void Initialize(MaudeOptions options = null)
+    {   
+        Initialize_Internal(activateImmediately: false, options);
     }
     
     /// <summary>
-    /// Activates the MA
+    /// Activates Maude's memory tracking.
     /// </summary>
     public static void Activate()
     {
         Instance.Activate();
     }
 
+    /// <summary>
+    /// Deactivates Maude's memory tracking.
+    /// </summary>
     public static void Deactivate()
     {
         Instance.Deactivate();
@@ -73,15 +110,15 @@ public static class MaudeRuntime
         return Instance.IsActive;
     }
 
-    public static bool IsPresented => Instance.IsPresented;
+    public static bool IsPresented => Instance.IsSheetPresented;
 
     public static bool IsPresentationEnabled => Instance.IsPresentationEnabled;
     
-    public static bool IsChartOverlayPresented => Instance.IsChartOverlayPresented;
+    public static bool IsChartOverlayPresented => Instance.IsOverlayPresented;
 
     public static void Present()
     {
-        Instance.Present();
+        Instance.PresentSheet();
     }
 
     /// <summary>
@@ -89,17 +126,27 @@ public static class MaudeRuntime
     /// </summary>
     public static void Dismiss()
     {
-        Instance.Dismiss();
+        Instance.DismissSheet();
     }
 
     public static void PresentChartOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
     {
-        Instance.PresentChartOverlay(position);
+        Instance.PresentOverlay(position);
+    }
+
+    public static void EnableShakeGesture()
+    {
+        Instance.EnableShakeGesture();
+    }
+
+    public static void DisableShakeGesture()
+    {
+        Instance.DisableShakeGesture();
     }
 
     public static void DismissChartOverlay()
     {
-        Instance.DismissChartOverlay();
+        Instance.DismissOverlay();
     }
     
     /// <summary>

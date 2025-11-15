@@ -1,8 +1,8 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.IO;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Storage;
 using SkiaSharp;
@@ -54,34 +54,30 @@ public static class MaudeChartRenderer
             }
         }
 
-        var metricsByChannel = resources.MetricsByChannel;
-        metricsByChannel.Clear();
-        var eventsByChannel = resources.EventsByChannel;
-        eventsByChannel.Clear();
+        var channelSpans = resources.ChannelSpans;
+        channelSpans.Clear();
+        var channelSpanLookup = resources.ChannelSpanLookup;
+        channelSpanLookup.Clear();
         double maxValue = 0;
+        var hasMetrics = false;
 
         foreach (var channelId in visibleChannels)
         {
-            var metrics = dataSink.GetMetricsForChannelInRange(channelId, fromUtc, toUtc);
-            
-            if (metrics.Count > 0)
-            {
-                metricsByChannel[channelId] = metrics;
-                var channelMax = metrics.Max(m => m.Value);
-                if (channelMax > maxValue)
-                {
-                    maxValue = channelMax;
-                }
-            }
+            var span = dataSink.GetMetricsChannelSpanForRange(channelId, fromUtc, toUtc);
+            channelSpans.Add(span);
+            channelSpanLookup[channelId] = span;
 
-            var events = dataSink.GetEventsForChannelInRange(channelId, fromUtc, toUtc);
-            if (events.Count > 0)
+            if (span.Valid && span.Count > 0)
             {
-                eventsByChannel[channelId] = events;
+                hasMetrics = true;
+                if (span.MaxValue > maxValue)
+                {
+                    maxValue = span.MaxValue;
+                }
             }
         }
 
-        if (metricsByChannel.Count == 0)
+        if (!hasMetrics)
         {
             DrawEmptyState(canvas, info);
             return MaudeRenderResult.Empty;
@@ -151,9 +147,12 @@ public static class MaudeChartRenderer
 
         var legendChannels = resources.LegendChannels;
         legendChannels.Clear();
-        foreach (var channelId in metricsByChannel.Keys)
+        foreach (var span in channelSpans)
         {
-            if (channelLookup.TryGetValue(channelId, out var channelInfo) && channelInfo != null)
+            if (span.Valid
+                && span.Count > 0
+                && channelLookup.TryGetValue(span.ChannelId, out var channelInfo)
+                && channelInfo != null)
             {
                 legendChannels.Add(channelInfo);
             }
@@ -215,44 +214,62 @@ public static class MaudeChartRenderer
         }
 
         // Prepare event visuals so backing lines can render behind the chart data.
-        foreach (var kv in eventsByChannel)
+        foreach (var channelId in visibleChannels)
         {
-            var channel = channelLookup.TryGetValue(kv.Key, out var channelInfo)
+            var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
                 ? channelInfo
-                : new MaudeChannel(kv.Key, $"Channel {kv.Key}", Colors.Purple);
+                : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
 
             var channelColor = ToSkColor(channel.Color);
-            var isDetached = kv.Key == MaudeConstants.ReservedChannels.ChannelNotSpecified_Id;
-            var hasMetrics = metricsByChannel.TryGetValue(kv.Key, out var channelMetrics) && channelMetrics.Count > 0;
+            var isDetached = channelId == MaudeConstants.ReservedChannels.ChannelNotSpecified_Id;
+            var span = channelSpanLookup.TryGetValue(channelId, out var lookupSpan) ? lookupSpan : default;
+            var hasMetricsForChannel = span.Valid;
 
-            foreach (var maudeEvent in kv.Value)
+            dataSink.UseEventsInChannelForRange(channelId, fromUtc, toUtc, eventSpan =>
             {
-                var icon = string.IsNullOrWhiteSpace(maudeEvent.Icon)
-                    ? MaudeConstants.DefaultEventIcon
-                    : maudeEvent.Icon;
-
-                var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                float y;
-
-                if (isDetached || !hasMetrics)
+                if (eventSpan.IsEmpty)
                 {
-                    y = chartRect.Bottom - (8f * layoutScale);
-                }
-                else
-                {
-                    var metricForEvent = channelMetrics!.LastOrDefault(m => m.CapturedAtUtc <= maudeEvent.CapturedAtUtc) ?? channelMetrics[^1];
-                    y = chartRect.Bottom - (float)(metricForEvent.Value / maxDisplayValue) * chartRect.Height;
+                    return;
                 }
 
-                eventVisuals.Add(new EventVisual
+                var useMetrics = hasMetricsForChannel && !isDetached;
+
+                foreach (var maudeEvent in eventSpan)
                 {
-                    X = x,
-                    Y = y,
-                    Icon = icon,
-                    Label = maudeEvent.Label,
-                    Color = channelColor
-                });
-            }
+                    var icon = string.IsNullOrWhiteSpace(maudeEvent.Icon)
+                        ? MaudeConstants.DefaultEventIcon
+                        : maudeEvent.Icon;
+
+                    var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                    float y;
+
+                    if (useMetrics)
+                    {
+                        long? metricValue = null;
+                        dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
+                        {
+                            metricValue = GetMetricValueAt(metricsSpan, maudeEvent.CapturedAtUtc);
+                        });
+
+                        y = metricValue.HasValue
+                            ? chartRect.Bottom - (float)(metricValue.Value / maxDisplayValue) * chartRect.Height
+                            : chartRect.Bottom - (8f * layoutScale);
+                    }
+                    else
+                    {
+                        y = chartRect.Bottom - (8f * layoutScale);
+                    }
+
+                    eventVisuals.Add(new EventVisual
+                    {
+                        X = x,
+                        Y = y,
+                        Icon = icon,
+                        Label = maudeEvent.Label,
+                        Color = channelColor
+                    });
+                }
+            });
         }
 
         // Axes
@@ -315,37 +332,51 @@ public static class MaudeChartRenderer
         var pointRadius = 2f * layoutScale;
 
         // Lines
-        foreach (var kv in metricsByChannel)
+        foreach (var span in channelSpans)
         {
-            var channel = channelLookup.TryGetValue(kv.Key, out var channelInfo)
+            if (!span.Valid)
+            {
+                continue;
+            }
+
+            var channelId = span.ChannelId;
+            var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
                 ? channelInfo
-                : new MaudeChannel(kv.Key, $"Channel {kv.Key}", Colors.Purple);
+                : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
             var channelColor = ToSkColor(channel.Color);
 
             linePaint.Color = channelColor;
             pointPaint.Color = channelColor;
 
-            linePath.Reset();
-            var firstPoint = true;
-            foreach (var metric in kv.Value)
+            dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
             {
-                var x = chartRect.Left + (float)((metric.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                var y = chartRect.Bottom - (float)(metric.Value / maxDisplayValue) * chartRect.Height;
-
-                if (firstPoint)
+                if (metricsSpan.IsEmpty)
                 {
-                    linePath.MoveTo(x, y);
-                    firstPoint = false;
-                }
-                else
-                {
-                    linePath.LineTo(x, y);
+                    return;
                 }
 
-                canvas.DrawCircle(x, y, pointRadius, pointPaint);
-            }
+                linePath.Reset();
+                var firstPoint = true;
+                foreach (var metric in metricsSpan)
+                {
+                    var x = chartRect.Left + (float)((metric.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                    var y = chartRect.Bottom - (float)(metric.Value / maxDisplayValue) * chartRect.Height;
 
-            canvas.DrawPath(linePath, linePaint);
+                    if (firstPoint)
+                    {
+                        linePath.MoveTo(x, y);
+                        firstPoint = false;
+                    }
+                    else
+                    {
+                        linePath.LineTo(x, y);
+                    }
+
+                    canvas.DrawCircle(x, y, pointRadius, pointPaint);
+                }
+
+                canvas.DrawPath(linePath, linePaint);
+            });
         }
 
         // Events
@@ -356,8 +387,9 @@ public static class MaudeChartRenderer
             canvas.DrawText(visual.Icon, visual.X, iconBaselineY, eventIconPaint);
 
             var labelOffset = eventLabelPaint.TextSize + eventIconPaint.TextSize * 0.25f + 4 * layoutScale;
+            var labelX = visual.X - (eventLabelPaint.MeasureText(visual.Label) / 2f);
             canvas.DrawText(visual.Label,
-                            visual.X + eventIconPaint.TextSize * 0.6f,
+                            labelX,
                             visual.Y - labelOffset,
                             eventLabelPaint);
         }
@@ -378,18 +410,20 @@ public static class MaudeChartRenderer
             highlightLines.Clear();
             foreach (var channelInfo in legendChannels)
             {
-                if (!metricsByChannel.TryGetValue(channelInfo.Id, out var channelMetrics))
+                if (!channelSpanLookup.TryGetValue(channelInfo.Id, out var channelSpan) || !channelSpan.Valid)
                 {
                     continue;
                 }
 
-                var value = GetMetricValueAt(channelMetrics, probeUtc.Value);
-                if (!value.HasValue)
+                long? value = null;
+                dataSink.UseMetricsInChannelForRange(channelInfo.Id, fromUtc, toUtc, metricsSpan =>
                 {
-                    continue;
+                    value = GetMetricValueAt(metricsSpan, probeUtc.Value);
+                });
+                if (value.HasValue)
+                {
+                    highlightLines.Add(($"{channelInfo.Name}: {FormatBytes(value.Value)}", ToSkColor(channelInfo.Color)));
                 }
-
-                highlightLines.Add(($"{channelInfo.Name}: {FormatBytes(value.Value)}", ToSkColor(channelInfo.Color)));
             }
 
             if (highlightLines.Count > 0)
@@ -475,14 +509,14 @@ public static class MaudeChartRenderer
         return $"{bytes:0.#} {units[unit]}";
     }
 
-    private static long? GetMetricValueAt(IReadOnlyList<MaudeMetric> metrics, DateTime targetUtc)
+    private static long? GetMetricValueAt(ReadOnlySpan<MaudeMetric> metrics, DateTime targetUtc)
     {
-        if (metrics == null || metrics.Count == 0)
+        if (metrics.IsEmpty)
         {
             return null;
         }
 
-        for (var i = metrics.Count - 1; i >= 0; i--)
+        for (var i = metrics.Length - 1; i >= 0; i--)
         {
             var metric = metrics[i];
             if (metric.CapturedAtUtc <= targetUtc)
@@ -633,8 +667,8 @@ public static class MaudeChartRenderer
         public SKPath LinePath { get; }
 
         public Dictionary<byte, MaudeChannel> ChannelLookup { get; } = new();
-        public Dictionary<byte, IReadOnlyList<MaudeMetric>> MetricsByChannel { get; } = new();
-        public Dictionary<byte, IReadOnlyList<MaudeEvent>> EventsByChannel { get; } = new();
+        public Dictionary<byte, MaudeChannelSpan> ChannelSpanLookup { get; } = new();
+        public List<MaudeChannelSpan> ChannelSpans { get; } = new();
         public List<string> LabelSamples { get; } = new();
         public List<MaudeChannel> LegendChannels { get; } = new();
         public List<LegendEntry> LegendEntries { get; } = new();

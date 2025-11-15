@@ -8,9 +8,14 @@ public class Program
     // This is the main entry point of the application.
     static void Main(string[] args)
     {
-        MaudeLogger.RegisterCallback(new CustomMaudeLogCallback());
-        MaudeRuntime.Initialize(CustomMaudeConfiguration.Options);
-        MaudeRuntime.Activate();
+        var options = MaudeOptions.CreateBuilder()
+            .WithAdditionalLogger(new CustomMaudeLogCallback())
+            .WithShakeGesture()
+            .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)
+            .WithAdditionalChannels(CustomMaudeConfiguration.AdditionalChannels)
+            .Build();
+        
+        MaudeRuntime.InitializeAndActivate(options);
         
         // if you want to use a different Application Delegate class from "AppDelegate"
         // you can specify it here.

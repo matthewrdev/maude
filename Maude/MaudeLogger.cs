@@ -1,11 +1,17 @@
 namespace Maude;
 
+/// <summary>
+/// The logging framework used by Maude, which allows the integrating software to 
+/// </summary>
 public static class MaudeLogger
 {
     private static readonly Lock LoggerLock = new Lock();
 
     private static readonly List<IMaudeLogCallback> Callbacks = new List<IMaudeLogCallback>();
 
+    /// <summary>
+    /// Registers a <see cref="IMaudeLogCallback"/> into the logger, which will receive all log messages recorded by Maude.
+    /// </summary>
     public static void RegisterCallback(IMaudeLogCallback callback)
     {
         if (callback == null) throw new ArgumentNullException(nameof(callback));

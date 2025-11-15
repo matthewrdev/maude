@@ -9,9 +9,13 @@ public class MainApplication : MauiApplication
     public MainApplication(IntPtr handle, JniHandleOwnership ownership)
         : base(handle, ownership)
     {
-        MaudeLogger.RegisterCallback(new CustomMaudeLogCallback());
-        MaudeRuntime.Initialize(CustomMaudeConfiguration.Options);
-        MaudeRuntime.Activate();
+        var options = MaudeOptions.CreateBuilder()
+            .WithAdditionalLogger(new CustomMaudeLogCallback())
+            .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)
+            .WithAdditionalChannels(CustomMaudeConfiguration.AdditionalChannels)
+            .Build();
+        
+        MaudeRuntime.InitializeAndActivate(options);
     }
 
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();

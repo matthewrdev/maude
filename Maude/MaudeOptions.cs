@@ -1,5 +1,8 @@
 namespace Maude;
 
+using System.Collections.Generic;
+using System.Linq;
+
 public class MaudeOptions
 {
     public static readonly MaudeOptions Default = new MaudeOptions()
@@ -15,7 +18,13 @@ public class MaudeOptions
     
     public int MaximumBufferSize => RetentionPeriodSeconds * (int)Math.Ceiling(1000f / (float)SampleFrequencyMilliseconds);
     
-    public required List<MaudeChannel> AdditionalChannels { get; init; }
+    public List<MaudeChannel> AdditionalChannels { get; set; } = new();
+
+    public bool AllowShakeGesture { get; private set; } = false;
+    
+    public MaudeShakeGestureBehaviour ShakeGestureBehaviour { get; private set; } = MaudeShakeGestureBehaviour.SlideSheet;
+    
+    public IMaudeLogCallback? AdditionalLogger { get; private set; }
 
     public void Validate()
     {
@@ -48,8 +57,72 @@ public class MaudeOptions
             var usesPredefinedChannels = AdditionalChannels.Where(MaudeConstants.IsPredefinedChannel).ToList();
             if (usesPredefinedChannels.Any())
             {
-                throw new InvalidOperationException("One or more additional channels use a reserved Maude channel ID. " + string.Join(", ", usesPredefinedChannels.Select(x => x.Name + " uses reserved channel " + x.Id)));
+                throw new InvalidOperationException("One or more additional channels use a reserved channel ID. " + string.Join(", ", usesPredefinedChannels.Select(x => x.Name + " uses reserved channel " + x.Id)));
             }
         }
     }
+    
+    public static MaudeOptionsBuilder CreateBuilder() => new MaudeOptionsBuilder();
+
+    
+    public sealed class MaudeOptionsBuilder
+    {
+        private readonly MaudeOptions options = new MaudeOptions();
+
+        public MaudeOptionsBuilder WithSampleFrequencyMilliseconds(ushort sampleFrequencyMilliseconds)
+        {
+            options.SampleFrequencyMilliseconds = sampleFrequencyMilliseconds;
+            return this;
+        }
+        
+        public MaudeOptionsBuilder WithRetentionPeriodSeconds(ushort retentionPeriodSeconds)
+        {
+            options.RetentionPeriodSeconds = retentionPeriodSeconds;
+            return this;
+        }
+
+        public MaudeOptionsBuilder WithAdditionalChannels(IEnumerable<MaudeChannel> additionalChannels)
+        {
+            if (additionalChannels == null) throw new ArgumentNullException(nameof(additionalChannels));
+            
+            options.AdditionalChannels = additionalChannels.ToList();
+            return this;
+        }
+
+        public MaudeOptionsBuilder AddAdditionalChannel(MaudeChannel additionalChannel)
+        {
+            if (additionalChannel == null) throw new ArgumentNullException(nameof(additionalChannel));
+
+            options.AdditionalChannels ??= new List<MaudeChannel>();
+            options.AdditionalChannels.Add(additionalChannel);
+            return this;
+        }
+
+        public MaudeOptionsBuilder WithShakeGestureBehaviour(MaudeShakeGestureBehaviour  shakeGestureBehaviour)
+        {
+            options.ShakeGestureBehaviour = shakeGestureBehaviour;
+            return this;
+        }
+        
+        public MaudeOptionsBuilder WithShakeGesture()
+        {
+            options.AllowShakeGesture = true;
+            return this;
+        }
+
+        public MaudeOptionsBuilder WithAdditionalLogger(IMaudeLogCallback logger)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            
+            options.AdditionalLogger = logger;
+            return this;
+        }
+
+        public MaudeOptions Build()
+        {
+            options.Validate();
+            return options;
+        }
+    }
+
 }

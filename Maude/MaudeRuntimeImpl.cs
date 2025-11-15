@@ -1,3 +1,4 @@
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Platform;
 
 namespace Maude;
@@ -16,23 +17,26 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     private bool gcNotificationsStarted = false;
 
     private readonly MaudeMutableDataSink MutableDataSink;
+    
+    private readonly MaudeShakeGestureListener shakeGestureListener;
 
     public IMaudeDataSink DataSink => MutableDataSink;
 
     public MaudeRuntimeImpl(MaudeOptions options)
     {
-        if (options == null) throw new ArgumentNullException(nameof(options));
-
-        this.options = options;
+        this.options = options ?? throw new ArgumentNullException(nameof(options));
         MutableDataSink = new MaudeMutableDataSink(options);
+        shakeGestureListener = new MaudeShakeGestureListener(this, options);
+        shakeGestureListener.Enable();
     }
     
     public bool IsActive { get; private set; }
 
-    public bool IsPresented => presentedMaudeViewReference != null && presentedMaudeViewReference.TryGetTarget(out _);
+    public bool IsSheetPresented => presentedMaudeViewReference != null && presentedMaudeViewReference.TryGetTarget(out _);
 
     public bool IsPresentationEnabled => true;
-    public bool IsChartOverlayPresented => chartOverlayReference != null && chartOverlayReference.TryGetTarget(out _);
+    
+    public bool IsOverlayPresented => chartOverlayReference != null && chartOverlayReference.TryGetTarget(out _);
     
     public event EventHandler? OnActivated;
     
@@ -87,9 +91,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         OnDeactivated?.Invoke(this, EventArgs.Empty);
     }
 
-    public void Present()
+    public void PresentSheet()
     {
-        if (!IsPresentationEnabled || IsPresented)
+        if (!IsPresentationEnabled || IsSheetPresented)
         {
             return;
         }
@@ -99,7 +103,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             await presentationSemaphore.WaitAsync();
             try
             {
-                if (IsPresented)
+                if (IsSheetPresented)
                 {
                     return;
                 }
@@ -193,9 +197,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         popup.OnClosed += Handler;
     }
 
-    public void Dismiss()
+    public void DismissSheet()
     {
-        if (!IsPresented)
+        if (!IsSheetPresented)
         {
             return;
         }
@@ -205,7 +209,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             await presentationSemaphore.WaitAsync();
             try
             {
-                if (!IsPresented)
+                if (!IsSheetPresented)
                 {
                     return;
                 }
@@ -228,7 +232,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         });
     }
 
-    public void PresentChartOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
+    public void PresentOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
     {
         if (!IsPresentationEnabled)
         {
@@ -240,7 +244,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             await chartOverlaySemaphore.WaitAsync();
             try
             {
-                if (IsChartOverlayPresented && chartOverlayReference.TryGetTarget(out var existingOverlay))
+                if (IsOverlayPresented && chartOverlayReference.TryGetTarget(out var existingOverlay))
                 {
                     existingOverlay.UpdatePosition(position);
                     return;
@@ -274,9 +278,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         });
     }
 
-    public void DismissChartOverlay()
+    public void DismissOverlay()
     {
-        if (!IsChartOverlayPresented)
+        if (!IsOverlayPresented)
         {
             return;
         }
@@ -304,6 +308,16 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                 chartOverlaySemaphore.Release();
             }
         });
+    }
+    
+    public void EnableShakeGesture()
+    {
+        shakeGestureListener.Enable();
+    }
+
+    public void DisableShakeGesture()
+    {
+        shakeGestureListener.Disable();
     }
 
     public void Metric(long value, byte channel)
