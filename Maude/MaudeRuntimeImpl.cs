@@ -46,7 +46,6 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             {
                 return;
             }
-            
             // TODO: Experimental GC tracking support.
             // if (!gcNotificationsStarted)
             // {

@@ -1,11 +1,23 @@
+
+# In-app observability for .NET MAUI.
+
+```
+Maude (Name, Germanic): Mighty in battle, powerful battler.
+```
+
 # Maude
 
-Minimal in-app observability for .NET MAUI apps.
+Maude, aka **Mau**i**de**bug, is a visualiser for observing memory usage in-app.
+
+Maude performs light-weight memory monitoring and then displays these metrics in a live-rendered chart view:
 
 
 
+Using Maude, you can:
 
-Maude samples runtime memory, captures custom metrics/events, and presents a lightweight, Skia-rendered chart plus event feed as either a slide-in sheet or an embeddable view.
+ * Visually monitor your apps memory usage.
+ * Record custom events to corellate 
+
 
 ## Capabilities
 - Runtime sampler for CLR (and platform) memory with configurable frequency/retention.
@@ -16,6 +28,7 @@ Maude samples runtime memory, captures custom metrics/events, and presents a lig
 - Simple lifecycle hooks to activate/deactivate sampling and present/dismiss the UI.
 
 ## Quick integration (default setup)
+
 Add Maude to your MAUI app with minimal code.
 
 1) Initialise Maude in the plaform specific startups:
@@ -30,6 +43,7 @@ MaudeRuntime.Initialize();
 **iOS**
 ```csharp
 // Program.cs
+MaudeRuntime.Initialize();
 ```
 
 
@@ -67,6 +81,7 @@ MaudeRuntime.Dismiss(); // close it
 ```
 
 ## Deep customization
+
 Use custom channels/options and embed the views directly.
 
 - Provide options (frequency, retention, channels) before calling `UseMaude`:

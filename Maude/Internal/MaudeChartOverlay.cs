@@ -1,76 +1,15 @@
 #if ANDROID || IOS
-using System;
-using System.Linq;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Graphics.Platform;
-using Microsoft.Maui.Platform;
 using SkiaSharp;
 
 namespace Maude;
-
-internal sealed class MaudeChartWindowOverlay : WindowOverlay, IDisposable
-{
-    private readonly IMaudeDataSink dataSink;
-    private readonly MaudeChartOverlayElement chartElement;
-
-    public MaudeChartWindowOverlay(Window window, IMaudeDataSink sink, MaudeOverlayPosition position) : base(window)
-    {
-        ArgumentNullException.ThrowIfNull(window);
-        ArgumentNullException.ThrowIfNull(sink);
-
-        dataSink = sink;
-        chartElement = new MaudeChartOverlayElement(sink, position);
-
-        AddWindowElement(chartElement);
-        EnableDrawableTouchHandling = false;
-
-        dataSink.OnMetricsUpdated += HandleSinkUpdated;
-        dataSink.OnEventsUpdated += HandleSinkUpdated;
-    }
-
-    public void UpdatePosition(MaudeOverlayPosition position)
-    {
-        chartElement.Position = position;
-        InvalidateOnMainThread();
-    }
-
-    public void RequestRedraw() => InvalidateOnMainThread();
-
-    private void HandleSinkUpdated(object? sender, EventArgs e)
-    {
-        InvalidateOnMainThread();
-    }
-
-    private void InvalidateOnMainThread()
-    {
-        if (MainThread.IsMainThread)
-        {
-            Invalidate();
-        }
-        else
-        {
-            MainThread.BeginInvokeOnMainThread(Invalidate);
-        }
-    }
-
-    public void Dispose()
-    {
-        dataSink.OnMetricsUpdated -= HandleSinkUpdated;
-        dataSink.OnEventsUpdated -= HandleSinkUpdated;
-
-        RemoveWindowElement(chartElement);
-        chartElement.Dispose();
-    }
-}
 
 internal sealed class MaudeChartOverlayElement : IWindowOverlayElement, IDisposable
 {
     private readonly IMaudeDataSink dataSink;
     private readonly TimeSpan windowDuration = TimeSpan.FromMinutes(1);
-    private const float OverlaySizeScale = 0.5f;
-    private const float OverlayAlpha = 0.85f;
+    private const float OverlaySizeScale = 0.6f;
+    private const float OverlayAlpha = 0.8f;
     private SKBitmap? renderBitmap;
     private SKCanvas? renderCanvas;
     private SKImageInfo renderInfo;
@@ -98,10 +37,9 @@ internal sealed class MaudeChartOverlayElement : IWindowOverlayElement, IDisposa
             {
                 return;
             }
-
             var overlayWidth = Math.Max(0f, Math.Min(360f, dirtyRect.Width - 24)) * OverlaySizeScale;
             var overlayHeight = Math.Max(0f, Math.Min(240f, dirtyRect.Height - 24)) * OverlaySizeScale;
-            var margin = 16f;
+            var margin = 32f;
 
             var x = Position switch
             {
@@ -280,51 +218,4 @@ internal sealed class MaudeChartOverlayElement : IWindowOverlayElement, IDisposa
     }
 }
 
-internal static class WindowOverlayHelpers
-{
-    public static bool TryAddOverlay(Window? window, WindowOverlay overlay)
-    {
-        if (window == null) return false;
-
-        // Prefer official API if present
-        var addOverlay = window.GetType().GetMethod("AddOverlay", new[] { typeof(WindowOverlay) });
-        if (addOverlay != null)
-        {
-            addOverlay.Invoke(window, new object[] { overlay });
-            return true;
-        }
-
-        var handler = window.Handler;
-        var addMethod = handler?.GetType().GetMethod("AddOverlay", new[] { typeof(WindowOverlay) });
-        if (addMethod != null)
-        {
-            addMethod.Invoke(handler, new object[] { overlay });
-            return true;
-        }
-
-        return false;
-    }
-
-    public static bool TryRemoveOverlay(Window? window, WindowOverlay overlay)
-    {
-        if (window == null) return false;
-
-        var removeOverlay = window.GetType().GetMethod("RemoveOverlay", new[] { typeof(WindowOverlay) });
-        if (removeOverlay != null)
-        {
-            removeOverlay.Invoke(window, new object[] { overlay });
-            return true;
-        }
-
-        var handler = window.Handler;
-        var removeMethod = handler?.GetType().GetMethod("RemoveOverlay", new[] { typeof(WindowOverlay) });
-        if (removeMethod != null)
-        {
-            removeMethod.Invoke(handler, new object[] { overlay });
-            return true;
-        }
-
-        return false;
-    }
-}
 #endif
