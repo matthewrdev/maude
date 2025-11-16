@@ -2,6 +2,7 @@
 
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maude="clr-namespace:Maude"
              x:Name="self"
              x:Class="Maude.MaudeEventsView">
 
@@ -20,6 +21,7 @@
             <DataTemplate>
                 <Grid ColumnDefinitions="Auto,*,Auto"
                       Padding="4,12"
+                      x:DataType="maude:MaudeEventDisplay"
                       ColumnSpacing="12">
                     
                     <Label Text="{Binding Icon}"

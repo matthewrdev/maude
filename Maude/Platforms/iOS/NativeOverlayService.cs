@@ -111,6 +111,12 @@ internal sealed class NativeOverlayService : INativeOverlayService
         };
 
         overlay.AddSubview(host);
+        NSLayoutConstraint.ActivateConstraints(new[]
+        {
+            host.WidthAnchor.ConstraintEqualTo(OverlayWidth),
+            host.HeightAnchor.ConstraintEqualTo(OverlayHeight),
+        });
+
         hosts[window] = host;
         return host;
     }
@@ -149,14 +155,10 @@ internal sealed class NativeOverlayService : INativeOverlayService
 
         NSLayoutConstraint.ActivateConstraints(new[]
         {
-            platformView.LeadingAnchor.ConstraintEqualTo(host.LeadingAnchor),
-            platformView.TrailingAnchor.ConstraintEqualTo(host.TrailingAnchor),
-            platformView.TopAnchor.ConstraintEqualTo(host.TopAnchor),
-            platformView.BottomAnchor.ConstraintEqualTo(host.BottomAnchor),
             platformView.WidthAnchor.ConstraintEqualTo(OverlayWidth),
             platformView.HeightAnchor.ConstraintEqualTo(OverlayHeight),
-            host.WidthAnchor.ConstraintGreaterThanOrEqualTo(OverlayWidth),
-            host.HeightAnchor.ConstraintGreaterThanOrEqualTo(OverlayHeight),
+            platformView.CenterXAnchor.ConstraintEqualTo(host.CenterXAnchor),
+            platformView.CenterYAnchor.ConstraintEqualTo(host.CenterYAnchor),
         });
 
         chartViews[window] = chartView;

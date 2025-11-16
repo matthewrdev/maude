@@ -24,6 +24,7 @@ public partial class MaudeView : Grid
         
         BindRuntime();
         BindWindowSelector();
+        UpdateWindowLabel();
     }
     
     private void OnToggleOverlayTapped(object sender, TappedEventArgs e)
@@ -53,15 +54,23 @@ public partial class MaudeView : Grid
             if (args.Selected?.Duration is TimeSpan duration && duration > TimeSpan.Zero)
             {
                 chartView.WindowDuration = duration;
+                UpdateWindowLabel();
             }
         };
 
         chartView.WindowDuration = intervalSelector.SelectedItem?.Duration ?? TimeSpan.FromSeconds(60);
+        UpdateWindowLabel();
     }
 
     public void UnbindRuntime()
     {
         chartView.Detach();
         eventsView.Detach();
+    }
+
+    private void UpdateWindowLabel()
+    {
+        var seconds = Math.Max(1, (int)Math.Round(chartView.WindowDuration.TotalSeconds));
+        windowLabel.Text = $"Last {seconds}s";
     }
 }

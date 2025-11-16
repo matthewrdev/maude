@@ -220,7 +220,7 @@ public static class MaudeRuntime
     }
 
     /// <summary>
-    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the provided icon with the additional <paramref name="details"/>.
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the provided icon.
     /// </summary>
     public static void Event(string label, string icon)
     {

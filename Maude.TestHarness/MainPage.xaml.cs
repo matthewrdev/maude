@@ -77,24 +77,38 @@ public partial class MainPage : ContentPage
         UpdateRuntimeStatus();
     }
 
+    private void PresentOverlay(MaudeOverlayPosition position)
+    {
+        MaudeRuntime.PresentOverlay(position);
+        UpdateRuntimeStatus();
+    }
 
-    private async void OnLowSpikeClicked(object? sender, EventArgs e) => await RunMemorySpike("Low", 4);
+    private void OnOverlayTopLeftClicked(object? sender, EventArgs e) => PresentOverlay(MaudeOverlayPosition.TopLeft);
 
-    private async void OnMediumSpikeClicked(object? sender, EventArgs e) => await RunMemorySpike("Medium", 16);
+    private void OnOverlayTopRightClicked(object? sender, EventArgs e) => PresentOverlay(MaudeOverlayPosition.TopRight);
 
-    private async void OnHighSpikeClicked(object? sender, EventArgs e) => await RunMemorySpike("High", 48);
+    private void OnOverlayBottomLeftClicked(object? sender, EventArgs e) => PresentOverlay(MaudeOverlayPosition.BottomLeft);
 
-    private async void OnExtremeSpikeClicked(object? sender, EventArgs e) => await RunMemorySpike("Extreme", 96);
+    private void OnOverlayBottomRightClicked(object? sender, EventArgs e) => PresentOverlay(MaudeOverlayPosition.BottomRight);
 
-    private async void OnLowNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native Low", 200, 50);
 
-    private async void OnMediumNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native Medium", 600, 40);
+    private void OnLowSpikeClicked(object? sender, EventArgs e) => RunClrMemorySpike("Low", 4).SafeFireAndForget();
 
-    private async void OnHighNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native High", 1200, 30);
+    private void OnMediumSpikeClicked(object? sender, EventArgs e) => RunClrMemorySpike("Medium", 16).SafeFireAndForget();
 
-    private async void OnExtremeNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native Extreme", 2000, 20);
+    private void OnHighSpikeClicked(object? sender, EventArgs e) => RunClrMemorySpike("High", 48).SafeFireAndForget();
 
-    private async Task RunMemorySpike(string label, int sizeMb)
+    private  void OnExtremeSpikeClicked(object? sender, EventArgs e) => RunClrMemorySpike("Extreme", 96).SafeFireAndForget();
+
+    private  void OnLowNativeClicked(object? sender, EventArgs e) => RunNativeSpike("Native Low", 500).SafeFireAndForget();
+
+    private  void OnMediumNativeClicked(object? sender, EventArgs e) => RunNativeSpike("Native Medium", 2000).SafeFireAndForget();
+
+    private  void OnHighNativeClicked(object? sender, EventArgs e) => RunNativeSpike("Native High", 4000).SafeFireAndForget();
+
+    private  void OnExtremeNativeClicked(object? sender, EventArgs e) => RunNativeSpike("Native Extreme", 12000).SafeFireAndForget();
+
+    private async Task RunClrMemorySpike(string label, int sizeMb)
     {
         try
         {
@@ -123,7 +137,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task RunNativeSpike(string label, int count, int delayMilliseconds)
+    private async Task RunNativeSpike(string label, int count)
     {
         try
         {
@@ -132,8 +146,6 @@ public partial class MainPage : ContentPage
             for (int i = 0; i < count; i++)
             {
                 list.Add(new Java.Lang.String($"maude-{i}-{DateTime.UtcNow.Ticks}"));
-                if (delayMilliseconds > 0)
-                    await Task.Delay(delayMilliseconds);
             }
             MaudeRuntime.Event($"{label} (Java objects)", CustomMaudeConfiguration.CustomEventChannelId);
             await Task.Delay(750);
@@ -143,8 +155,6 @@ public partial class MainPage : ContentPage
             for (int i = 0; i < count; i++)
             {
                 list.Add(new Foundation.NSString($"maude-{i}-{DateTime.UtcNow.Ticks}"));
-                if (delayMilliseconds > 0)
-                    await Task.Delay(delayMilliseconds);
             }
             MaudeRuntime.Event($"{label} (NSObjects)", CustomMaudeConfiguration.CustomEventChannelId);
             await Task.Delay(750);

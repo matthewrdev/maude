@@ -1,13 +1,15 @@
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Devices;
+using SkiaSharp.Views.Maui.Controls;
+using SKPaintSurfaceEventArgs = SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs;
 
 namespace Maude;
 
 /// <summary>
 /// Renders Maude metrics and events as a live chart inside the slide-in sheet or overlay.
 /// </summary>
-public partial class MaudeChartView : VerticalStackLayout
+public partial class MaudeChartView : SKCanvasView
 {
     private IMaudeDataSink dataSink;
     private IDispatcherTimer redrawTimer;
@@ -17,11 +19,9 @@ public partial class MaudeChartView : VerticalStackLayout
     public MaudeChartView()
     {
         InitializeComponent();
-        titleLabel.TextColor = MaudeConstants.MaudeBrandColor;
-        canvasView.EnableTouchEvents = true;
-        canvasView.Touch += OnCanvasTouch;
+        this.EnableTouchEvents = true;
+        this.Touch += OnCanvasTouch;
         InitialiseTimer();
-        UpdateWindowLabel();
         UpdateModeVisuals();
     }
 
@@ -41,7 +41,6 @@ public partial class MaudeChartView : VerticalStackLayout
     {
         if (bindable is MaudeChartView view)
         {
-            view.UpdateWindowLabel();
             view.RequestRedraw();
         }
     }
@@ -104,18 +103,10 @@ public partial class MaudeChartView : VerticalStackLayout
         this.Scale = isOverlay ? overlayScale : 1f;
         this.InputTransparent = isOverlay;
         this.IsEnabled = !isOverlay;
-        this.Spacing = isOverlay ? 0 : 8;
-        if (headerLayout != null)
-        {
-            headerLayout.IsVisible = !isOverlay;
-        }
 
-        if (canvasView != null)
-        {
-            canvasView.EnableTouchEvents = !isOverlay;
-            var overlayHeight = DeviceInfo.Current.Platform == DevicePlatform.Android ? 180 : 120;
-            canvasView.HeightRequest = isOverlay ? overlayHeight : 220;
-        }
+        this.EnableTouchEvents = !isOverlay;
+        var overlayHeight = DeviceInfo.Current.Platform == DevicePlatform.Android ? 180 : 120;
+        this.HeightRequest = isOverlay ? overlayHeight : 220;
 
         if (isOverlay)
         {
@@ -160,19 +151,13 @@ public partial class MaudeChartView : VerticalStackLayout
 
     private void RequestRedraw()
     {
-        if (Dispatcher?.IsDispatchRequired == true)
+        if (!MainThread.IsMainThread)
         {
-            Dispatcher.Dispatch(RequestRedraw);
+            MainThread.BeginInvokeOnMainThread(RequestRedraw);
             return;
         }
 
-        canvasView?.InvalidateSurface();
-    }
-
-    private void UpdateWindowLabel()
-    {
-        var seconds = Math.Max(1, (int)Math.Round(WindowDuration.TotalSeconds));
-        titleLabel.Text = $"MEMORY OVERVIEW (Last {seconds}s)";
+        InvalidateSurface();
     }
 
     private void InitialiseTimer()
@@ -191,7 +176,6 @@ public partial class MaudeChartView : VerticalStackLayout
 
     private void OnRedrawTimerOnTick(object? o, EventArgs eventArgs)
     {
-        UpdateWindowLabel();
         RequestRedraw();
     }
 
@@ -298,10 +282,7 @@ public partial class MaudeChartView : VerticalStackLayout
             Unsubscribe(dataSink);
         }
 
-        if (canvasView != null)
-        {
-            canvasView.Touch -= OnCanvasTouch;
-        }
+        Touch -= OnCanvasTouch;
 
         chartBounds = null;
     }

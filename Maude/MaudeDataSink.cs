@@ -22,8 +22,11 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
         channels[MaudeConstants.ReservedChannels.ClrMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.ClrMemoryUsage_Id, MaudeConstants.ReservedChannels.ClrMemoryUsage_Name, MaudeConstants.ReservedChannels.ClrMemoryUsage_Color);
         
-#if IOS || ANDROID
+#if IOS
         channels[MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Name, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Color);
+#elif ANDROID
+        channels[MaudeConstants.ReservedChannels.NativeHeapAllocated_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.NativeHeapAllocated_Id, MaudeConstants.ReservedChannels.NativeHeapAllocated_Name, MaudeConstants.ReservedChannels.NativeHeapAllocated_Color);
+        channels[MaudeConstants.ReservedChannels.Rss_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.Rss_Id, MaudeConstants.ReservedChannels.Rss_Name, MaudeConstants.ReservedChannels.Rss_Color);
 #endif
         
         channels[MaudeConstants.ReservedChannels.ChannelNotSpecified_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, "Not Specified", default(Color));
@@ -296,9 +299,15 @@ internal class MaudeMutableDataSink : IMaudeDataSink
             {
                 end = BinarySearchHelper.FindLastIndex(channelData, toUtc);
             }
-            
+
+            var length = Math.Max(0, end - start + 1);
+            if (length <= 0)
+            {
+                return;
+            }
+
             ReadOnlySpan<MaudeMetric> range = CollectionsMarshal.AsSpan(channelData)
-                .Slice(start, end - start);
+                .Slice(start, length);
             
             useAction(range);
         }
@@ -441,8 +450,14 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 end = BinarySearchHelper.FindLastIndex(channelData, toUtc);
             }
             
+            var length = Math.Max(0, end - start + 1);
+            if (length == 0)
+            {
+                return;
+            }
+
             ReadOnlySpan<MaudeEvent> range = CollectionsMarshal.AsSpan(channelData)
-                                                                  .Slice(start, end - start);
+                                                                  .Slice(start, length);
             
             useAction(range);
         }
@@ -451,12 +466,6 @@ internal class MaudeMutableDataSink : IMaudeDataSink
     public void RecordMemorySnapshot(MemorySnapshot snapshot)
     {
         var clr = snapshot.ManagedHeapBytes;
-        var platform = snapshot.RssBytes;
-        
-#if ANDROID
-        platform = snapshot.TotalPssBytes;
-#endif
-
         MutateMetrics(metrics =>
         {
             List<MaudeMetric> added = new List<MaudeMetric>();
@@ -473,8 +482,8 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 clrMetrics.Add(metric);
             }
             
-#if IOS || ANDROID
-            
+#if IOS
+            var platform = snapshot.RssBytes;
             if (metrics.TryGetValue(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, 
                                     out var platformMetrics))
             {
@@ -488,11 +497,34 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 added.Add(metric);
                 platformMetrics.Add(metric);
             }
+#elif ANDROID
+            AddMetricIfPresent(metrics, added, MaudeConstants.ReservedChannels.NativeHeapAllocated_Id, snapshot.NativeHeapAllocatedBytes);
+            AddMetricIfPresent(metrics, added, MaudeConstants.ReservedChannels.Rss_Id, snapshot.RssBytes);
 #endif
 
             return added;
         });
     }
+
+#if ANDROID
+    private static void AddMetricIfPresent(Dictionary<byte, List<MaudeMetric>> metrics, List<MaudeMetric> added, byte channelId, long value)
+    {
+        if (!metrics.TryGetValue(channelId, out var channelMetrics))
+        {
+            return;
+        }
+
+        var metric = new MaudeMetric()
+        {
+            CapturedAtUtc = DateTime.UtcNow,
+            Channel = channelId,
+            Value = value
+        };
+
+        added.Add(metric);
+        channelMetrics.Add(metric);
+    }
+#endif
     
     public void Metric(long value, byte channel)
     {
