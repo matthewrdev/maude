@@ -335,7 +335,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
     public IReadOnlyList<MaudeEvent> GetEventsForChannel(byte channelId)
     {
-        lock (metricsLock)
+        lock (eventsLock)
         {
             if (!this.eventsByChannel.TryGetValue(channelId, out var channelData))
             {
@@ -555,7 +555,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         if (mutator == null) throw new ArgumentNullException(nameof(mutator));
 
         IReadOnlyList<MaudeMetric> newValues = null;
-        List<MaudeMetric> trimmedValues = new List<MaudeMetric>();
+        List<MaudeMetric>? trimmedValues = null;
         
         var expiryTime = DateTime.UtcNow - TimeSpan.FromSeconds(options.RetentionPeriodSeconds);
         
@@ -567,6 +567,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
             {
                 while (channel.Count > 0 && channel[0].CapturedAtUtc < expiryTime)
                 {
+                    trimmedValues ??= new List<MaudeMetric>();
                     trimmedValues.Add(channel[0]);
                     channel.RemoveAt(0);
                 }
@@ -595,10 +596,10 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
         if (didChange)
         {
-            newValues = newValues ??  Array.Empty<MaudeMetric>();
-            trimmedValues = trimmedValues ?? new List<MaudeMetric>();
+            IReadOnlyList<MaudeMetric> added = newValues ?? Array.Empty<MaudeMetric>();
+            IReadOnlyList<MaudeMetric> removed = trimmedValues as IReadOnlyList<MaudeMetric> ?? Array.Empty<MaudeMetric>();
             
-            this.OnMetricsUpdated?.Invoke(this, new MaudeMetricsUpdatedEventArgs(newValues, trimmedValues));
+            this.OnMetricsUpdated?.Invoke(this, new MaudeMetricsUpdatedEventArgs(added, removed));
         }
     }
 
@@ -666,7 +667,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         if (mutator == null) throw new ArgumentNullException(nameof(mutator));
 
         IReadOnlyList<MaudeEvent> newValues = null;
-        List<MaudeEvent> trimmedValues = new List<MaudeEvent>();
+        List<MaudeEvent>? trimmedValues = null;
         
         var expiryTime = DateTime.UtcNow - TimeSpan.FromSeconds(options.RetentionPeriodSeconds);
         
@@ -678,6 +679,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
             {
                 while (channel.Count > 0 && channel[0].CapturedAtUtc < expiryTime)
                 {
+                    trimmedValues ??= new List<MaudeEvent>();
                     trimmedValues.Add(channel[0]);
                     channel.RemoveAt(0);
                 }
@@ -706,7 +708,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         if (didChange)
         {
             newValues = newValues ??  Array.Empty<MaudeEvent>();
-            trimmedValues = trimmedValues ?? new List<MaudeEvent>();
+            trimmedValues = trimmedValues ?? Array.Empty<MaudeEvent>();
             
             this.OnEventsUpdated?.Invoke(this, new MaudeEventsUpdatedEventArgs(newValues, trimmedValues));
         }
