@@ -530,7 +530,7 @@ public static class MaudeChartRenderer
     internal static string FormatBytes(long value)
     {
         double bytes = value;
-        string[] units = { "B", "KB", "MB", "GB", "TB" };
+        string[] units = { "B", "KB", "MB" };
         int unit = 0;
         while (bytes >= 1024 && unit < units.Length - 1)
         {
@@ -548,16 +548,27 @@ public static class MaudeChartRenderer
             return null;
         }
 
-        for (var i = metrics.Length - 1; i >= 0; i--)
+        var low = 0;
+        var high = metrics.Length - 1;
+        var bestIndex = -1;
+
+        while (low <= high)
         {
-            var metric = metrics[i];
-            if (metric.CapturedAtUtc <= targetUtc)
+            var mid = low + ((high - low) >> 1);
+            var midMetric = metrics[mid];
+
+            if (midMetric.CapturedAtUtc <= targetUtc)
             {
-                return metric.Value;
+                bestIndex = mid;
+                low = mid + 1;
+            }
+            else
+            {
+                high = mid - 1;
             }
         }
 
-        return metrics[0].Value;
+        return bestIndex >= 0 ? metrics[bestIndex].Value : metrics[0].Value;
     }
 
     private static SKTypeface LoadMaterialSymbolsTypeface()

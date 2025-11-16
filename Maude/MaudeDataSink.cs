@@ -565,16 +565,23 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
             foreach (var channel in metricsByChannel.Values)
             {
-                while (channel.Count > 0 && channel[0].CapturedAtUtc < expiryTime)
+                var removeCount = 0;
+                var initialCount = channel.Count;
+
+                while (removeCount < initialCount && channel[removeCount].CapturedAtUtc < expiryTime)
+                {
+                    removeCount++;
+                }
+
+                if (removeCount > 0)
                 {
                     trimmedValues ??= new List<MaudeMetric>();
-                    trimmedValues.Add(channel[0]);
-                    channel.RemoveAt(0);
+                    trimmedValues.AddRange(channel.GetRange(0, removeCount));
+                    channel.RemoveRange(0, removeCount);
                 }
                 
                 if (channel.Count > 0)
                 {
-                    
                     var last = channel[^1];
                     var first = channel[0];
 
@@ -677,14 +684,19 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
             foreach (var channel in eventsByChannel.Values)
             {
-                var spanToRemoveStart = -1;
-                var spanToRemoveEnd = -1;
-                // TODO: This can be implemented via a RemoveRange.
-                while (channel.Count > 0 && channel[0].CapturedAtUtc < expiryTime)
+                var removeCount = 0;
+                var initialCount = channel.Count;
+
+                while (removeCount < initialCount && channel[removeCount].CapturedAtUtc < expiryTime)
+                {
+                    removeCount++;
+                }
+
+                if (removeCount > 0)
                 {
                     trimmedValues ??= new List<MaudeEvent>();
-                    trimmedValues.Add(channel[0]);
-                    channel.RemoveAt(0);
+                    trimmedValues.AddRange(channel.GetRange(0, removeCount));
+                    channel.RemoveRange(0, removeCount);
                 }
                 
                 if (channel.Count > 0)

@@ -49,7 +49,6 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 
     public void Activate()
     {
-        MaudeLogger.Info("Activate requested.");
         lock (samplerLock)
         {
             if (IsActive)
@@ -68,12 +67,10 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         }
 
         OnActivated?.Invoke(this, EventArgs.Empty);
-        MaudeLogger.Info("Activation complete and event dispatched.");
     }
 
     public void Deactivate()
     {
-        MaudeLogger.Info("Deactivate requested.");
         lock (samplerLock)
         {
             if (!IsActive)
@@ -89,7 +86,6 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         }
 
         OnDeactivated?.Invoke(this, EventArgs.Empty);
-        MaudeLogger.Info("Deactivation complete and event dispatched.");
     }
 
     public void PresentSheet()
@@ -124,7 +120,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 
                 if (popupView != null)
                 {
-                    MaudeLogger.Error("An error occured while opening the slide sheet.");
+                    MaudeLogger.Info("Presented the Maude Chart Sheet");
                     WirePopupLifecycle(popupView, maudeView);
                     presentedMaudeViewReference = new WeakReference<IMaudePopup>(popupView);
                 }

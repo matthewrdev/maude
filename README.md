@@ -148,7 +148,7 @@ UIApplication.Main(args, null, typeof(AppDelegate));
 
 ### Modal Pages
 
-MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`PresentSheet`) for modal-heavy flows.
+MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`PresentSheet`) for modal-heavy flows. On Android the overlay is a transparent `FrameLayout` added to the current activity’s decor view; it stays on top of your content but under system UI. On iOS a non-interactive `UIView` is injected into every active `UIWindow` (per scene), so the overlay follows window bounds but will sit behind any OS-owned alerts or modal hosts.
 
 ### Target framework
 
