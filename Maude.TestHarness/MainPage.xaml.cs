@@ -86,6 +86,14 @@ public partial class MainPage : ContentPage
 
     private async void OnExtremeSpikeClicked(object? sender, EventArgs e) => await RunMemorySpike("Extreme", 96);
 
+    private async void OnLowNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native Low", 200, 50);
+
+    private async void OnMediumNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native Medium", 600, 40);
+
+    private async void OnHighNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native High", 1200, 30);
+
+    private async void OnExtremeNativeClicked(object? sender, EventArgs e) => await RunNativeSpike("Native Extreme", 2000, 20);
+
     private async Task RunMemorySpike(string label, int sizeMb)
     {
         try
@@ -108,6 +116,46 @@ public partial class MainPage : ContentPage
         catch (OutOfMemoryException)
         {
             MaudeRuntime.Event($"Failed spike ({label})", MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
+        }
+        finally
+        {
+            UpdateRuntimeStatus();
+        }
+    }
+
+    private async Task RunNativeSpike(string label, int count, int delayMilliseconds)
+    {
+        try
+        {
+#if ANDROID
+            var list = new List<Java.Lang.Object>(count);
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(new Java.Lang.String($"maude-{i}-{DateTime.UtcNow.Ticks}"));
+                if (delayMilliseconds > 0)
+                    await Task.Delay(delayMilliseconds);
+            }
+            MaudeRuntime.Event($"{label} (Java objects)", CustomMaudeConfiguration.CustomEventChannelId);
+            await Task.Delay(750);
+            list.Clear();
+#elif IOS || MACCATALYST
+            var list = new List<Foundation.NSObject>(count);
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(new Foundation.NSString($"maude-{i}-{DateTime.UtcNow.Ticks}"));
+                if (delayMilliseconds > 0)
+                    await Task.Delay(delayMilliseconds);
+            }
+            MaudeRuntime.Event($"{label} (NSObjects)", CustomMaudeConfiguration.CustomEventChannelId);
+            await Task.Delay(750);
+            list.Clear();
+#else
+            await Task.CompletedTask;
+#endif
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
         }
         finally
         {

@@ -75,13 +75,44 @@
                                FontSize="12"
                                TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
                         
-                        <Grid ColumnDefinitions="*,*,*,*"
-                              ColumnSpacing="8">
-                            <Button Grid.Column="0" Text="Low (4 MB)" Clicked="OnLowSpikeClicked"/>
-                            <Button Grid.Column="1" Text="Medium (16 MB)" Clicked="OnMediumSpikeClicked"/>
-                            <Button Grid.Column="2" Text="High (48 MB)" Clicked="OnHighSpikeClicked"/>
-                            <Button Grid.Column="3" Text="Extreme (96 MB)" Clicked="OnExtremeSpikeClicked"/>
-                        </Grid>
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Low (4 MB)" Clicked="OnLowSpikeClicked" Margin="0,0,10,10"/>
+                            <Button Text="Medium (16 MB)" Clicked="OnMediumSpikeClicked" Margin="0,0,10,10"/>
+                            <Button Text="High (48 MB)" Clicked="OnHighSpikeClicked" Margin="0,0,10,10"/>
+                            <Button Text="Extreme (96 MB)" Clicked="OnExtremeSpikeClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Stroke="{AppThemeBinding Light=#dcdcdc Dark=#303030}"
+                        StrokeThickness="1"
+                        BackgroundColor="{AppThemeBinding Light=#ffffff Dark=#1c1c1c}"
+                        Padding="14,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Native allocations"
+                               FontAttributes="Bold"
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#111111 Dark=#f5f5f5}"/>
+                        <Label Text="Create Java/NSObject instances to stress native heaps."
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Low native" Clicked="OnLowNativeClicked" Margin="0,0,10,10"/>
+                            <Button Text="Medium native" Clicked="OnMediumNativeClicked" Margin="0,0,10,10"/>
+                            <Button Text="High native" Clicked="OnHighNativeClicked" Margin="0,0,10,10"/>
+                            <Button Text="Extreme native" Clicked="OnExtremeNativeClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
 

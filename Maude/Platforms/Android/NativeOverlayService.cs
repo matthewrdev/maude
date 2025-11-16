@@ -75,9 +75,7 @@ internal sealed class NativeOverlayService : INativeOverlayService
                 ViewGroup.LayoutParams.WrapContent)
         };
 
-        var padding = DpToPx(activity, 12);
-        contentHost.SetPadding(padding, padding, padding, padding);
-        contentHost.Background = CreateCardBackground(activity);
+        contentHost.SetPadding(0, 0, 0, 0);
 
         overlay.AddView(contentHost);
         rootView.AddView(overlay);
@@ -135,22 +133,13 @@ internal sealed class NativeOverlayService : INativeOverlayService
             Gravity = ConvertGravity(position)
         };
 
-        var margin = DpToPx(activity, 24);
+        var margin = DpToPx(activity, 16);
         lp.SetMargins(margin, margin, margin, margin);
         overlay.LayoutParameters = lp;
     }
 
     private static int DpToPx(Context context, float dp) =>
         (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, dp, context.Resources.DisplayMetrics);
-
-    private static Drawable CreateCardBackground(Context context)
-    {
-        var drawable = new GradientDrawable();
-        drawable.SetColor(Color.Argb(200, 18, 18, 26));
-        drawable.SetCornerRadius(DpToPx(context, 12));
-        drawable.SetStroke(1, Color.Argb(180, 80, 80, 90));
-        return drawable;
-    }
 
     private static GravityFlags ConvertGravity(MaudeOverlayPosition position) => position switch
     {

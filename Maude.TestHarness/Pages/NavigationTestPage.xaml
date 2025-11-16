@@ -11,6 +11,22 @@
         <Label Text="This page was pushed onto the navigation stack."
                FontSize="14"
                TextColor="{AppThemeBinding Light=#555555 Dark=#dddddd}" />
+        <Label Text="Large images below intentionally stress texture/memory allocations on navigation."
+               FontSize="12"
+               TextColor="{AppThemeBinding Light=#777777 Dark=#bbbbbb}" />
+        <ScrollView HeightRequest="420">
+            <VerticalStackLayout Spacing="10">
+                <Image Source="https://picsum.photos/seed/maude-nav-1/1600/900"
+                       Aspect="AspectFill"
+                       HeightRequest="200" />
+                <Image Source="https://picsum.photos/seed/maude-nav-2/1600/900"
+                       Aspect="AspectFill"
+                       HeightRequest="200" />
+                <Image Source="https://picsum.photos/seed/maude-nav-3/1600/900"
+                       Aspect="AspectFill"
+                       HeightRequest="200" />
+            </VerticalStackLayout>
+        </ScrollView>
         <Button Text="Pop page" Clicked="OnPopClicked" />
     </VerticalStackLayout>
 </ContentPage>

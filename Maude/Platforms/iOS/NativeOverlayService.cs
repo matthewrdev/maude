@@ -105,14 +105,10 @@ internal sealed class NativeOverlayService : INativeOverlayService
         host = new UIView
         {
             TranslatesAutoresizingMaskIntoConstraints = false,
-            BackgroundColor = UIColor.FromRGB(18, 18, 26).ColorWithAlpha(0.85f),
+            BackgroundColor = UIColor.Clear,
             UserInteractionEnabled = false,
-            LayoutMargins = new UIEdgeInsets(2, 2, 2, 2)
+            LayoutMargins = UIEdgeInsets.Zero
         };
-        host.Layer.CornerRadius = 10;
-        host.Layer.MasksToBounds = true;
-        host.Layer.BorderWidth = 1;
-        host.Layer.BorderColor = UIColor.FromRGBA(80, 80, 90, 180).CGColor;
 
         overlay.AddSubview(host);
         hosts[window] = host;
@@ -151,13 +147,12 @@ internal sealed class NativeOverlayService : INativeOverlayService
         platformView.UserInteractionEnabled = false;
         host.AddSubview(platformView);
 
-        var guide = host.LayoutMarginsGuide;
         NSLayoutConstraint.ActivateConstraints(new[]
         {
-            platformView.LeadingAnchor.ConstraintEqualTo(guide.LeadingAnchor),
-            platformView.TrailingAnchor.ConstraintEqualTo(guide.TrailingAnchor),
-            platformView.TopAnchor.ConstraintEqualTo(guide.TopAnchor),
-            platformView.BottomAnchor.ConstraintEqualTo(guide.BottomAnchor),
+            platformView.LeadingAnchor.ConstraintEqualTo(host.LeadingAnchor),
+            platformView.TrailingAnchor.ConstraintEqualTo(host.TrailingAnchor),
+            platformView.TopAnchor.ConstraintEqualTo(host.TopAnchor),
+            platformView.BottomAnchor.ConstraintEqualTo(host.BottomAnchor),
             platformView.WidthAnchor.ConstraintEqualTo(OverlayWidth),
             platformView.HeightAnchor.ConstraintEqualTo(OverlayHeight),
             host.WidthAnchor.ConstraintGreaterThanOrEqualTo(OverlayWidth),
@@ -176,7 +171,7 @@ internal sealed class NativeOverlayService : INativeOverlayService
             NSLayoutConstraint.DeactivateConstraints(constraints);
         }
 
-        var margin = 6;
+        var margin = 12;
         constraints = position switch
         {
             MaudeOverlayPosition.TopLeft => new[]
