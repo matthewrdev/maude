@@ -574,28 +574,41 @@ internal class MaudeMutableDataSink : IMaudeDataSink
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
         
-        Event(label, MaudeConstants.DefaultEventIcon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
+        Event(label, MaudeConstants.DefaultEventIcon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, string.Empty);
     }
 
     public void Event(string label, string icon)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
-        
-        Event(label, icon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
+
+        Event(label, icon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, string.Empty);
+    }
+
+    public void Event(string label, string icon, string details)
+    {
+        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+
+        Event(label, icon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, details);
     }
     
     public void Event(string label, byte channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
         
-        Event(label, MaudeConstants.DefaultEventIcon, channel);
+        Event(label, MaudeConstants.DefaultEventIcon, channel, string.Empty);
     }
 
     public void Event(string label, string icon, byte channel)
     {
+        Event(label, icon, channel, string.Empty);
+    }
+
+    public void Event(string label, string icon, byte channel, string details)
+    {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
         icon = icon ?? MaudeConstants.DefaultEventIcon;
+        details ??= string.Empty;
         
         MutateEvents(metrics =>
         {
@@ -604,7 +617,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 return Array.Empty<MaudeEvent>();
             }
 
-            var @event = new MaudeEvent(label, icon, DateTime.UtcNow, externalId: null, channel); 
+            var @event = new MaudeEvent(label, icon, details, DateTime.UtcNow, externalId: null, channel); 
             
             channelEvents.Add(@event);
 

@@ -13,8 +13,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     private WeakReference<MaudeChartWindowOverlay> chartOverlayReference;
     
     private MemorySamplerThread samplerThread;
-    private readonly object samplerLock = new object();
-    private bool gcNotificationsStarted = false;
+    private readonly Lock samplerLock = new Lock();
     
     private readonly MaudeMutableDataSink MutableDataSink;
     
@@ -55,13 +54,6 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                 MaudeLogger.Info("Activate requested but runtime is already active.");
                 return;
             }
-            // TODO: Experimental GC tracking support.
-            // if (!gcNotificationsStarted)
-            // {
-            //     gcNotificationsStarted = true;
-            //     GCNotification.GCDone += OnGcDone;
-            //     GCNotification.Start();
-            // }
             
             samplerThread = new MemorySamplerThread(options.SampleFrequencyMilliseconds, snapshot =>
             {
@@ -74,12 +66,6 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 
         OnActivated?.Invoke(this, EventArgs.Empty);
         MaudeLogger.Info("Activation complete and event dispatched.");
-    }
-
-    private void OnGcDone(int obj)
-    {
-        MaudeLogger.Info($"GC notification received for generation {obj}.");
-        Event($"GC GEN {obj}", MaterialSymbols.Delete, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
     }
 
     public void Deactivate()
@@ -410,6 +396,14 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         MutableDataSink.Event(label, icon);
     }
 
+    public void Event(string label, string icon, string details)
+    {
+        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+
+        MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' and details on detached channel.");
+        MutableDataSink.Event(label, icon, details);
+    }
+
     public void Event(string label, byte channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
@@ -425,6 +419,15 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' on channel {channel}.");
         
         MutableDataSink.Event(label, icon, channel);
+    }
+
+    public void Event(string label, string icon, byte channel, string details)
+    {
+        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+
+        MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' and details on channel {channel}.");
+
+        MutableDataSink.Event(label, icon, channel, details);
     }
 
     public void Clear()

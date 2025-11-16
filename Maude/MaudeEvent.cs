@@ -3,7 +3,8 @@ namespace Maude;
 public class MaudeEvent : IComparable<MaudeEvent>
 {
     public MaudeEvent(string label, 
-                      string icon,
+                      string icon, 
+                      string details,
                       DateTime capturedAtUtc, 
                       object externalId, 
                       byte channel)
@@ -11,7 +12,8 @@ public class MaudeEvent : IComparable<MaudeEvent>
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
         Label = label;
-        Icon = icon;
+        Icon = icon ?? MaudeConstants.DefaultEventIcon;
+        Details = details ?? string.Empty;
         CapturedAtUtc = capturedAtUtc;
         ExternalId = externalId;
         Channel = channel;
@@ -26,7 +28,9 @@ public class MaudeEvent : IComparable<MaudeEvent>
     /// 
     /// </summary>
     public string Icon {get;}
-    
+
+    public string Details { get; }
+
     /// <summary>
     /// The date-time that this event was captured, in UTC time.
     /// </summary>

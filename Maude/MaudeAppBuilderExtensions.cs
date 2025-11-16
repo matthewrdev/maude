@@ -7,18 +7,25 @@ public static class MaudeAppBuilderExtensions
 {
 
     /// <summary>
-    /// Configures the <see cref="MauiAppBuilder"/> to use the specified <typeparamref name="TApp"/> as the main application type
+    /// Set's up the <see cref="MauiAppBuilder"/> to initialise the <see cref="MaudeRuntime"/> and registers required fonts and dependencies. 
     /// </summary>
-    public static MauiAppBuilder UseMaude(this MauiAppBuilder builder)
+    public static MauiAppBuilder UseMaude(this MauiAppBuilder builder, bool activate =  true)
     {
         builder.ConfigureFonts(fonts =>
         {
             fonts.AddFont("MaterialSymbolsOutlined.ttf", MaudeConstants.MaterialSymbolsFontName);
         });
 
+        var didInitialise = false;
         if (!MaudeRuntime.IsInitialized)
         {
             MaudeRuntime.Initialize();
+            didInitialise = true;
+        }
+
+        if (activate)
+        {
+            MaudeRuntime.Activate();
         }
         
         builder.Services.AddSingleton<IMaudeRuntime>(_ => MaudeRuntime.Instance);

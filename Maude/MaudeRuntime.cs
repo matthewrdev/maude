@@ -196,6 +196,19 @@ public static class MaudeRuntime
     }
 
     /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> and <paramref name="icon"/> with the provided <paramref name="details"/> against the unspecified channel.
+    /// </summary>
+    public static void Event(string label, string icon, string details)
+    {
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        }
+
+        Instance.Event(label, icon, details);
+    }
+    
+    /// <summary>
     /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the default icon.
     /// <para/>
     /// The provided <paramref name="channel"/> <b>must</b> be a built-in channel or predefined during your setup of Maude via <see cref="MaudeRuntime.Initialize"/>.
@@ -227,5 +240,22 @@ public static class MaudeRuntime
         }
         
         Instance.Event(label, icon, channel);
+    }
+    
+    /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the provided <paramref name="icon"/> with the additional <paramref name="details"/>.
+    /// <para/>
+    /// The provided <paramref name="channel"/> <b>must</b> be a built-in channel or predefined during your setup of Maude via <see cref="MaudeRuntime.Initialize"/>.
+    /// <para/>
+    /// Event's recorded against unknown channels will be discarded.
+    /// </summary>
+    public static void Event(string label, string icon, byte channel, string details)
+    {
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        }
+        
+        Instance.Event(label, icon, channel, details);
     }
 }

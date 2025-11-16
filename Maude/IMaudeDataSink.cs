@@ -48,4 +48,16 @@ public interface IMaudeDataSink
     IReadOnlyList<MaudeEvent> GetEventsForChannelInRange(byte channelId, DateTime fromUtc, DateTime toUtc);
     
     void UseEventsInChannelForRange(byte channelId, DateTime fromUtc, DateTime toUtc, Action<ReadOnlySpan<MaudeEvent>> useAction);
+
+    void Event(string label);
+
+    void Event(string label, string icon);
+
+    void Event(string label, string icon, string details);
+
+    void Event(string label, byte channel);
+
+    void Event(string label, string icon, byte channel);
+
+    void Event(string label, string icon, byte channel, string details);
 }

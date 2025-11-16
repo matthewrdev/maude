@@ -106,6 +106,8 @@ public partial class MaudeEventsView : ContentView
                 Label = maudeEvent.Label,
                 Icon = string.IsNullOrWhiteSpace(maudeEvent.Icon) ? MaterialSymbols.Info : maudeEvent.Icon,
                 ChannelColor = channel.Color,
+                Details = maudeEvent.Details,
+                HasDetails = !string.IsNullOrWhiteSpace(maudeEvent.Details),
                 Timestamp = maudeEvent.CapturedAtUtc.ToLocalTime().ToString("HH:mm:ss")
             });
         }
@@ -124,7 +126,14 @@ public partial class MaudeEventsView : ContentView
     {
         public string Icon { get; init; }
         public string Label { get; init; }
+        public string Details { get; init; }
+        public bool HasDetails { get; init; }
         public Color ChannelColor { get; init; }
         public string Timestamp { get; init; }
+    }
+
+    public void Detach()
+    {
+        Unsubscribe(dataSink);
     }
 }

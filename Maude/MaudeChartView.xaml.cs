@@ -264,25 +264,30 @@ public partial class MaudeChartView : VerticalStackLayout
         base.OnHandlerChanging(args);
         if (args.NewHandler == null)
         {
-            if (redrawTimer != null)
-            {
-                redrawTimer.Stop();
-                redrawTimer.Tick -= OnRedrawTimerOnTick;
-            }
-
-            redrawTimer = null;
-
-            if (dataSink != null)
-            {
-                Unsubscribe(dataSink);
-            }
-
-            if (canvasView != null)
-            {
-                canvasView.Touch -= OnCanvasTouch;
-            }
-
-            chartBounds = null;
+            Detach();
         }
+    }
+
+    public void Detach()
+    {
+        if (redrawTimer != null)
+        {
+            redrawTimer.Stop();
+            redrawTimer.Tick -= OnRedrawTimerOnTick;
+        }
+
+        redrawTimer = null;
+
+        if (dataSink != null)
+        {
+            Unsubscribe(dataSink);
+        }
+
+        if (canvasView != null)
+        {
+            canvasView.Touch -= OnCanvasTouch;
+        }
+
+        chartBounds = null;
     }
 }

@@ -100,6 +100,11 @@ public interface IMaudeRuntime
     public void Event(string label, string icon);
     
     /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the provided icon with the additional <paramref name="details"/>.
+    /// </summary>
+    public void Event(string label, string icon, string details);
+    
+    /// <summary>
     /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the default icon.
     /// <para/>
     /// The provided <paramref name="channel"/> <b>must</b> be a built-in channel or predefined during your setup of Maude via <see cref="MaudeRuntime.Initialize"/>.
@@ -116,6 +121,15 @@ public interface IMaudeRuntime
     /// Event's recorded against unknown channels will be discarded.
     /// </summary>
     void Event(string label, string icon, byte channel);
+        
+    /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the provided icon with the additional <paramref name="details"/>.
+    /// <para/>
+    /// The provided <paramref name="channel"/> <b>must</b> be a built-in channel or predefined during your setup of Maude via <see cref="MaudeRuntime.Initialize"/>.
+    /// <para/>
+    /// Event's recorded against unknown channels will be discarded.
+    /// </summary>
+    void Event(string label, string icon, byte channel, string details);
     
     /// <summary>
     /// Clears the backing data sink, removing all recorded metrics and events.
