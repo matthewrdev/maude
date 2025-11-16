@@ -125,14 +125,16 @@ UIApplication.Main(args, null, typeof(AppDelegate));
 
 ## What does Maude capture?
 
-| Platform | Metric | Description | Documentation |
-|---------|--------|-------------|----------------|
-| **Android** | **Resident Set Size (RSS)** | Physical RAM currently mapped into the process (Java + native + runtime), excluding swapped pages. | Android memory overview: https://developer.android.com/topic/performance/memory-overview#mem-anatomy · Linux `/proc` docs: https://man7.org/linux/man-pages/man5/proc.5.html |
-| **Android** | **Native Heap** | Memory allocated through native allocators (`malloc`, `new`) used by the ART runtime and native libraries. | `Debug.getNativeHeapAllocatedSize()`: https://developer.android.com/reference/android/os/Debug#getNativeHeapAllocatedSize |
-| **Android** | **CLR (Managed Heap)** | Memory consumed by the .NET/Mono runtime (managed objects, GC generations, LOH). | .NET GC fundamentals: https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals |
-| **iOS** | **Physical Footprint (Jetsam Footprint)** | Total physical RAM attributed to the app by the kernel — the primary metric used by Jetsam to terminate processes. | Apple `task_vm_info_data_t`: https://developer.apple.com/documentation/kernel/task_vm_info_data_t · WWDC Memory Deep Dive: https://developer.apple.com/videos/play/wwdc2018/416/ |
-| **iOS** | **Available Headroom** | Approx. remaining memory the process can consume before Jetsam pressure escalates. | `os_proc_available_memory` (Apple libsystem source): https://github.com/apple-oss-distributions/libmalloc/blob/main/libmalloc/os_alloc_once_private.h |
-| **iOS** | **CLR (Managed Heap)** | Memory consumed by the .NET/Mono runtime on iOS (managed objects + GC overhead). | .NET GC fundamentals: https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals |
+
+| Platform | Metric | Description + Documentation |
+|---------|--------|-----------------------------|
+| **Android** | **Resident Set Size (RSS)** | Physical RAM currently mapped into the process (Java + native + runtime), excluding swapped pages. [Android Memory Overview](https://developer.android.com/topic/performance/memory-overview#mem-anatomy) • [`/proc` reference](https://man7.org/linux/man-pages/man5/proc.5.html) |
+| **Android** | **Native Heap** | Memory allocated through native allocators (`malloc`, `new`) used by native libraries and the ART runtime. [`Debug.getNativeHeapAllocatedSize`](https://developer.android.com/reference/android/os/Debug#getNativeHeapAllocatedSize) |
+| **Android** | **CLR (Managed Heap)** | Managed heap consumed by the .NET/Mono runtime (GC generations, LOH, objects, metadata). [.NET GC Fundamentals](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals) |
+| **iOS** | **Physical Footprint (Jetsam Footprint)** | Total physical RAM attributed to the process by the kernel — the value Jetsam uses to kill apps. [`task_vm_info_data_t`](https://developer.apple.com/documentation/kernel/task_vm_info_data_t) • [WWDC Memory Deep Dive](https://developer.apple.com/videos/play/wwdc2018/416/) |
+| **iOS** | **Available Headroom** | Approximate remaining memory the process can consume before hitting Jetsam pressure. [`os_proc_available_memory` source](https://github.com/apple-oss-distributions/libmalloc/blob/main/libmalloc/os_alloc_once_private.h) |
+| **iOS** | **CLR (Managed Heap)** | Managed memory consumed by the .NET/Mono runtime on iOS (AOT GC heap + metadata). [.NET GC Fundamentals](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals) |
+
 
 
 ## Limitations and Known Issues
