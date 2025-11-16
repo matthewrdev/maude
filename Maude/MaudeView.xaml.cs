@@ -16,6 +16,8 @@ public partial class MaudeView : Grid
         new TagSelectorOption("120s", TimeSpan.FromSeconds(120)),
         new TagSelectorOption("150s", TimeSpan.FromSeconds(150)),
         new TagSelectorOption("180s", TimeSpan.FromSeconds(180)),
+        new TagSelectorOption("240s", TimeSpan.FromSeconds(240)),
+        new TagSelectorOption("300s", TimeSpan.FromSeconds(300)),
     };
 
     public MaudeView()

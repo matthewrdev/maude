@@ -3,6 +3,8 @@
 public partial class MainPage : ContentPage
 {
     private readonly List<byte[]> spikes = new();
+    private readonly List<object> nativeAllocations = new();
+    private readonly Stack<Action> releaseActions = new();
     private readonly object spikeLock = new();
     private readonly Random random = new();
 
@@ -108,7 +110,7 @@ public partial class MainPage : ContentPage
 
     private  void OnExtremeNativeClicked(object? sender, EventArgs e) => RunNativeSpike("Native Extreme", 12000).SafeFireAndForget();
 
-    private async Task RunClrMemorySpike(string label, int sizeMb)
+    private Task RunClrMemorySpike(string label, int sizeMb)
     {
         try
         {
@@ -120,12 +122,13 @@ public partial class MainPage : ContentPage
 
             MaudeRuntime.Event($"Memory spike ({label})", CustomMaudeConfiguration.CustomEventChannelId);
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
-
-            lock (spikeLock)
+            releaseActions.Push(() =>
             {
-                spikes.Remove(buffer);
-            }
+                lock (spikeLock)
+                {
+                    spikes.Remove(buffer);
+                }
+            });
         }
         catch (OutOfMemoryException)
         {
@@ -135,6 +138,8 @@ public partial class MainPage : ContentPage
         {
             UpdateRuntimeStatus();
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task RunNativeSpike(string label, int count)
@@ -148,8 +153,12 @@ public partial class MainPage : ContentPage
                 list.Add(new Java.Lang.String($"maude-{i}-{DateTime.UtcNow.Ticks}"));
             }
             MaudeRuntime.Event($"{label} (Java objects)", CustomMaudeConfiguration.CustomEventChannelId);
-            await Task.Delay(750);
-            list.Clear();
+            nativeAllocations.Add(list);
+            releaseActions.Push(() =>
+            {
+                list.Clear();
+                nativeAllocations.Remove(list);
+            });
 #elif IOS || MACCATALYST
             var list = new List<Foundation.NSObject>(count);
             for (int i = 0; i < count; i++)
@@ -157,8 +166,12 @@ public partial class MainPage : ContentPage
                 list.Add(new Foundation.NSString($"maude-{i}-{DateTime.UtcNow.Ticks}"));
             }
             MaudeRuntime.Event($"{label} (NSObjects)", CustomMaudeConfiguration.CustomEventChannelId);
-            await Task.Delay(750);
-            list.Clear();
+            nativeAllocations.Add(list);
+            releaseActions.Push(() =>
+            {
+                list.Clear();
+                nativeAllocations.Remove(list);
+            });
 #else
             await Task.CompletedTask;
 #endif
@@ -171,6 +184,20 @@ public partial class MainPage : ContentPage
         {
             UpdateRuntimeStatus();
         }
+    }
+
+    private void OnReleaseAllocationClicked(object? sender, EventArgs e)
+    {
+        if (releaseActions.Count == 0)
+        {
+            return;
+        }
+
+        var action = releaseActions.Pop();
+        action();
+
+        MaudeRuntime.Event("Released allocation", CustomMaudeConfiguration.CustomEventChannelId);
+        UpdateRuntimeStatus();
     }
 
     private void OnRecordCustomMetricClicked(object? sender, EventArgs e)

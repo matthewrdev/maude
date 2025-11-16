@@ -19,11 +19,11 @@
                     x:Name="StatusLabel"
                     Text="Maude runtime is inactive"
                     FontSize="14"
-                    TextColor="{AppThemeBinding Light=#444444 Dark=#d5d5d5}" />
+                    TextColor="#444444" />
 
-                <Border Stroke="{AppThemeBinding Light=#dcdcdc Dark=#303030}"
+                <Border Stroke="#dcdcdc"
                         StrokeThickness="1"
-                        BackgroundColor="{AppThemeBinding Light=#ffffff Dark=#1c1c1c}"
+                        BackgroundColor="#ffffff"
                         Padding="14,12">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="12"/>
@@ -32,10 +32,10 @@
                         <Label Text="Runtime controls"
                                FontAttributes="Bold"
                                FontSize="16"
-                               TextColor="{AppThemeBinding Light=#111111 Dark=#f5f5f5}"/>
+                               TextColor="#111111"/>
                         <Label Text="Toggle sampling and present Maude surfaces."
                                FontSize="12"
-                               TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
+                               TextColor="#666666"/>
                         
                         <FlexLayout Direction="Row"
                                     Wrap="Wrap"
@@ -70,9 +70,9 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Stroke="{AppThemeBinding Light=#dcdcdc Dark=#303030}"
+                <Border Stroke="#dcdcdc"
                         StrokeThickness="1"
-                        BackgroundColor="{AppThemeBinding Light=#ffffff Dark=#1c1c1c}"
+                        BackgroundColor="#ffffff"
                         Padding="14,12">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="12"/>
@@ -81,10 +81,10 @@
                         <Label Text="Memory spikes"
                                FontAttributes="Bold"
                                FontSize="16"
-                               TextColor="{AppThemeBinding Light=#111111 Dark=#f5f5f5}"/>
+                               TextColor="#111111"/>
                         <Label Text="Allocate temporary arrays in the CLR to exercise the sampler."
                                FontSize="12"
-                               TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
+                               TextColor="#666666"/>
                         
                         <FlexLayout Direction="Row"
                                     Wrap="Wrap"
@@ -95,13 +95,14 @@
                             <Button Text="Medium (16 MB)" Clicked="OnMediumSpikeClicked" Margin="0,0,10,10"/>
                             <Button Text="High (48 MB)" Clicked="OnHighSpikeClicked" Margin="0,0,10,10"/>
                             <Button Text="Extreme (96 MB)" Clicked="OnExtremeSpikeClicked" Margin="0,0,10,10"/>
+                            <Button Text="Release last allocation" Clicked="OnReleaseAllocationClicked" Margin="0,0,10,10"/>
                         </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Stroke="{AppThemeBinding Light=#dcdcdc Dark=#303030}"
+                <Border Stroke="#dcdcdc"
                         StrokeThickness="1"
-                        BackgroundColor="{AppThemeBinding Light=#ffffff Dark=#1c1c1c}"
+                        BackgroundColor="#ffffff"
                         Padding="14,12">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="12"/>
@@ -110,10 +111,10 @@
                         <Label Text="Native allocations"
                                FontAttributes="Bold"
                                FontSize="16"
-                               TextColor="{AppThemeBinding Light=#111111 Dark=#f5f5f5}"/>
+                               TextColor="#111111"/>
                         <Label Text="Create Java/NSObject instances to stress native heaps."
                                FontSize="12"
-                               TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
+                               TextColor="#666666"/>
                         <FlexLayout Direction="Row"
                                     Wrap="Wrap"
                                     JustifyContent="Start"
@@ -127,9 +128,9 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Stroke="{AppThemeBinding Light=#dcdcdc Dark=#303030}"
+                <Border Stroke="#dcdcdc"
                         StrokeThickness="1"
-                        BackgroundColor="{AppThemeBinding Light=#ffffff Dark=#1c1c1c}"
+                        BackgroundColor="#ffffff"
                         Padding="14,12">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="12"/>
@@ -138,10 +139,10 @@
                         <Label Text="Metrics + Events"
                                FontAttributes="Bold"
                                FontSize="16"
-                               TextColor="{AppThemeBinding Light=#111111 Dark=#f5f5f5}"/>
+                               TextColor="#111111"/>
                         <Label Text="Send data to the custom channels configured for the harness."
                                FontSize="12"
-                               TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
+                               TextColor="#666666"/>
 
                         <FlexLayout Direction="Row"
                                     Wrap="Wrap"
@@ -163,9 +164,9 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Stroke="{AppThemeBinding Light=#dcdcdc Dark=#303030}"
+                <Border Stroke="#dcdcdc"
                         StrokeThickness="1"
-                        BackgroundColor="{AppThemeBinding Light=#ffffff Dark=#1c1c1c}"
+                        BackgroundColor="#ffffff"
                         Padding="14,12">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="12"/>
@@ -174,10 +175,10 @@
                         <Label Text="Navigation tests"
                                FontAttributes="Bold"
                                FontSize="16"
-                               TextColor="{AppThemeBinding Light=#111111 Dark=#f5f5f5}"/>
+                               TextColor="#111111"/>
                         <Label Text="Exercise navigation stack interactions while Maude is active."
                                FontSize="12"
-                               TextColor="{AppThemeBinding Light=#666666 Dark=#bcbcbc}"/>
+                               TextColor="#666666"/>
 
                         <FlexLayout Direction="Row"
                                     Wrap="Wrap"

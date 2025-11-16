@@ -10,7 +10,7 @@
                HorizontalOptions="Center" />
         <Label Text="This page was pushed modally onto the navigation stack."
                FontSize="14"
-               TextColor="{AppThemeBinding Light=#555555 Dark=#dddddd}" />
+               TextColor="#555555" />
         <Button Text="Dismiss modal" Clicked="OnDismissClicked" />
     </VerticalStackLayout>
 </ContentPage>

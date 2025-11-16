@@ -9,12 +9,12 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 {
     private readonly MaudeOptions options;
     private readonly SemaphoreSlim presentationSemaphore = new SemaphoreSlim(1, 1);
-    private WeakReference<IMaudePopup> presentedMaudeViewReference;
+    private WeakReference<IMaudePopup>? presentedMaudeViewReference;
     
     private readonly SemaphoreSlim chartOverlaySemaphore = new SemaphoreSlim(1, 1);
     private readonly INativeOverlayService overlayService;
     
-    private MemorySamplerThread samplerThread;
+    private MemorySamplerThread? samplerThread;
     private readonly Lock samplerLock = new Lock();
     
     private readonly MaudeMutableDataSink MutableDataSink;
@@ -106,7 +106,6 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             return;
         }
 
-        MaudeLogger.Info("Queueing sheet presentation on main thread.");
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             await presentationSemaphore.WaitAsync();
@@ -117,18 +116,29 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                     MaudeLogger.Info("Sheet presentation skipped because it is already showing after acquiring the semaphore.");
                     return;
                 }
+                
 
                 var maudeView = new MaudeView();
                 
-                var popupView = await CreateAndOpenPopup(maudeView);
-                WirePopupLifecycle(popupView, maudeView);
-                this.presentedMaudeViewReference = new  WeakReference<IMaudePopup>(popupView);
+                var popupView = CreateAndOpenPopup(maudeView);
+
+                if (popupView != null)
+                {
+                    MaudeLogger.Error("An error occured while opening the slide sheet.");
+                    WirePopupLifecycle(popupView, maudeView);
+                    presentedMaudeViewReference = new WeakReference<IMaudePopup>(popupView);
+                }
+                else
+                {
+                    maudeView.UnbindRuntime();
+                    MaudeLogger.Error("An error occured while opening the slide sheet.");
+                }
             }
             catch (Exception ex)
             {
                 MaudeLogger.Error("Failed to present Maude sheet.");
                 MaudeLogger.Exception(ex);
-                this.presentedMaudeViewReference = null;
+                presentedMaudeViewReference = null;
             }
             finally
             {
@@ -138,7 +148,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     }
     
     
-    private async Task<IMaudePopup> CreateAndOpenPopup(MaudeView maudeView)
+    private IMaudePopup? CreateAndOpenPopup(MaudeView maudeView)
     {
         if (maudeView == null)
         {
@@ -149,6 +159,12 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         maudeView.VerticalOptions = LayoutOptions.Fill;
 
         var mauiContext = Application.Current?.Handler?.MauiContext;
+        if (mauiContext == null)
+        {
+            MaudeLogger.Error("Unable to present the slide sheet as the 'Application.Current?.Handler?.MauiContext' is null.");
+            return null;
+        }
+        
         maudeView.BackgroundColor = Colors.WhiteSmoke;
         
 #if ANDROID
@@ -173,7 +189,11 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                          ?.OfType<UIKit.UIWindowScene>()
                          ?.SelectMany(scene => scene.Windows)
                          ?.FirstOrDefault(w => w.IsKeyWindow)    // visible/active window
-                     ?? UIKit.UIApplication.SharedApplication?.Windows?.FirstOrDefault();
+                     ?? UIKit.UIApplication.SharedApplication
+                         ?.ConnectedScenes
+                         ?.OfType<UIKit.UIWindowScene>()
+                         ?.SelectMany(scene => scene.Windows)
+                         ?.FirstOrDefault();
 
         var rootController = window?.RootViewController?.PresentedViewController
                              ?? window?.RootViewController;
@@ -208,11 +228,10 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             MaudeLogger.Warning("WirePopupLifecycle invoked without a MaudeView instance to unbind.");
         }
 
-        MaudeLogger.Info("Wiring popup lifecycle handlers.");
         void Handler(object sender, EventArgs args)
         {
             popup.OnClosed -= Handler;
-            MaudeLogger.Info("Maude popup closed; cleaning up references.");
+            MaudeLogger.Info("Maude slide sheet closed.");
             
             try
             {
@@ -238,19 +257,16 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         }
 
         popup.OnClosed += Handler;
-        MaudeLogger.Info("Popup lifecycle wired.");
     }
 
     public void DismissSheet()
     {
-        MaudeLogger.Info("DismissSheet requested.");
         if (!IsSheetPresented)
         {
             MaudeLogger.Info("DismissSheet skipped because no sheet is currently presented.");
             return;
         }
 
-        MaudeLogger.Info("Queueing sheet dismissal on main thread.");
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             await presentationSemaphore.WaitAsync();
@@ -269,7 +285,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                 }
 
                 presentedMaudeViewReference = null;
-                MaudeLogger.Info("Sheet dismissal complete and references cleared.");
+                MaudeLogger.Info("Slide sheet was dismissed.");
             }
             catch (Exception ex)
             {
@@ -297,18 +313,15 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             return;
         }
 
-        MaudeLogger.Info("Queueing overlay presentation on main thread.");
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             await chartOverlaySemaphore.WaitAsync();
             try
             {
-                MaudeLogger.Info("Rendering overlay with native host.");
                 overlayService.Show(MutableDataSink, position);
             }
             catch (Exception ex)
             {
-                MaudeLogger.Error("Failed to present overlay.");
                 MaudeLogger.Exception(ex);
             }
             finally
@@ -320,19 +333,18 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 
     public void DismissOverlay()
     {
-        MaudeLogger.Info("DismissOverlay requested.");
         if (!IsOverlayPresented)
         {
             MaudeLogger.Info("DismissOverlay skipped because no overlay is currently presented.");
             return;
         }
 
-        MaudeLogger.Info("Queueing overlay dismissal on main thread.");
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             await chartOverlaySemaphore.WaitAsync();
             try
             {
+                MaudeLogger.Info("Dismissed the charting overlay.");
                 overlayService.Hide();
             }
             catch (Exception ex)
@@ -349,14 +361,12 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     
     public void EnableShakeGesture()
     {
-        MaudeLogger.Info("EnableShakeGesture requested.");
         shakeGestureListener.Enable();
         MaudeLogger.Info("Shake gesture listener enabled.");
     }
 
     public void DisableShakeGesture()
     {
-        MaudeLogger.Info("DisableShakeGesture requested.");
         shakeGestureListener.Disable();
         MaudeLogger.Info("Shake gesture listener disabled.");
     }
@@ -376,8 +386,10 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 
     public void Event(string label, string icon)
     {
+        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        
         MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' on detached channel.");
-        MutableDataSink.Event(label, icon);
+        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon);
     }
 
     public void Event(string label, string icon, string details)
@@ -385,7 +397,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
         MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' and details on detached channel.");
-        MutableDataSink.Event(label, icon, details);
+        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon, details);
     }
 
     public void Event(string label, byte channel)
@@ -402,7 +414,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         
         MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' on channel {channel}.");
         
-        MutableDataSink.Event(label, icon, channel);
+        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon, channel);
     }
 
     public void Event(string label, string icon, byte channel, string details)
@@ -411,7 +423,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 
         MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' and details on channel {channel}.");
 
-        MutableDataSink.Event(label, icon, channel, details);
+        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon, channel, details);
     }
 
     public void Clear()

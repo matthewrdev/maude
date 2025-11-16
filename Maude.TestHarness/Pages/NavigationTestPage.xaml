@@ -10,10 +10,10 @@
                HorizontalOptions="Center" />
         <Label Text="This page was pushed onto the navigation stack."
                FontSize="14"
-               TextColor="{AppThemeBinding Light=#555555 Dark=#dddddd}" />
+               TextColor="#555555" />
         <Label Text="Large images below intentionally stress texture/memory allocations on navigation."
                FontSize="12"
-               TextColor="{AppThemeBinding Light=#777777 Dark=#bbbbbb}" />
+               TextColor="#777777" />
         <ScrollView HeightRequest="420">
             <VerticalStackLayout Spacing="10">
                 <Image Source="https://picsum.photos/seed/maude-nav-1/1600/900"

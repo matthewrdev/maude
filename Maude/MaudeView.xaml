@@ -47,7 +47,13 @@
 
     <local:MaudeChartView Grid.Row="1" x:Name="chartView" />
 
-    <local:TagSelector x:Name="intervalSelector" Grid.Row="2" Margin="0,8,0,8"/>
+    <ScrollView Grid.Row="2"
+                Margin="0,8,0,8"
+                Orientation="Horizontal"
+                HorizontalScrollBarVisibility="Never"
+                VerticalScrollBarVisibility="Never">
+        <local:TagSelector x:Name="intervalSelector" />
+    </ScrollView>
 
     <local:MaudeEventsView Grid.Row="3" x:Name="eventsView"/>
 </Grid>
