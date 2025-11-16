@@ -10,7 +10,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     private WeakReference<IMaudePopup> presentedMaudeViewReference;
     
     private readonly SemaphoreSlim chartOverlaySemaphore = new SemaphoreSlim(1, 1);
-    private WeakReference<MaudeChartWindowOverlay> chartOverlayReference;
+    private readonly INativeOverlayService overlayService;
     
     private MemorySamplerThread samplerThread;
     private readonly Lock samplerLock = new Lock();
@@ -30,15 +30,16 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         shakeGestureListener = new MaudeShakeGestureListener(this, options);
         shakeGestureListener.Enable();
         MaudeLogger.Info("Shake gesture listener initialised and enabled.");
+        overlayService = new NativeOverlayService();
     }
     
     public bool IsActive { get; private set; }
-
+    
     public bool IsSheetPresented => presentedMaudeViewReference != null && presentedMaudeViewReference.TryGetTarget(out _);
 
     public bool IsPresentationEnabled => true;
     
-    public bool IsOverlayPresented => chartOverlayReference != null && chartOverlayReference.TryGetTarget(out _);
+    public bool IsOverlayPresented => overlayService?.IsVisible == true;
     
     public event EventHandler? OnActivated;
     
@@ -300,37 +301,13 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             await chartOverlaySemaphore.WaitAsync();
             try
             {
-                if (IsOverlayPresented && chartOverlayReference.TryGetTarget(out var existingOverlay))
-                {
-                    MaudeLogger.Info("Overlay already presented; updating position.");
-                    existingOverlay.UpdatePosition(position);
-                    return;
-                }
-
-                var window = Application.Current?.Windows?.FirstOrDefault();
-                if (window == null)
-                {
-                    MaudeLogger.Warning("Overlay presentation skipped because no application window was found.");
-                    return;
-                }
-
-                var overlay = new MaudeChartWindowOverlay(window, MutableDataSink, position);
-                if (WindowOverlayHelpers.TryAddOverlay(window, overlay))
-                {
-                    chartOverlayReference = new WeakReference<MaudeChartWindowOverlay>(overlay);
-                    MaudeLogger.Info("Overlay presented and reference stored.");
-                }
-                else
-                {
-                    MaudeLogger.Warning("Failed to add overlay to window; disposing overlay instance.");
-                    overlay.Dispose();
-                }
+                MaudeLogger.Info("Rendering overlay with native host.");
+                overlayService.Show(MutableDataSink, position);
             }
             catch (Exception ex)
             {
                 MaudeLogger.Error("Failed to present overlay.");
                 MaudeLogger.Exception(ex);
-                chartOverlayReference = null;
             }
             finally
             {
@@ -354,15 +331,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             await chartOverlaySemaphore.WaitAsync();
             try
             {
-                if (chartOverlayReference?.TryGetTarget(out var overlay) == true)
-                {
-                    var window = Application.Current?.Windows?.FirstOrDefault();
-                    WindowOverlayHelpers.TryRemoveOverlay(window, overlay);
-                    overlay.Dispose();
-                    MaudeLogger.Info("Overlay removed and disposed.");
-                }
-
-                chartOverlayReference = null;
+                overlayService.Hide();
             }
             catch (Exception ex)
             {

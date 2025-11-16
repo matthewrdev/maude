@@ -5,7 +5,7 @@
                      xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
                      x:Class="Maude.MaudeChartView"
                      Spacing="8">
-        <HorizontalStackLayout Spacing="8">
+        <HorizontalStackLayout x:Name="headerLayout" Spacing="8">
             
             <Image Source="maude_small.png" 
                    WidthRequest="24" 

@@ -1,5 +1,6 @@
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
+using Microsoft.Maui.Devices;
 
 namespace Maude;
 
@@ -97,12 +98,23 @@ public partial class MaudeChartView : VerticalStackLayout
     private void UpdateModeVisuals()
     {
         var isOverlay = RenderMode == MaudeChartRenderMode.Overlay;
+        var overlayScale = DeviceInfo.Current.Platform == DevicePlatform.Android ? 1f : 0.5f;
+
         this.Opacity = isOverlay ? 0.85 : 1;
-        this.Scale = isOverlay ? 0.5f : 1f;
+        this.Scale = isOverlay ? overlayScale : 1f;
+        this.InputTransparent = isOverlay;
+        this.IsEnabled = !isOverlay;
+        this.Spacing = isOverlay ? 0 : 8;
+        if (headerLayout != null)
+        {
+            headerLayout.IsVisible = !isOverlay;
+        }
 
         if (canvasView != null)
         {
             canvasView.EnableTouchEvents = !isOverlay;
+            var overlayHeight = DeviceInfo.Current.Platform == DevicePlatform.Android ? 180 : 120;
+            canvasView.HeightRequest = isOverlay ? overlayHeight : 220;
         }
 
         if (isOverlay)

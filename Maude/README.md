@@ -136,6 +136,6 @@ If you prefer depedency injection, use `builder.UseMaude<App>()` in `MauiProgram
 
 ## Limitations and Known Issues
 
-- Modal pages: MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`Present`) for modal-heavy flows.
-- Overlay overhead: the overlay is Skia-rendered and re-blitted while visible; expect a small temporary memory bump from the render target/frame buffer.
+- Modal pages: the overlay is injected at the root window level, so modal pages can still obscure it. Use the slide-in sheet (`Present`) for modal-heavy flows.
+- Overlay overhead: the overlay now hosts the live `MaudeChartView` via native embedding (no off-screen blit), but Skia rendering remains active while visible.
 - Target framework: built for .NET 9+ to leverage [`Span<T>` optimisations](https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0) and [MAUI native embedding](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding); earlier TFMs are unsupported.
