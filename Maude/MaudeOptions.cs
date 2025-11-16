@@ -117,6 +117,12 @@ public class MaudeOptions
             options.AdditionalLogger = logger;
             return this;
         }
+        
+        public MaudeOptionsBuilder WithBuiltInLogger()
+        {
+            options.AdditionalLogger = new MaudeConsoleLogger();
+            return this;
+        }
 
         public MaudeOptions Build()
         {

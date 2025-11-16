@@ -1,13 +1,14 @@
 namespace Maude;
 
 /// <summary>
-/// The logging framework used by Maude, which allows the integrating software to 
+/// The logging framework used by Maude, which allows the integrating software to subscribe 
 /// </summary>
 public static class MaudeLogger
 {
     private static readonly Lock LoggerLock = new Lock();
 
     private static readonly List<IMaudeLogCallback> Callbacks = new List<IMaudeLogCallback>();
+
 
     /// <summary>
     /// Registers a <see cref="IMaudeLogCallback"/> into the logger, which will receive all log messages recorded by Maude.
@@ -83,21 +84,41 @@ public static class MaudeLogger
 
     public static void Error(string message)
     {
-        Broadcast(cb => (cb).Error(message));
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;    
+        }
+        
+        Broadcast(cb => cb.Error(message));
     }
 
     public static void Warning(string message)
     {
-        Broadcast(cb => (cb).Warning(message));
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;    
+        }
+        
+        Broadcast(cb => cb.Warning(message));
     }
 
     public static void Info(string message)
     {
-        Broadcast(cb => (cb).Info(message));
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;    
+        }
+        
+        Broadcast(cb => cb.Info(message));
     }
 
     public static void Exception(Exception exception)
     {
+        if (exception == null)
+        {
+            return;
+        }
+        
         Broadcast(cb => (cb).Exception(exception));
     }
 

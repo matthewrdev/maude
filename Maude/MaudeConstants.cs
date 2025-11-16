@@ -4,7 +4,7 @@ namespace Maude;
 
 public static class MaudeConstants
 {
-    internal const string LoggingPrefix = " 🟣 Maude: ";
+    internal const string LoggingPrefix = " 🟣MAUDE: ";
 
     public const string DefaultEventIcon = MaterialSymbols.Info;
 

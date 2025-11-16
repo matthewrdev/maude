@@ -7,13 +7,9 @@ public static class MaudeAppBuilderExtensions
 {
 
     /// <summary>
-    /// Configures the <see cref="MauiAppBuilder"/> to use the specified <typeparamref name="TApp"/> as the main application type.
+    /// Configures the <see cref="MauiAppBuilder"/> to use the specified <typeparamref name="TApp"/> as the main application type
     /// </summary>
-    /// <typeparam name="TApp">The type to use as the application.</typeparam>
-    /// <param name="builder">The <see cref="MauiAppBuilder"/> to configure.</param>
-    /// <returns>The configured <see cref="MauiAppBuilder"/>.</returns>
-    public static MauiAppBuilder UseMaude<TApp>(this MauiAppBuilder builder)
-        where TApp : class, IApplication
+    public static MauiAppBuilder UseMaude(this MauiAppBuilder builder)
     {
         builder.ConfigureFonts(fonts =>
         {

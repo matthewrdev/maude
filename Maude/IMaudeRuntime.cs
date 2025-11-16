@@ -1,5 +1,8 @@
 namespace Maude;
 
+/// <summary>
+/// Contract for controlling the Maude runtime: manage lifecycle, presentation surfaces, and record metrics/events.
+/// </summary>
 public interface IMaudeRuntime
 {
     /// <summary>
@@ -13,7 +16,7 @@ public interface IMaudeRuntime
     bool IsActive { get; }
     
     /// <summary>
-    /// 
+    /// Returns true when the slide-in sheet UI is currently presented.
     /// </summary>
     bool IsSheetPresented { get; }
     
@@ -22,19 +25,29 @@ public interface IMaudeRuntime
     /// </summary>
     bool IsPresentationEnabled { get;  }
     
-    
+    /// <summary>
+    /// Returns true when the chart overlay is currently presented.
+    /// </summary>
     bool IsOverlayPresented { get; }
 
     /// <summary>
-    /// Occurs when 
+    /// Raised after activation finishes and sampling begins.
     /// </summary>
     event EventHandler OnActivated;
     
+    /// <summary>
+    /// Raised after deactivation finishes and sampling stops.
+    /// </summary>
     event EventHandler OnDeactivated;
 
-    
+    /// <summary>
+    /// Starts memory sampling and raises <see cref="OnActivated"/> when complete.
+    /// </summary>
     void Activate();
     
+    /// <summary>
+    /// Stops memory sampling and raises <see cref="OnDeactivated"/> when complete.
+    /// </summary>
     void Deactivate();
     
     /// <summary>
@@ -75,6 +88,16 @@ public interface IMaudeRuntime
     /// Metrics recorded against unknown channels will be discarded.
     /// </summary>
     void Metric(long value, byte channel);
+
+    /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the default icon.
+    /// </summary>
+    public void Event(string label);
+
+    /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the provided icon.
+    /// </summary>
+    public void Event(string label, string icon);
     
     /// <summary>
     /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the default icon.
@@ -86,7 +109,7 @@ public interface IMaudeRuntime
     void Event(string label, byte channel);
     
     /// <summary>
-    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the given 
+    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the provided icon.
     /// <para/>
     /// The provided <paramref name="channel"/> <b>must</b> be a built-in channel or predefined during your setup of Maude via <see cref="MaudeRuntime.Initialize"/>.
     /// <para/>

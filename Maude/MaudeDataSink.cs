@@ -570,6 +570,20 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         }
     }
 
+    public void Event(string label)
+    {
+        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        
+        Event(label, MaudeConstants.DefaultEventIcon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
+    }
+
+    public void Event(string label, string icon)
+    {
+        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        
+        Event(label, icon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
+    }
+    
     public void Event(string label, byte channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
@@ -580,8 +594,8 @@ internal class MaudeMutableDataSink : IMaudeDataSink
     public void Event(string label, string icon, byte channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
-        if (string.IsNullOrWhiteSpace(icon)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(icon));
-        
+
+        icon = icon ?? MaudeConstants.DefaultEventIcon;
         
         MutateEvents(metrics =>
         {

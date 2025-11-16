@@ -30,7 +30,7 @@ internal sealed class MaudeShakeGestureListener : IDisposable
         var accelerometer = Accelerometer.Default;
         if (accelerometer == null || !accelerometer.IsSupported)
         {
-            MaudeLogger.Warning($"{MaudeConstants.LoggingPrefix} Shake gesture is not supported on this device.");
+            MaudeLogger.Warning("Shake gesture is not supported on this device.");
             return;
         }
 
@@ -48,7 +48,7 @@ internal sealed class MaudeShakeGestureListener : IDisposable
         }
         catch (FeatureNotSupportedException)
         {
-            MaudeLogger.Warning($"{MaudeConstants.LoggingPrefix} Shake gesture is not supported on this device.");
+            MaudeLogger.Warning("Shake gesture is not supported on this device.");
         }
         catch (Exception ex)
         {

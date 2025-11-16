@@ -27,6 +27,7 @@ public static class MaudeRuntime
             {
                 if (runtime == null)
                 {
+                    MaudeLogger.Error($"Attempted to access MaudeRuntime before it was initialized.");
                     throw new InvalidOperationException("You must call 'MaudeRuntime.Initialize(MaudeOptions)' before accessing the MaudeRuntime Instance.");
                 }
                 
@@ -39,6 +40,7 @@ public static class MaudeRuntime
     private static void Initialize_Internal(bool activateImmediately, 
                                             MaudeOptions options)
     {
+        MaudeLogger.Info($"Initialising MaudeRuntime (activateImmediately: {activateImmediately}).");
         lock (runtimeLock)
         {
             if (runtime != null)
@@ -47,6 +49,7 @@ public static class MaudeRuntime
             }
 
             options = options ?? MaudeOptions.Default;
+            MaudeLogger.Info($"Using options: sample frequency {options.SampleFrequencyMilliseconds}ms, retention {options.RetentionPeriodSeconds}s, additional channels {options.AdditionalChannels?.Count ?? 0}.");
             
             if (options.AdditionalLogger != null)
             {
@@ -54,10 +57,12 @@ public static class MaudeRuntime
             }
             
             runtime = new MaudeRuntimeImpl(options);
+            MaudeLogger.Info($"MaudeRuntime initialisation complete.");
         }
 
         if (activateImmediately)
         {
+            MaudeLogger.Info($"Activate immediately requested post initialisation.");
             Activate();
         }
     }
@@ -85,7 +90,7 @@ public static class MaudeRuntime
     }
     
     /// <summary>
-    /// Activates Maude's memory tracking.
+    /// Starts memory sampling and raises OnActivated when complete.
     /// </summary>
     public static void Activate()
     {
@@ -93,13 +98,16 @@ public static class MaudeRuntime
     }
 
     /// <summary>
-    /// Deactivates Maude's memory tracking.
+    /// Stops memory sampling and raises OnDeactivated when complete.
     /// </summary>
     public static void Deactivate()
     {
         Instance.Deactivate();
     }
 
+    /// <summary>
+    /// Clears the backing data sink, removing all recorded metrics and events.
+    /// </summary>
     public static void Clear()
     {
         Instance.Clear();
@@ -110,10 +118,19 @@ public static class MaudeRuntime
         return Instance.IsActive;
     }
 
+    /// <summary>
+    /// Returns true when the slide-in sheet UI is currently presented.
+    /// </summary>
     public static bool IsPresented => Instance.IsSheetPresented;
 
+    /// <summary>
+    /// Should the slide sheet or overlay be allowed to be presented?
+    /// </summary>
     public static bool IsPresentationEnabled => Instance.IsPresentationEnabled;
     
+    /// <summary>
+    /// Returns true when the chart overlay is currently presented.
+    /// </summary>
     public static bool IsChartOverlayPresented => Instance.IsOverlayPresented;
 
     public static void Present()
@@ -129,6 +146,9 @@ public static class MaudeRuntime
         Instance.DismissSheet();
     }
 
+    /// <summary>
+    /// Shows the chart overlay on the current window at the given position.
+    /// </summary>
     public static void PresentChartOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
     {
         Instance.PresentOverlay(position);
@@ -144,6 +164,9 @@ public static class MaudeRuntime
         Instance.DisableShakeGesture();
     }
 
+    /// <summary>
+    /// Hides and disposes the chart overlay.
+    /// </summary>
     public static void DismissChartOverlay()
     {
         Instance.DismissOverlay();
@@ -160,6 +183,17 @@ public static class MaudeRuntime
     {
         Instance.Metric(value, channel);
     }
+    
+    
+    public static void Event(string label)
+    {
+        Instance.Event(label);
+    }
+
+    public static void Event(string label, string icon)
+    {
+        Instance.Event(label, icon);
+    }
 
     /// <summary>
     /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the default icon.
@@ -170,7 +204,10 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label, byte channel)
     {
-        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        }
         
         Instance.Event(label, channel);
     }
@@ -184,7 +221,10 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label, string icon, byte channel)
     {
-        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        }
         
         Instance.Event(label, icon, channel);
     }
