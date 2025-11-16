@@ -9,11 +9,13 @@ Maude is a plugin for .NET MAUI that monitors app memory and displays it via an 
 
 Maude, aka Maui-Debug, is a powerful, lightweight tool to help you in your debugging battles.
 
-## Disclaimer
+## Disclaimer ⚠️
 
 Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
 
-Treat Maude’s numbers as guidance; use the native tools and platform specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
+*Please treat Maude’s numbers as a guidance, a heuristic.*
+
+Always use the native tools and platform specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
 
 ## Quickstart
 
@@ -33,8 +35,7 @@ public static MauiApp CreateMauiApp()
 }
 ```
 
-
-2) Recording memory samples:
+2) Start tracking memory usage:
 ```csharp
     MaudeRuntime.Activate();
 ```
@@ -42,7 +43,6 @@ public static MauiApp CreateMauiApp()
 
 3) Show Maude:
 ```csharp
-
 // Show Maude as a slide in sheet.
 MaudeRuntime.PresentSheet();   // Open the chart and events view as a slide in.
 MaudeRuntime.DismissSheet();   // Close the slide in sheet.
@@ -123,16 +123,24 @@ MaudeRuntime.InitializeAndActivate(options);
 UIApplication.Main(args, null, typeof(AppDelegate));
 ```
 
-If you prefer depedency injection, use `builder.UseMaude<App>()` in `MauiProgram` which registers the runtime and fonts; call `MaudeRuntime.Initialize`/`Activate` later when you want to start sampling.
+## What does Maude capture?
 
-## Notes
+| Platform | Metric | Description | Documentation |
+|---------|--------|-------------|----------------|
+| **Android** | **Resident Set Size (RSS)** | Physical RAM currently mapped into the process (Java + native + runtime), excluding swapped pages. | Android memory overview: https://developer.android.com/topic/performance/memory-overview#mem-anatomy · Linux `/proc` docs: https://man7.org/linux/man-pages/man5/proc.5.html |
+| **Android** | **Native Heap** | Memory allocated through native allocators (`malloc`, `new`) used by the ART runtime and native libraries. | `Debug.getNativeHeapAllocatedSize()`: https://developer.android.com/reference/android/os/Debug#getNativeHeapAllocatedSize |
+| **Android** | **CLR (Managed Heap)** | Memory consumed by the .NET/Mono runtime (managed objects, GC generations, LOH). | .NET GC fundamentals: https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals |
+| **iOS** | **Physical Footprint (Jetsam Footprint)** | Total physical RAM attributed to the app by the kernel — the primary metric used by Jetsam to terminate processes. | Apple `task_vm_info_data_t`: https://developer.apple.com/documentation/kernel/task_vm_info_data_t · WWDC Memory Deep Dive: https://developer.apple.com/videos/play/wwdc2018/416/ |
+| **iOS** | **Available Headroom** | Approx. remaining memory the process can consume before Jetsam pressure escalates. | `os_proc_available_memory` (Apple libsystem source): https://github.com/apple-oss-distributions/libmalloc/blob/main/libmalloc/os_alloc_once_private.h |
+| **iOS** | **CLR (Managed Heap)** | Memory consumed by the .NET/Mono runtime on iOS (managed objects + GC overhead). | .NET GC fundamentals: https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals |
 
-- Reserved channel IDs: `0` (.NET/CLR), `1` (platform), `255` (not specified); use other IDs for custom channels.
-- Metrics/events on unknown channels are ignored—register channels via `MaudeOptions.AdditionalChannels`.
-- Maude is currently targeted at Android/iOS with SkiaSharp-rendered visuals.
 
 ## Limitations and Known Issues
 
-- Modal pages: MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`Present`) for modal-heavy flows.
-- Overlay overhead: the overlay is Skia-rendered and re-blitted while visible; expect a small temporary memory bump from the render target/frame buffer.
-- Target framework: built for .NET 9+ to leverage [`Span<T>` optimisations](https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0) and [MAUI native embedding](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding); earlier TFMs are unsupported.
+### Modal Pages
+
+MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`Present`) for modal-heavy flows.
+
+### Target framework
+
+Maude is explicitly built for .NET 9+ to leverage [`Span<T>` optimisations](https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0) and [MAUI native embedding](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding); earlier target frameworks are unsupported.
