@@ -117,16 +117,20 @@ public static class MaudeChartRenderer
 
         var layoutScale = renderOptions.Mode == MaudeChartRenderMode.Overlay ? 0.65f : 1f;
         var textPaint = resources.TextPaint;
-        textPaint.TextSize = 14 * layoutScale;
+        var textFont = resources.TextFont;
+        textFont.Size = 14 * layoutScale;
 
         var legendTextPaint = resources.LegendTextPaint;
-        legendTextPaint.TextSize = 12 * layoutScale;
+        var legendFont = resources.LegendFont;
+        legendFont.Size = 12 * layoutScale;
 
         var eventLabelPaint = resources.EventLabelPaint;
-        eventLabelPaint.TextSize = 10 * layoutScale;
+        var eventLabelFont = resources.EventLabelFont;
+        eventLabelFont.Size = 10 * layoutScale;
 
         var eventIconPaint = resources.EventIconPaint;
-        eventIconPaint.TextSize = 18 * layoutScale;
+        var eventIconFont = resources.EventIconFont;
+        eventIconFont.Size = 18 * layoutScale;
 
         var eventLinePaint = resources.EventLinePaint;
         eventLinePaint.StrokeWidth = 1f * layoutScale;
@@ -145,7 +149,7 @@ public static class MaudeChartRenderer
         }
 
         var maxLabelWidth = labelSamples.Count > 0
-            ? labelSamples.Max(label => textPaint.MeasureText(label))
+            ? labelSamples.Max(label => textFont.MeasureText(label, textPaint))
             : 0f;
 
         var legendChannels = resources.LegendChannels;
@@ -170,10 +174,10 @@ public static class MaudeChartRenderer
         legendEntries.Clear();
         foreach (var channel in legendChannels)
         {
-            legendEntries.Add(new LegendEntry(channel, legendTextPaint.MeasureText(channel.Name)));
+            legendEntries.Add(new LegendEntry(channel, legendFont.MeasureText(channel.Name, legendTextPaint)));
         }
 
-        var legendLineHeight = legendTextPaint.TextSize + 8f * layoutScale;
+        var legendLineHeight = legendFont.Size + 8f * layoutScale;
         var legendEntrySpacing = 18f * layoutScale;
         var availableLegendWidth = Math.Max(20f, info.Width - rightMargin - leftMargin);
 
@@ -286,19 +290,34 @@ public static class MaudeChartRenderer
             canvas.DrawLine(chartRect.Left, y, chartRect.Right, y, gridPaint);
 
             var label = labelSamples[i];
-            canvas.DrawText(label, chartRect.Left - 10 - textPaint.MeasureText(label), y + (textPaint.TextSize / 3), textPaint);
+            canvas.DrawText(label,
+                            chartRect.Left - 10 - textFont.MeasureText(label, textPaint),
+                            y + (textFont.Size / 3),
+                            SKTextAlign.Left,
+                            textFont,
+                            textPaint);
         }
 
         // Time labels
         var startLabel = fromUtc.ToLocalTime().ToString("HH:mm:ss");
         var endLabel = toUtc.ToLocalTime().ToString("HH:mm:ss");
         var midLabel = fromUtc.AddMilliseconds(totalMilliseconds / 2).ToLocalTime().ToString("HH:mm:ss");
-        canvas.DrawText(startLabel, chartRect.Left, chartRect.Bottom + textPaint.TextSize + 4, textPaint);
-        canvas.DrawText(midLabel, chartRect.MidX - textPaint.MeasureText(midLabel) / 2, chartRect.Bottom + textPaint.TextSize + 4, textPaint);
-        canvas.DrawText(endLabel, chartRect.Right - textPaint.MeasureText(endLabel), chartRect.Bottom + textPaint.TextSize + 4, textPaint);
+        canvas.DrawText(startLabel, chartRect.Left, chartRect.Bottom + textFont.Size + 4, SKTextAlign.Left, textFont, textPaint);
+        canvas.DrawText(midLabel,
+                        chartRect.MidX - textFont.MeasureText(midLabel, textPaint) / 2,
+                        chartRect.Bottom + textFont.Size + 4,
+                        SKTextAlign.Left,
+                        textFont,
+                        textPaint);
+        canvas.DrawText(endLabel,
+                        chartRect.Right - textFont.MeasureText(endLabel, textPaint),
+                        chartRect.Bottom + textFont.Size + 4,
+                        SKTextAlign.Left,
+                        textFont,
+                        textPaint);
 
         // Legend
-        var legendY = baseTopMargin + legendTextPaint.TextSize;
+        var legendY = baseTopMargin + legendFont.Size;
         for (var lineIndex = 0; lineIndex < legendLineCount; lineIndex++)
         {
             var startIndex = legendLineStarts[lineIndex];
@@ -310,12 +329,17 @@ public static class MaudeChartRenderer
                 var entry = legendEntries[entryIndex];
                 var channelColor = ToSkColor(entry.Channel.Color);
                 var iconRadius = 4f * layoutScale;
-                var iconCenterY = legendY - (legendTextPaint.TextSize / 3);
+                var iconCenterY = legendY - (legendFont.Size / 3);
 
                 var legendPaint = resources.LegendPaint;
                 legendPaint.Color = channelColor;
                 canvas.DrawCircle(legendX + iconRadius, iconCenterY, iconRadius, legendPaint);
-                canvas.DrawText(entry.Channel.Name, legendX + iconRadius * 2 + 4f * layoutScale, legendY, legendTextPaint);
+                canvas.DrawText(entry.Channel.Name,
+                                legendX + iconRadius * 2 + 4f * layoutScale,
+                                legendY,
+                                SKTextAlign.Left,
+                                legendFont,
+                                legendTextPaint);
                 legendX += entry.TotalWidth;
             }
 
@@ -383,17 +407,19 @@ public static class MaudeChartRenderer
         }
 
         // Events
-        var iconMetrics = eventIconPaint.FontMetrics;
+        var iconMetrics = eventIconFont.Metrics;
         foreach (var visual in eventVisuals)
         {
             var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
-            canvas.DrawText(visual.Icon, visual.X, iconBaselineY, eventIconPaint);
+            canvas.DrawText(visual.Icon, visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
 
-            var labelOffset = eventLabelPaint.TextSize + eventIconPaint.TextSize * 0.25f + 4 * layoutScale;
-            var labelX = visual.X - (eventLabelPaint.MeasureText(visual.Label) / 2f);
+            var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
+            var labelX = visual.X - (eventLabelFont.MeasureText(visual.Label, eventLabelPaint) / 2f);
             canvas.DrawText(visual.Label,
                             labelX,
                             visual.Y - labelOffset,
+                            SKTextAlign.Left,
+                            eventLabelFont,
                             eventLabelPaint);
         }
 
@@ -432,10 +458,10 @@ public static class MaudeChartRenderer
             if (highlightLines.Count > 0)
             {
                 var headerText = probeUtc.Value.ToLocalTime().ToString("HH:mm:ss");
-                var lineHeight = textPaint.TextSize + 4f * layoutScale;
+                var lineHeight = textFont.Size + 4f * layoutScale;
                 var padding = 8f * layoutScale;
-                var maxTextWidth = Math.Max(textPaint.MeasureText(headerText),
-                    highlightLines.Max(l => textPaint.MeasureText(l.Text)));
+                var maxTextWidth = Math.Max(textFont.MeasureText(headerText, textPaint),
+                    highlightLines.Max(l => textFont.MeasureText(l.Text, textPaint)));
                 var panelWidth = maxTextWidth + padding * 2;
                 var panelHeight = (highlightLines.Count + 1) * lineHeight + padding * 2;
                 var panelRect = new SKRect(
@@ -449,15 +475,15 @@ public static class MaudeChartRenderer
                 canvas.DrawRoundRect(panelRect, 6f * layoutScale, 6f * layoutScale, panelFill);
 
                 var originalColor = textPaint.Color;
-                var textY = panelRect.Top + padding + textPaint.TextSize;
+                var textY = panelRect.Top + padding + textFont.Size;
                 textPaint.Color = new SKColor(255, 255, 255);
-                canvas.DrawText(headerText, panelRect.Left + padding, textY, textPaint);
+                canvas.DrawText(headerText, panelRect.Left + padding, textY, SKTextAlign.Left, textFont, textPaint);
                 textY += lineHeight;
 
                 foreach (var line in highlightLines)
                 {
                     textPaint.Color = line.Color;
-                    canvas.DrawText(line.Text, panelRect.Left + padding, textY, textPaint);
+                    canvas.DrawText(line.Text, panelRect.Left + padding, textY, SKTextAlign.Left, textFont, textPaint);
                     textY += lineHeight;
                 }
 
@@ -473,16 +499,19 @@ public static class MaudeChartRenderer
         using var paint = new SKPaint
         {
             Color = new SKColor(150, 150, 160),
-            TextSize = 16,
             IsAntialias = true
+        };
+        using var font = new SKFont
+        {
+            Size = 16
         };
 
         var message = "Waiting for samples...";
         var bounds = new SKRect();
-        paint.MeasureText(message, ref bounds);
-        var x = (info.Width - bounds.Width) / 2;
-        var y = (info.Height + bounds.Height) / 2;
-        canvas.DrawText(message, x, y, paint);
+        font.MeasureText(message, out bounds, paint);
+        var x = (info.Width / 2f) - bounds.MidX;
+        var y = (info.Height / 2f) - bounds.MidY;
+        canvas.DrawText(message, x, y, SKTextAlign.Left, font, paint);
     }
 
     private static SKColor ToSkColor(Color color)
@@ -581,28 +610,31 @@ public static class MaudeChartRenderer
                 Color = new SKColor(210, 210, 224),
                 IsAntialias = true
             };
+            TextFont = new SKFont();
 
             LegendTextPaint = new SKPaint
             {
                 Color = new SKColor(210, 210, 224),
                 IsAntialias = true
             };
+            LegendFont = new SKFont();
 
             EventLabelPaint = new SKPaint
             {
                 Color = new SKColor(230, 230, 230),
                 IsAntialias = true
             };
+            EventLabelFont = new SKFont();
 
             MaterialSymbolsTypeface = LoadMaterialSymbolsTypeface();
+            EventIconFont = new SKFont(MaterialSymbolsTypeface)
+            {
+            };
 
             EventIconPaint = new SKPaint
             {
                 Color = SKColors.White,
-                IsAntialias = true,
-                TextAlign = SKTextAlign.Center,
-                Typeface = MaterialSymbolsTypeface,
-                TextEncoding = SKTextEncoding.Utf16
+                IsAntialias = true
             };
 
             EventLinePaint = new SKPaint
@@ -658,6 +690,10 @@ public static class MaudeChartRenderer
         public SKPaint TextPaint { get; }
         public SKPaint LegendTextPaint { get; }
         public SKPaint EventLabelPaint { get; }
+        public SKFont TextFont { get; }
+        public SKFont LegendFont { get; }
+        public SKFont EventLabelFont { get; }
+        public SKFont EventIconFont { get; }
         public SKPaint EventIconPaint { get; }
         public SKPaint EventLinePaint { get; }
         public SKTypeface MaterialSymbolsTypeface { get; }

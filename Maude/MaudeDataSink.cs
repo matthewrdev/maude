@@ -677,6 +677,9 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
             foreach (var channel in eventsByChannel.Values)
             {
+                var spanToRemoveStart = -1;
+                var spanToRemoveEnd = -1;
+                // TODO: This can be implemented via a RemoveRange.
                 while (channel.Count > 0 && channel[0].CapturedAtUtc < expiryTime)
                 {
                     trimmedValues ??= new List<MaudeEvent>();
@@ -707,10 +710,10 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
         if (didChange)
         {
-            newValues = newValues ??  Array.Empty<MaudeEvent>();
-            trimmedValues = trimmedValues ?? Array.Empty<MaudeEvent>();
+            IReadOnlyList<MaudeEvent> added = newValues ?? Array.Empty<MaudeEvent>();
+            IReadOnlyList<MaudeEvent> removed = trimmedValues as IReadOnlyList<MaudeEvent> ?? Array.Empty<MaudeEvent>();
             
-            this.OnEventsUpdated?.Invoke(this, new MaudeEventsUpdatedEventArgs(newValues, trimmedValues));
+            this.OnEventsUpdated?.Invoke(this, new MaudeEventsUpdatedEventArgs(added, removed));
         }
     }
 
