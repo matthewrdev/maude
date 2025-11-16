@@ -21,10 +21,9 @@ Maude, aka Maui-Debug, is a powerful, lightweight tool to help in your debugging
 
 Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
 
-Treat Maude’s numbers as guidance; use platform profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
+Treat Maude’s numbers as guidance; use the native tools and platform specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
 
 ## Quickstart
-
 
 Add Maude to your MAUI app with minimal code.
 
