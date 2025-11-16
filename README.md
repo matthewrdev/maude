@@ -3,22 +3,6 @@
 
 Maude is a plugin for .NET MAUI that monitors app memory and displays it via an in-app, live-rendered chart.
 
-| <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
-| --- | --- | --- |
-| **Shake to open Maude** | **Memory chart overlay** | **Slide-in events sheet** |
-
-Maude, aka Maui-Debug, is a powerful, lightweight tool to help you in your debugging battles.
-
-## Disclaimer ⚠️
-
-Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
-
-*Please treat Maude’s numbers as a guidance, a heuristic.*
-
-Always use the native tools and platform specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
-
-## Quickstart
-
 Add Maude to your MAUI app with minimal code.
 
 1) Configure the app builder:
@@ -51,6 +35,20 @@ MaudeRuntime.DismissSheet();   // Close the slide in sheet.
 MaudeRuntime.PresentOverlay();   // Show the chart as a window overlay.
 MaudeRuntime.DismissOverlay();   // Close the overlay.
 ```
+
+| <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
+| --- | --- | --- |
+| **Shake to open Maude** | **Memory chart overlay** | **Slide-in events sheet** |
+
+Maude, aka Maui-Debug, is a powerful, lightweight tool to help you in your debugging battles.
+
+## Disclaimer ⚠️
+
+Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
+
+*Please treat Maude’s numbers as a guidance, a heuristic.*
+
+Always use the native tools and platform specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
 
 ## Record Events
 
