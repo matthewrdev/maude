@@ -26,7 +26,7 @@
         <IsPackable>true</IsPackable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Maude</PackageId>
-        <PackageVersion>1.0.0</PackageVersion>
+        <PackageVersion>0.1.0-alpha</PackageVersion>
         <Authors>Matthew Robbins</Authors>
         <Company>Matthew Robbins</Company>
         <Product>Maude</Product>
@@ -34,7 +34,7 @@
         <PackageTags>MAUI;observability;memory;metrics;debugging</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageIcon>maude.png</PackageIcon>
+        <PackageIcon>maude_small.png</PackageIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -58,7 +58,7 @@
 
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\"/>
-        <None Include="..\maude.png" Pack="true" PackagePath="\"/>
+        <None Include="..\img\maude_small.png" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>

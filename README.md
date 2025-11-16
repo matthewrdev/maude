@@ -7,7 +7,8 @@
 Maude (Name, Germanic): Mighty in battle, powerful battler.
 ```
 
-Maude monitors your apps memory and displays it via an in-app, live-rendered chart.
+Maude monitors your apps memory and displays it via an in-app, live-rendered chart:
+
 
 Maude, aka Maui-Debug, is a powerful, lightweight tool to help in your debugging battles.
 
@@ -19,7 +20,6 @@ Treat Maude’s numbers as guidance; use platform profilers (Xcode Instruments, 
 
 ## Quickstart
 
-Install Maude
 
 Add Maude to your MAUI app with minimal code.
 
@@ -36,16 +36,24 @@ public static MauiApp CreateMauiApp()
     return builder.Build();
 }
 ```
-2) Show Maude:
+
+
+2) Recording memory samples:
+```csharp
+    MaudeRuntime.Activate();
+```
+
+
+3) Show Maude:
 ```csharp
 
 // Show Maude as a slide in sheet.
-MaudeRuntime.PresentSheet();   // Open the sheet
-MaudeRuntime.DismissSheet();   // Close it.
+MaudeRuntime.PresentSheet();   // Open the chart and events view as a slide in.
+MaudeRuntime.DismissSheet();   // Close the slide in sheet.
 
 // Show Maude as a window overlay.
-MaudeRuntime.PresentOverlay();   // overlay pinned to a window corner
-MaudeRuntime.DismissOverlay();   // close it
+MaudeRuntime.PresentOverlay();   // Show the chart as a window overlay.
+MaudeRuntime.DismissOverlay();   // Close the overlay.
 ```
 
 ## Record Events
@@ -88,12 +96,13 @@ var options = MaudeOptions.CreateBuilder()
     .WithRetentionPeriodSeconds(10 * 60)      // clamp: 60–3600 s
     .WithAdditionalChannels(customChannels)   // extra metric/event series
     .WithShakeGesture()                       // enable shake-to-toggle
+    .WithDefaultOverlayPosition(MaudeOverlayPosition.TopRight) // default anchor when showing overlay without an explicit position
     .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay) // or SlideSheet
     .WithAdditionalLogger(new MyLogger())     // or .WithBuiltInLogger()
     .Build();
 ```
 
-### Platform Initialisation
+### Platform initialisation
 
 While the MauiAppBuilder extension registers and initialises Maude, it may be desireable to ensure that Maude is sampling immediately when you're app starts.
 
@@ -118,7 +127,7 @@ MaudeRuntime.InitializeAndActivate(options);
 UIApplication.Main(args, null, typeof(AppDelegate));
 ```
 
-If you prefer dependency injection, use `builder.UseMaude<App>()` in `MauiProgram` which registers the runtime and fonts; call `MaudeRuntime.Initialize`/`Activate` later when you want to start sampling.
+If you prefer depedency injection, use `builder.UseMaude<App>()` in `MauiProgram` which registers the runtime and fonts; call `MaudeRuntime.Initialize`/`Activate` later when you want to start sampling.
 
 ## Notes
 
@@ -130,8 +139,4 @@ If you prefer dependency injection, use `builder.UseMaude<App>()` in `MauiProgra
 
 - Modal pages: MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`Present`) for modal-heavy flows.
 - Overlay overhead: the overlay is Skia-rendered and re-blitted while visible; expect a small temporary memory bump from the render target/frame buffer.
-- Target framework: built for .NET 9+ to leverage `Span<T>` optimisations and MAUI native embedding; earlier TFMs are unsupported.
-
-native embedding: https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding
-Spans: https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0
-
+- Target framework: built for .NET 9+ to leverage [`Span<T>` optimisations](https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0) and [MAUI native embedding](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding); earlier TFMs are unsupported.

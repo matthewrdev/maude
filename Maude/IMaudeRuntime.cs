@@ -61,9 +61,14 @@ public interface IMaudeRuntime
     void DismissSheet();
 
     /// <summary>
+    /// Shows the chart overlay on the current window using the default position from <see cref="MaudeOptions"/>.
+    /// </summary>
+    void PresentOverlay();
+    
+    /// <summary>
     /// Shows the chart overlay on the current window at the given <paramref name="position"/>.
     /// </summary>
-    void PresentOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight);
+    void PresentOverlay(MaudeOverlayPosition position);
     
     /// <summary>
     /// Hides and disposes the chart overlay.

@@ -26,6 +26,8 @@ public static class MaudeConstants
     internal const string MaterialSymbolsFontName = "Maude-MaterialSymbols";
     
     public static readonly Color MaudeBrandColor = new Color(91, 58, 150);
+    
+    public static readonly Color MaudeBrandColor_Faded = new Color(91, 58, 150).WithAlpha(0.8f);
 
     /// <summary>
     /// Reserved channel identifiers and display metadata.

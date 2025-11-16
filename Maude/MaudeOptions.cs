@@ -27,6 +27,11 @@ public class MaudeOptions
     
     public MaudeShakeGestureBehaviour ShakeGestureBehaviour { get; private set; } = MaudeShakeGestureBehaviour.SlideSheet;
     
+    /// <summary>
+    /// Default overlay anchor position when presented without an explicit position.
+    /// </summary>
+    public MaudeOverlayPosition DefaultOverlayPosition { get; private set; } = MaudeOverlayPosition.TopRight;
+    
     public IMaudeLogCallback? AdditionalLogger { get; private set; }
 
     public void Validate()
@@ -113,6 +118,15 @@ public class MaudeOptions
         public MaudeOptionsBuilder WithShakeGesture()
         {
             options.AllowShakeGesture = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the default overlay anchor position used when none is specified.
+        /// </summary>
+        public MaudeOptionsBuilder WithDefaultOverlayPosition(MaudeOverlayPosition position)
+        {
+            options.DefaultOverlayPosition = position;
             return this;
         }
 

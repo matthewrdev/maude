@@ -280,7 +280,12 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         });
     }
 
-    public void PresentOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
+    public void PresentOverlay()
+    {
+        PresentOverlay(options.DefaultOverlayPosition);
+    }
+
+    public void PresentOverlay(MaudeOverlayPosition position)
     {
         MaudeLogger.Info($"PresentOverlay requested at position {position}.");
         if (!IsPresentationEnabled)

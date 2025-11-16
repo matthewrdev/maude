@@ -159,9 +159,17 @@ public static class MaudeRuntime
     }
 
     /// <summary>
+    /// Shows the chart overlay on the current window using the default overlay position from <see cref="MaudeOptions"/>.
+    /// </summary>
+    public static void PresentOverlay()
+    {
+        Instance.PresentOverlay();
+    }
+
+    /// <summary>
     /// Shows the chart overlay on the current window at the given position.
     /// </summary>
-    public static void PresentChartOverlay(MaudeOverlayPosition position = MaudeOverlayPosition.TopRight)
+    public static void PresentOverlay(MaudeOverlayPosition position)
     {
         Instance.PresentOverlay(position);
     }
@@ -185,7 +193,7 @@ public static class MaudeRuntime
     /// <summary>
     /// Hides and disposes the chart overlay.
     /// </summary>
-    public static void DismissChartOverlay()
+    public static void DismissOverlay()
     {
         Instance.DismissOverlay();
     }

@@ -28,13 +28,13 @@ public partial class MaudeView : Grid
     
     private void OnToggleOverlayClicked(object sender, EventArgs e)
     {
-        if (MaudeRuntime.IsOverlayPresented)
+        if (MaudeRuntime.IsChartOverlayPresented)
         {
-            MaudeRuntime.DismissChartOverlay();
+            MaudeRuntime.DismissOverlay();
         }
         else
         {
-            MaudeRuntime.PresentChartOverlay(MaudeOverlayPosition.TopRight);
+            MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight);
         }
     }
 
