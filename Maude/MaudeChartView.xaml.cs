@@ -139,12 +139,12 @@ public partial class MaudeChartView : SKCanvasView
         }
     }
 
-    private void HandleMetricsUpdated(object sender, MaudeMetricsUpdatedEventArgs e)
+    private void HandleMetricsUpdated(object? sender, MaudeMetricsUpdatedEventArgs e)
     {
         RequestRedraw();
     }
 
-    private void HandleEventsUpdated(object sender, MaudeEventsUpdatedEventArgs e)
+    private void HandleEventsUpdated(object? sender, MaudeEventsUpdatedEventArgs e)
     {
         RequestRedraw();
     }

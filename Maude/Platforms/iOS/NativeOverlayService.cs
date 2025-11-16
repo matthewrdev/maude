@@ -174,27 +174,28 @@ internal sealed class NativeOverlayService : INativeOverlayService
         }
 
         var margin = 12;
+        var safeArea = overlay.SafeAreaLayoutGuide;
         constraints = position switch
         {
             MaudeOverlayPosition.TopLeft => new[]
             {
-                host.LeadingAnchor.ConstraintEqualTo(overlay.LeadingAnchor, margin),
-                host.TopAnchor.ConstraintEqualTo(overlay.TopAnchor, margin)
+                host.LeadingAnchor.ConstraintEqualTo(safeArea.LeadingAnchor, margin),
+                host.TopAnchor.ConstraintEqualTo(safeArea.TopAnchor, margin)
             },
             MaudeOverlayPosition.TopRight => new[]
             {
-                host.TrailingAnchor.ConstraintEqualTo(overlay.TrailingAnchor, -margin),
-                host.TopAnchor.ConstraintEqualTo(overlay.TopAnchor, margin)
+                host.TrailingAnchor.ConstraintEqualTo(safeArea.TrailingAnchor, -margin),
+                host.TopAnchor.ConstraintEqualTo(safeArea.TopAnchor, margin)
             },
             MaudeOverlayPosition.BottomLeft => new[]
             {
-                host.LeadingAnchor.ConstraintEqualTo(overlay.LeadingAnchor, margin),
-                host.BottomAnchor.ConstraintEqualTo(overlay.BottomAnchor, -margin)
+                host.LeadingAnchor.ConstraintEqualTo(safeArea.LeadingAnchor, margin),
+                host.BottomAnchor.ConstraintEqualTo(safeArea.BottomAnchor, -margin)
             },
             _ => new[]
             {
-                host.TrailingAnchor.ConstraintEqualTo(overlay.TrailingAnchor, -margin),
-                host.BottomAnchor.ConstraintEqualTo(overlay.BottomAnchor, -margin)
+                host.TrailingAnchor.ConstraintEqualTo(safeArea.TrailingAnchor, -margin),
+                host.BottomAnchor.ConstraintEqualTo(safeArea.BottomAnchor, -margin)
             }
         };
 

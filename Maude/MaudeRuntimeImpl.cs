@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Platform;
 
 namespace Maude;
 
+[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 internal class MaudeRuntimeImpl : IMaudeRuntime
 {
     private readonly MaudeOptions options;

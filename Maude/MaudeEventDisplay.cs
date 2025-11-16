@@ -5,10 +5,10 @@ namespace Maude;
 /// </summary>
 public class MaudeEventDisplay
 {
-    public string Icon { get; init; }
-    public string Label { get; init; }
-    public string Details { get; init; }
+    public string Icon { get; init; } = "";
+    public string Label { get; init; } = "";
+    public string Details { get; init; } = "";
     public bool HasDetails { get; init; }
-    public Color ChannelColor { get; init; }
-    public string Timestamp { get; init; }
+    public Color ChannelColor { get; init; } = Colors.WhiteSmoke;
+    public string Timestamp { get; init; } = "";
 }
