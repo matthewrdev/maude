@@ -57,7 +57,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
         <None Include="..\img\maude_small.png" Pack="true" PackagePath="\"/>
     </ItemGroup>
 

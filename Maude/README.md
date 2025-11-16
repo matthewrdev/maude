@@ -9,19 +9,6 @@ Maude (Name, Germanic): Mighty in battle, powerful battler.
 
 Maude monitors your apps memory and displays it via an in-app, live-rendered chart.
 
-
-** Easily open Maude via a shake gesture (if configured) **
-<img src="https://github.com/matthewrdev/maude/blob/49dd6d50077090512d491fccc85059583bb1a5fb/img/demo-animation.gif" alt="The Maude chart and events view loading via a shake gesture" style="max-height:200px; width:auto;">
-
-
-** View runtime memory usage via a chart overlay **
-<img src="https://github.com/matthewrdev/maude/blob/49dd6d50077090512d491fccc85059583bb1a5fb/img/demo-overlay.PNG" alt="View runtime memory usage via a chart overlay" style="max-height:200px; width:auto;">
-
-
-** View runtime memory usage and events through a slide in sheet **
-<img src="https://github.com/matthewrdev/maude/blob/49dd6d50077090512d491fccc85059583bb1a5fb/img/demo-slidesheet.jpeg" alt="View runtime memory usage and events through an interactive slide in sheet" style="max-height:200px; width:auto;">
-
-
 Maude, aka Maui-Debug, is a powerful, lightweight tool to help in your debugging battles.
 
 ## Disclaimer
