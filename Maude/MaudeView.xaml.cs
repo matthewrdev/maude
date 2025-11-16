@@ -2,6 +2,9 @@ using Microsoft.Maui.Controls;
 
 namespace Maude;
 
+/// <summary>
+/// Composite view that hosts the Maude chart, event list, and controls inside the slide-in sheet.
+/// </summary>
 public partial class MaudeView : Grid
 {
     private readonly IReadOnlyList<TagSelectorOption> windowOptions = new[]
@@ -21,6 +24,18 @@ public partial class MaudeView : Grid
         
         BindRuntime();
         BindWindowSelector();
+    }
+    
+    private void OnToggleOverlayClicked(object sender, EventArgs e)
+    {
+        if (MaudeRuntime.IsOverlayPresented)
+        {
+            MaudeRuntime.DismissChartOverlay();
+        }
+        else
+        {
+            MaudeRuntime.PresentChartOverlay(MaudeOverlayPosition.TopRight);
+        }
     }
 
     private void BindRuntime()

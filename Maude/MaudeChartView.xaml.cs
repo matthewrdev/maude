@@ -3,6 +3,9 @@ using SkiaSharp.Views.Maui;
 
 namespace Maude;
 
+/// <summary>
+/// Renders Maude metrics and events as a live chart inside the slide-in sheet or overlay.
+/// </summary>
 public partial class MaudeChartView : VerticalStackLayout
 {
     private IMaudeDataSink dataSink;

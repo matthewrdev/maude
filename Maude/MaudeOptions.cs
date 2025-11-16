@@ -3,6 +3,9 @@ namespace Maude;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// Configures how Maude samples, retains, logs, and presents runtime data.
+/// </summary>
 public class MaudeOptions
 {
     public static readonly MaudeOptions Default = new MaudeOptions()
@@ -65,6 +68,9 @@ public class MaudeOptions
     public static MaudeOptionsBuilder CreateBuilder() => new MaudeOptionsBuilder();
 
     
+    /// <summary>
+    /// Fluent builder for <see cref="MaudeOptions"/>.
+    /// </summary>
     public sealed class MaudeOptionsBuilder
     {
         private readonly MaudeOptions options = new MaudeOptions();

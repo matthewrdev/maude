@@ -51,12 +51,12 @@ public interface IMaudeRuntime
     void Deactivate();
     
     /// <summary>
-    /// Opens the charting presentation slide in sheet.
+    /// Opens the charting presentation as a slide in sheet.
     /// </summary>
     void PresentSheet();
     
     /// <summary>
-    /// Closes the charting presentation slide in sheet.
+    /// Closes the charting presentation as a slide in sheet.
     /// </summary>
     void DismissSheet();
 

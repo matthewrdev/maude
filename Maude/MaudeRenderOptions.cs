@@ -1,5 +1,8 @@
 namespace Maude;
 
+/// <summary>
+/// Options used by <see cref="MaudeChartRenderer"/> when drawing a chart frame.
+/// </summary>
 public struct MaudeRenderOptions
 {
     public required IReadOnlyList<byte> Channels { get; init; }

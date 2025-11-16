@@ -91,7 +91,6 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
 
     public void PresentSheet()
     {
-        MaudeLogger.Info("PresentSheet requested.");
         if (!IsPresentationEnabled)
         {
             MaudeLogger.Warning("Presentation requested while presentation is disabled.");
@@ -117,12 +116,10 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                 }
 
                 var maudeView = new MaudeView();
-                MaudeLogger.Info("Creating and presenting Maude view.");
                 
                 var popupView = await CreateAndOpenPopup(maudeView);
-                WirePopupLifecycle(popupView);
+                WirePopupLifecycle(popupView, maudeView);
                 this.presentedMaudeViewReference = new  WeakReference<IMaudePopup>(popupView);
-                MaudeLogger.Info("Maude sheet presented.");
             }
             catch (Exception ex)
             {
@@ -142,12 +139,9 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     {
         if (maudeView == null)
         {
-            MaudeLogger.Error("CreateAndOpenPopup invoked with a null MaudeView.");
             throw new ArgumentNullException(nameof(maudeView));
         }
 
-        MaudeLogger.Info("Preparing Maude popup for presentation.");
-            
         maudeView.HorizontalOptions = LayoutOptions.Fill;
         maudeView.VerticalOptions = LayoutOptions.Fill;
 
@@ -195,16 +189,20 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         popup.Show();
 #endif
 
-        MaudeLogger.Info("Popup successfully shown.");
         return popup;
     }
 
-    private void WirePopupLifecycle(IMaudePopup popup)
+    private void WirePopupLifecycle(IMaudePopup popup, MaudeView maudeView)
     {
         if (popup == null)
         {
             MaudeLogger.Warning("WirePopupLifecycle invoked with a null popup.");
             return;
+        }
+        
+        if (maudeView == null)
+        {
+            MaudeLogger.Warning("WirePopupLifecycle invoked without a MaudeView instance to unbind.");
         }
 
         MaudeLogger.Info("Wiring popup lifecycle handlers.");
@@ -212,6 +210,16 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         {
             popup.OnClosed -= Handler;
             MaudeLogger.Info("Maude popup closed; cleaning up references.");
+            
+            try
+            {
+                maudeView?.UnbindRuntime();
+            }
+            catch (Exception ex)
+            {
+                MaudeLogger.Warning("Failed to unbind runtime when popup closed.");
+                MaudeLogger.Exception(ex);
+            }
             
             if (ReferenceEquals(presentedMaudeViewReference, null))
             {

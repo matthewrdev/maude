@@ -3,6 +3,9 @@ using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace Maude;
 
+/// <summary>
+/// Extension methods for wiring Maude into a MAUI application builder.
+/// </summary>
 public static class MaudeAppBuilderExtensions
 {
 

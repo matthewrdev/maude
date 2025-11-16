@@ -1,5 +1,8 @@
 namespace Maude;
 
+/// <summary>
+/// Represents a single sampled metric value captured by Maude.
+/// </summary>
 public class MaudeMetric : IComparable<MaudeMetric>
 {
     public required long Value { get; init; }

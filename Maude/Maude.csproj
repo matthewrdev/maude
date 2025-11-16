@@ -21,6 +21,20 @@
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">12.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+
+        <!-- NuGet packaging -->
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>Maude</PackageId>
+        <PackageVersion>1.0.0</PackageVersion>
+        <Authors>Matthew Robbins</Authors>
+        <Company>Matthew Robbins</Company>
+        <Product>Maude</Product>
+        <Description>In-app observability for .NET MAUI: live memory sampling, charts, overlays, and event markers.</Description>
+        <PackageTags>MAUI;observability;memory;metrics;debugging</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>maude.png</PackageIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -40,6 +54,11 @@
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\maude.png" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>

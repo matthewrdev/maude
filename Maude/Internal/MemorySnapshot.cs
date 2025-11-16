@@ -1,6 +1,6 @@
 namespace Maude;
 
-public sealed record MemorySnapshot(
+internal sealed record MemorySnapshot(
     long TotalPssBytes,            // Android: PSS; iOS: 0 (not available)
     long RssBytes,                 // Resident set size (Android via /proc, iOS via mach)
     long JavaHeapUsedBytes,        // Android only; iOS: 0

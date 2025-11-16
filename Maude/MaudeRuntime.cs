@@ -1,13 +1,22 @@
 namespace Maude;
 
+/// <summary>
+/// Entry point for initialising, presenting, and recording data with Maude.
+/// </summary>
 public static class MaudeRuntime
 {
     private static readonly Lock runtimeLock = new Lock();
 
     private static MaudeRuntimeImpl runtime;
 
+    /// <summary>
+    /// The singleton runtime instance; throws if <see cref="Initialize(MaudeOptions)"/> has not been called first.
+    /// </summary>
     public static IMaudeRuntime Instance => MutableInstance;
 
+    /// <summary>
+    /// Indicates whether the runtime has been initialised via <see cref="Initialize(MaudeOptions)"/> or <see cref="InitializeAndActivate(MaudeOptions)"/>.
+    /// </summary>
     public static bool IsInitialized
     {
         get
@@ -70,9 +79,6 @@ public static class MaudeRuntime
     /// <summary>
     /// Initialises the <see cref="IMaudeRuntime"/> using the provided <paramref name="options"/> and immediately begins monitoring memory usage.
     /// </summary>
-    /// <param name="options"></param>
-    /// <param name="logger"></param>
-    /// <exception cref="InvalidOperationException"></exception>
     public static void InitializeAndActivate(MaudeOptions options = null)
     {
         Initialize_Internal(activateImmediately: true, options);
@@ -80,10 +86,9 @@ public static class MaudeRuntime
 
     /// <summary>
     /// Initialises the <see cref="IMaudeRuntime"/> using the provided <paramref name="options"/>.
+    /// <para/>
+    /// Does not start the memory tracker, use <see cref="Activate"/> to start tracking.
     /// </summary>
-    /// <param name="options"></param>
-    /// <param name="logger"></param>
-    /// <exception cref="InvalidOperationException"></exception>
     public static void Initialize(MaudeOptions options = null)
     {   
         Initialize_Internal(activateImmediately: false, options);
@@ -113,6 +118,10 @@ public static class MaudeRuntime
         Instance.Clear();
     }
 
+    /// <summary>
+    /// If Maude is currently performing memory tracking. 
+    /// </summary>
+    /// <returns></returns>
     public static bool IsActive()
     {
         return Instance.IsActive;
@@ -133,7 +142,10 @@ public static class MaudeRuntime
     /// </summary>
     public static bool IsChartOverlayPresented => Instance.IsOverlayPresented;
 
-    public static void Present()
+    /// <summary>
+    /// Opens the charting presentation as a slide in sheet.
+    /// </summary>
+    public static void PresentSheet()
     {
         Instance.PresentSheet();
     }
@@ -141,7 +153,7 @@ public static class MaudeRuntime
     /// <summary>
     /// Dismisses the presented Maude slide in sheet.
     /// </summary>
-    public static void Dismiss()
+    public static void DismissSheet()
     {
         Instance.DismissSheet();
     }
@@ -154,11 +166,17 @@ public static class MaudeRuntime
         Instance.PresentOverlay(position);
     }
 
+    /// <summary>
+    /// Enables shake gesture handling if it is configured in <see cref="MaudeOptions"/>.
+    /// </summary>
     public static void EnableShakeGesture()
     {
         Instance.EnableShakeGesture();
     }
 
+    /// <summary>
+    /// Disables shake gesture handling if previously enabled.
+    /// </summary>
     public static void DisableShakeGesture()
     {
         Instance.DisableShakeGesture();
@@ -185,11 +203,17 @@ public static class MaudeRuntime
     }
     
     
+    /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the default icon.
+    /// </summary>
     public static void Event(string label)
     {
         Instance.Event(label);
     }
 
+    /// <summary>
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the provided icon with the additional <paramref name="details"/>.
+    /// </summary>
     public static void Event(string label, string icon)
     {
         Instance.Event(label, icon);

@@ -1,5 +1,8 @@
 namespace Maude;
 
+/// <summary>
+/// Simple console-based logger for Maude diagnostics.
+/// </summary>
 public class MaudeConsoleLogger : IMaudeLogCallback
 {
     public string Name { get; } = "Maude Console Logger";

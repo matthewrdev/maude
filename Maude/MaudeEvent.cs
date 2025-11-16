@@ -1,5 +1,8 @@
 namespace Maude;
 
+/// <summary>
+/// Represents a single annotated moment in Maude, carrying metadata used for rendering markers and event lists.
+/// </summary>
 public class MaudeEvent : IComparable<MaudeEvent>
 {
     public MaudeEvent(string label, 

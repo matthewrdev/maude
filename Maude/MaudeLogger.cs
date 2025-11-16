@@ -1,7 +1,7 @@
 namespace Maude;
 
 /// <summary>
-/// The logging framework used by Maude, which allows the integrating software to subscribe 
+/// Lightweight logging hub used by Maude; consumers can register callbacks to receive diagnostics.
 /// </summary>
 public static class MaudeLogger
 {

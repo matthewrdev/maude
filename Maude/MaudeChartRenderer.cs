@@ -9,6 +9,9 @@ using SkiaSharp;
 
 namespace Maude;
 
+/// <summary>
+/// Renders Maude metric/event visuals onto a Skia canvas for both sheet and overlay layouts.
+/// </summary>
 public static class MaudeChartRenderer
 {
     private static readonly ThreadLocal<RenderResources> ThreadResources = new(() => new RenderResources());

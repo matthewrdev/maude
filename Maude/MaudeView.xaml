@@ -6,7 +6,18 @@
                      x:Class="Maude.MaudeView"
                      RowDefinitions="Auto, Auto, *"
                      Padding="4,12,4,0">
-        <local:MaudeChartView x:Name="chartView" Grid.Row="0" />
+        <Grid Grid.Row="0">
+            <local:MaudeChartView x:Name="chartView" />
+            <Button Text="OVERLAY"
+                    Clicked="OnToggleOverlayClicked"
+                    HorizontalOptions="End"
+                    VerticalOptions="Start"
+                    Margin="0,0,6,0"
+                    Padding="12,6"
+                    BackgroundColor="{AppThemeBinding Light=#f0f0f0 Dark=#2b2b2b}"
+                    TextColor="{AppThemeBinding Light=#1a1a1a Dark=#f2f2f2}"
+                    FontAttributes="Bold"/>
+        </Grid>
 
         <local:TagSelector x:Name="intervalSelector" Grid.Row="1"  Margin="0,8,0,8"/>
 

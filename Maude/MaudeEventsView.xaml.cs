@@ -7,6 +7,9 @@ using Microsoft.Maui.Graphics;
 
 namespace Maude;
 
+/// <summary>
+/// Displays the recent Maude events as a list inside the slide-in sheet.
+/// </summary>
 public partial class MaudeEventsView : ContentView
 {
     private const int MaxEvents = 50;
@@ -122,6 +125,9 @@ public partial class MaudeEventsView : ContentView
         }
     }
 
+    /// <summary>
+    /// UI-facing projection of a <see cref="MaudeEvent"/> for binding.
+    /// </summary>
     public class MaudeEventDisplay
     {
         public string Icon { get; init; }

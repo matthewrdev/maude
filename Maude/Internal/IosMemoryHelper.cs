@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 
 namespace Maude;
 
+/// <summary>
+/// iOS-specific helpers for reading process memory limits and footprint.
+/// </summary>
 public static class IosMemoryHelper
 {
     // --- Public API -----------------------------------------------------

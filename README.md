@@ -1,16 +1,21 @@
 
 # Maude - In-app observability for .NET MAUI.
 
-![Maude logo](images/maude_small.png)
+![Maude logo](https://github.com/matthewrdev/maude/blob/5e22911afbc5c6eef5cf839b9bc91b79b3522c8b/img/maude_small.png)
 
 ```
 Maude (Name, Germanic): Mighty in battle, powerful battler.
 ```
 
-Maude monitors your apps memory and displays it via an in-app, live-rendered chart:
-
+Maude monitors your apps memory and displays it via an in-app, live-rendered chart.
 
 Maude, aka Maui-Debug, is a powerful, lightweight tool to help in your debugging battles.
+
+## Disclaimer
+
+Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
+
+Treat Maude’s numbers as guidance; use platform profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
 
 ## Quickstart
 
@@ -31,12 +36,12 @@ public static MauiApp CreateMauiApp()
     return builder.Build();
 }
 ```
-2) Present Maude:
+2) Show Maude:
 ```csharp
 
 // Show Maude as a slide in sheet.
-MaudeRuntime.Present();   // Open the sheet
-MaudeRuntime.Dismiss();   // Close it.
+MaudeRuntime.PresentSheet();   // Open the sheet
+MaudeRuntime.DismissSheet();   // Close it.
 
 // Show Maude as a window overlay.
 MaudeRuntime.PresentOverlay();   // overlay pinned to a window corner
@@ -88,7 +93,11 @@ var options = MaudeOptions.CreateBuilder()
     .Build();
 ```
 
-### Platform initialisation
+### Platform Initialisation
+
+While the MauiAppBuilder extension registers and initialises Maude, it may be desireable to ensure that Maude is sampling immediately when you're app starts.
+
+To do so:
 
 - **Android**: initialise inside `MainApplication` so the runtime is ready before `CreateMauiApp()`:
 
@@ -109,7 +118,7 @@ MaudeRuntime.InitializeAndActivate(options);
 UIApplication.Main(args, null, typeof(AppDelegate));
 ```
 
-If you prefer depedency injection, use `builder.UseMaude<App>()` in `MauiProgram` which registers the runtime and fonts; call `MaudeRuntime.Initialize`/`Activate` later when you want to start sampling.
+If you prefer dependency injection, use `builder.UseMaude<App>()` in `MauiProgram` which registers the runtime and fonts; call `MaudeRuntime.Initialize`/`Activate` later when you want to start sampling.
 
 ## Notes
 
@@ -126,8 +135,3 @@ If you prefer depedency injection, use `builder.UseMaude<App>()` in `MauiProgram
 native embedding: https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding
 Spans: https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0
 
-## Disclaimer
-
-Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory—expect a small observer effect.
-
-Treat Maude’s numbers as guidance; use platform profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.

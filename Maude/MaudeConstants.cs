@@ -2,6 +2,9 @@
 
 namespace Maude;
 
+/// <summary>
+/// Common constants used across the Maude runtime and UI.
+/// </summary>
 public static class MaudeConstants
 {
     internal const string LoggingPrefix = " 🟣MAUDE: ";
@@ -24,6 +27,9 @@ public static class MaudeConstants
     
     public static readonly Color MaudeBrandColor = new Color(91, 58, 150);
 
+    /// <summary>
+    /// Reserved channel identifiers and display metadata.
+    /// </summary>
     public static class ReservedChannels
     {
         public const byte ClrMemoryUsage_Id = 0;
