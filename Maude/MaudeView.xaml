@@ -9,17 +9,23 @@
         <local:MaudeChartView  Grid.Row="0"  x:Name="chartView" />
         
         
-        <Button Text="OVERLAY" Grid.Row="0" 
-                Clicked="OnToggleOverlayClicked"
+        <Border Grid.Row="0"
                 HorizontalOptions="End"
                 VerticalOptions="Start"
-                FontSize="6"
                 Margin="0,0,6,0"
-                BorderWidth="4"
-                BorderColor="{x:Static local:MaudeConstants.MaudeBrandColor}"
+                Padding="12,6"
+                Stroke="{x:Static local:MaudeConstants.MaudeBrandColor}"
                 BackgroundColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"
-                TextColor="White"
-                FontAttributes="Bold"/>
+                StrokeShape="RoundRectangle 10">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnToggleOverlayTapped"/>
+            </Border.GestureRecognizers>
+            <Label Text="OVERLAY"
+                   TextColor="White"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+        </Border>
 
         <local:TagSelector x:Name="intervalSelector" Grid.Row="1"  Margin="0,8,0,8"/>
 

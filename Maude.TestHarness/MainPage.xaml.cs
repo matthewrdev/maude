@@ -49,7 +49,7 @@ public partial class MainPage : ContentPage
 
     private void OnPresentSheetClicked(object? sender, EventArgs e)
     {
-        MaudeRuntime.Present();
+        MaudeRuntime.PresentSheet();
         UpdateRuntimeStatus();
     }
 
@@ -57,11 +57,11 @@ public partial class MainPage : ContentPage
     {
         if (MaudeRuntime.IsChartOverlayPresented)
         {
-            MaudeRuntime.DismissChartOverlay();
+            MaudeRuntime.DismissOverlay();
         }
         else
         {
-            MaudeRuntime.PresentChartOverlay(MaudeOverlayPosition.TopRight);
+            MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight);
         }
 
         UpdateRuntimeStatus();
@@ -70,10 +70,10 @@ public partial class MainPage : ContentPage
     private void OnDismissClicked(object? sender, EventArgs e)
     {
 #if ANDROID || IOS
-        MaudeRuntime.DismissChartOverlay();
+        MaudeRuntime.DismissOverlay();
 #endif
         
-        MaudeRuntime.Dismiss();
+        MaudeRuntime.DismissSheet();
         UpdateRuntimeStatus();
     }
 

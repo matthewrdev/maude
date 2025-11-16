@@ -26,7 +26,7 @@ public partial class MaudeView : Grid
         BindWindowSelector();
     }
     
-    private void OnToggleOverlayClicked(object sender, EventArgs e)
+    private void OnToggleOverlayTapped(object sender, TappedEventArgs e)
     {
         if (MaudeRuntime.IsChartOverlayPresented)
         {
@@ -34,7 +34,7 @@ public partial class MaudeView : Grid
         }
         else
         {
-            MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight);
+            MaudeRuntime.PresentOverlay();
         }
     }
 
