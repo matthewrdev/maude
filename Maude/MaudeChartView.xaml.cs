@@ -11,6 +11,10 @@ namespace Maude;
 /// </summary>
 public partial class MaudeChartView : SKCanvasView
 {
+    private const float ChartCornerRadius = 12f;
+    private const float ChartBorderWidth = 2f;
+    private static readonly SKColor ChartBorderColor = new SKColor(0xcc, 0xcc, 0xcc);
+
     private IMaudeDataSink dataSink;
     private IDispatcherTimer redrawTimer;
     private float? probeRatio;
@@ -181,33 +185,55 @@ public partial class MaudeChartView : SKCanvasView
 
     private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+
+        var inset = ChartBorderWidth / 2f;
+        var outer = SKRect.Create(e.Info.Width, e.Info.Height);
+        outer.Inflate(-inset, -inset);
+        var roundRect = new SKRoundRect(outer, ChartCornerRadius, ChartCornerRadius);
+
+        canvas.Save();
+        canvas.ClipRoundRect(roundRect, antialias: true);
+
         var sink = dataSink;
         if (sink == null)
         {
-            e.Surface.Canvas.Clear();
             chartBounds = null;
-            return;
+        }
+        else
+        {
+            var channels = sink.Channels?.Select(c => c.Id).ToArray() ?? Array.Empty<byte>();
+            var now = DateTime.UtcNow;
+            if (WindowDuration <= TimeSpan.Zero)
+            {
+                WindowDuration = TimeSpan.FromSeconds(30);
+            }
+            
+            var renderOptions = new MaudeRenderOptions()
+            {
+                Channels = channels,
+                FromUtc = now - WindowDuration,
+                ToUtc = now,
+                CurrentUtc = now,
+                Mode = RenderMode,
+                ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null
+            };
+
+            var renderResult = MaudeChartRenderer.Render(canvas, e.Info, sink, renderOptions);
+            UpdateChartBounds(renderResult);
         }
 
-        var channels = sink.Channels?.Select(c => c.Id).ToArray() ?? Array.Empty<byte>();
-        var now = DateTime.UtcNow;
-        if (WindowDuration <= TimeSpan.Zero)
+        canvas.Restore();
+
+        using var borderPaint = new SKPaint
         {
-            WindowDuration = TimeSpan.FromSeconds(30);
-        }
-        
-        var renderOptions = new MaudeRenderOptions()
-        {
-            Channels = channels,
-            FromUtc = now - WindowDuration,
-            ToUtc = now,
-            CurrentUtc = now,
-            Mode = RenderMode,
-            ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = ChartBorderWidth,
+            Color = ChartBorderColor
         };
-
-        var renderResult = MaudeChartRenderer.Render(e.Surface.Canvas, e.Info, sink, renderOptions);
-        UpdateChartBounds(renderResult);
+        canvas.DrawRoundRect(roundRect, borderPaint);
     }
 
     private void UpdateChartBounds(MaudeRenderResult renderResult)
