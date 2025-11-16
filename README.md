@@ -1,21 +1,13 @@
 
 # Maude - In-app observability for .NET MAUI.
 
-![Maude logo](https://github.com/matthewrdev/maude/blob/5e22911afbc5c6eef5cf839b9bc91b79b3522c8b/img/maude_small.png)
-
-```
-Maude (Name, Germanic): Mighty in battle, powerful battler.
-```
-
-Maude monitors your apps memory and displays it via an in-app, live-rendered chart.
+Maude is a plugin for .NET MAUI that monitors app memory and displays it via an in-app, live-rendered chart.
 
 | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
 | --- | --- | --- |
 | **Shake to open Maude** | **Memory chart overlay** | **Slide-in events sheet** |
 
-
-
-Maude, aka Maui-Debug, is a powerful, lightweight tool to help in your debugging battles.
+Maude, aka Maui-Debug, is a powerful, lightweight tool to help you in your debugging battles.
 
 ## Disclaimer
 
