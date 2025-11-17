@@ -12,7 +12,11 @@ public class MaudeOptions
     {
         SampleFrequencyMilliseconds = MaudeConstants.DefaultSampleFrequencyMilliseconds,
         RetentionPeriodSeconds = MaudeConstants.DefaultRetentionPeriodSeconds,
-        AdditionalChannels = new List<MaudeChannel>()
+        AdditionalChannels = new List<MaudeChannel>(),
+        AllowShakeGesture = true,
+        ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
+        AdditionalLogger = new MaudeConsoleLogger(),
+        DefaultOverlayPosition= MaudeOverlayPosition.TopRight
     };
     
     public ushort SampleFrequencyMilliseconds { get; private set; } =  MaudeConstants.DefaultSampleFrequencyMilliseconds;

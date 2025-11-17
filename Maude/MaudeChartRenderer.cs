@@ -1,10 +1,3 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using Microsoft.Maui.Graphics;
-using Microsoft.Maui.Storage;
 using SkiaSharp;
 
 namespace Maude;
@@ -172,9 +165,18 @@ public static class MaudeChartRenderer
 
         var legendEntries = resources.LegendEntries;
         legendEntries.Clear();
+        var legendWidthCache = resources.LegendWidthCache;
+        var legendFontSize = legendFont.Size;
         foreach (var channel in legendChannels)
         {
-            legendEntries.Add(new LegendEntry(channel, legendFont.MeasureText(channel.Name, legendTextPaint)));
+            var cacheKey = (channel.Id, channel.Name, legendFontSize);
+            if (!legendWidthCache.TryGetValue(cacheKey, out var textWidth))
+            {
+                textWidth = legendFont.MeasureText(channel.Name, legendTextPaint);
+                legendWidthCache[cacheKey] = textWidth;
+            }
+
+            legendEntries.Add(new LegendEntry(channel, textWidth));
         }
 
         var legendLineHeight = legendFont.Size + 8f * layoutScale;
@@ -571,11 +573,6 @@ public static class MaudeChartRenderer
         return bestIndex >= 0 ? metrics[bestIndex].Value : metrics[0].Value;
     }
 
-    private static SKTypeface LoadMaterialSymbolsTypeface()
-    {
-        return LoadFontFromResources("MaterialSymbolsOutlined.ttf");
-    }
-
     private static SKTypeface LoadFontFromResources(string fontResourceName)
     {
         using (var stream = FileSystem.OpenAppPackageFileAsync(fontResourceName).Result)
@@ -637,10 +634,8 @@ public static class MaudeChartRenderer
             };
             EventLabelFont = new SKFont();
 
-            MaterialSymbolsTypeface = LoadMaterialSymbolsTypeface();
-            EventIconFont = new SKFont(MaterialSymbolsTypeface)
-            {
-            };
+            MaterialSymbolsTypeface = LoadFontFromResources("MaterialSymbolsOutlined.ttf");
+            EventIconFont = new SKFont(MaterialSymbolsTypeface);
 
             EventIconPaint = new SKPaint
             {
@@ -723,6 +718,7 @@ public static class MaudeChartRenderer
         public List<MaudeChannel> LegendChannels { get; } = new();
         public List<LegendEntry> LegendEntries { get; } = new();
         public List<int> LegendLineStarts { get; } = new();
+        public Dictionary<(byte ChannelId, string Name, float FontSize), float> LegendWidthCache { get; } = new();
         public List<(string Text, SKColor Color)> HighlightLines { get; } = new();
         public List<EventVisual> EventVisuals { get; } = new();
     }

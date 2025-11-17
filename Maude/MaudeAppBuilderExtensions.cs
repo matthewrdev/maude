@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace Maude;
@@ -10,12 +9,14 @@ public static class MaudeAppBuilderExtensions
 {
     /// <summary>
     /// Set's up the <see cref="MauiAppBuilder"/> to initialise the <see cref="MaudeRuntime"/> and registers required fonts and dependencies. 
+    /// <para/>
+    /// Does not activate the memory tracking, please use <see cref="MaudeRuntime.Activate"/> to start tracking memory usage.
     /// </summary>
-    public static MauiAppBuilder UseMaude(this MauiAppBuilder builder)
+    public static MauiAppBuilder UseMaude(this MauiAppBuilder builder, MaudeOptions? maudeOptions = null)
     {
         if (!MaudeRuntime.IsInitialized)
         {
-            MaudeRuntime.Initialize();
+            MaudeRuntime.Initialize(maudeOptions);
         }
 
         builder.Services.AddSingleton<IMaudeRuntime>(_ => MaudeRuntime.Instance);
@@ -25,5 +26,18 @@ public static class MaudeAppBuilderExtensions
         {
             fonts.AddFont("MaterialSymbolsOutlined.ttf", MaudeConstants.MaterialSymbolsFontName);
         }).UseSkiaSharp();
+    }
+    /// <summary>
+    /// Set's up the <see cref="MauiAppBuilder"/> to initialise the <see cref="MaudeRuntime"/> and registers required fonts and dependencies.
+    /// <para/>
+    /// Immediately activates Maudes memory tracking.
+    /// </summary>
+    public static MauiAppBuilder UseMaudeAndActivate(this MauiAppBuilder builder, MaudeOptions? maudeOptions = null)
+    {
+        builder = builder.UseMaude(maudeOptions);
+        
+        MaudeRuntime.Activate();
+        
+        return builder;
     }
 }

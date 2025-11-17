@@ -7,7 +7,7 @@ public static class MaudeRuntime
 {
     private static readonly Lock runtimeLock = new Lock();
 
-    private static MaudeRuntimeImpl runtime;
+    private static MaudeRuntimeImpl? runtime;
 
     /// <summary>
     /// The singleton runtime instance; throws if <see cref="Initialize(MaudeOptions)"/> has not been called first.
@@ -47,7 +47,7 @@ public static class MaudeRuntime
     
     
     private static void Initialize_Internal(bool activateImmediately, 
-                                            MaudeOptions options)
+                                            MaudeOptions? options)
     {
         MaudeLogger.Info($"Initialising MaudeRuntime (activateImmediately: {activateImmediately}).");
         lock (runtimeLock)
@@ -79,7 +79,7 @@ public static class MaudeRuntime
     /// <summary>
     /// Initialises the <see cref="IMaudeRuntime"/> using the provided <paramref name="options"/> and immediately begins monitoring memory usage.
     /// </summary>
-    public static void InitializeAndActivate(MaudeOptions options = null)
+    public static void InitializeAndActivate(MaudeOptions? options = null)
     {
         Initialize_Internal(activateImmediately: true, options);
     }
@@ -89,7 +89,7 @@ public static class MaudeRuntime
     /// <para/>
     /// Does not start the memory tracker, use <see cref="Activate"/> to start tracking.
     /// </summary>
-    public static void Initialize(MaudeOptions options = null)
+    public static void Initialize(MaudeOptions? options = null)
     {   
         Initialize_Internal(activateImmediately: false, options);
     }
