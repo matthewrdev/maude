@@ -554,7 +554,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
     {
         if (mutator == null) throw new ArgumentNullException(nameof(mutator));
 
-        IReadOnlyList<MaudeMetric> newValues = null;
+        IReadOnlyList<MaudeMetric>? newValues = null;
         List<MaudeMetric>? trimmedValues = null;
         
         var expiryTime = DateTime.UtcNow - TimeSpan.FromSeconds(options.RetentionPeriodSeconds);
@@ -664,7 +664,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
     {
         if (mutator == null) throw new ArgumentNullException(nameof(mutator));
 
-        IReadOnlyList<MaudeEvent> newValues = null;
+        IReadOnlyList<MaudeEvent>? newValues = null;
         List<MaudeEvent>? trimmedValues = null;
         
         var expiryTime = DateTime.UtcNow - TimeSpan.FromSeconds(options.RetentionPeriodSeconds);

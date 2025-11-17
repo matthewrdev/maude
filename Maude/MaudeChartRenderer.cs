@@ -245,10 +245,6 @@ public static class MaudeChartRenderer
 
                 foreach (var maudeEvent in eventSpan)
                 {
-                    var icon = string.IsNullOrWhiteSpace(maudeEvent.Symbol)
-                        ? MaudeConstants.DefaultEventSymbol
-                        : maudeEvent.Symbol;
-
                     var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
                     float y;
 
@@ -273,7 +269,7 @@ public static class MaudeChartRenderer
                     {
                         X = x,
                         Y = y,
-                        Icon = icon,
+                        EventType = maudeEvent.Type,
                         Label = maudeEvent.Label,
                         Color = channelColor
                     });
@@ -355,7 +351,7 @@ public static class MaudeChartRenderer
         }
 
         var linePaint = resources.LinePaint;
-        linePaint.StrokeWidth = 2f * layoutScale;
+        linePaint.StrokeWidth = 1f * layoutScale;
         var pointPaint = resources.PointPaint;
         var linePath = resources.LinePath;
         var pointRadius = 2f * layoutScale;
@@ -413,7 +409,7 @@ public static class MaudeChartRenderer
         foreach (var visual in eventVisuals)
         {
             var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
-            canvas.DrawText(visual.Icon, visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
+            canvas.DrawText(MaudeEventLegend.GetSymbol(visual.EventType), visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
 
             var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
             var labelX = visual.X - (eventLabelFont.MeasureText(visual.Label, eventLabelPaint) / 2f);
@@ -728,7 +724,8 @@ public static class MaudeChartRenderer
     {
         public float X { get; init; }
         public float Y { get; init; }
-        public string Icon { get; init; }
+        
+        public MaudeEventType EventType { get; init; }
         public string Label { get; init; }
         public SKColor Color { get; init; }
     }

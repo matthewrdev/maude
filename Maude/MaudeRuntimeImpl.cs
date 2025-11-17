@@ -30,8 +30,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         MutableDataSink = new MaudeMutableDataSink(options);
         MaudeLogger.Info("Mutable data sink created.");
         shakeGestureListener = new MaudeShakeGestureListener(this, options);
-        shakeGestureListener.Enable();
-        MaudeLogger.Info("Shake gesture listener initialised and enabled.");
+        MaudeLogger.Info("Shake gesture listener initialised.");
         overlayService = new NativeOverlayService();
     }
     
@@ -54,6 +53,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             if (IsActive)
             {
                 MaudeLogger.Info("Activate requested but runtime is already active.");
+                EnableShakeGesture();
                 return;
             }
             
@@ -66,6 +66,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             MaudeLogger.Info($"Memory sampler started with frequency {options.SampleFrequencyMilliseconds}ms.");
         }
 
+        EnableShakeGesture();
         OnActivated?.Invoke(this, EventArgs.Empty);
     }
 
@@ -76,6 +77,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             if (!IsActive)
             {
                 MaudeLogger.Info("Deactivate requested but runtime is already inactive.");
+                DisableShakeGesture();
                 return;
             }
 
@@ -85,6 +87,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             MaudeLogger.Info("Memory sampler disposed and activity flag cleared.");
         }
 
+        DisableShakeGesture();
         OnDeactivated?.Invoke(this, EventArgs.Empty);
     }
 
@@ -357,6 +360,20 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     
     public void EnableShakeGesture()
     {
+        if (!options.AllowShakeGesture)
+        {
+            MaudeLogger.Info("Shake gesture enable requested but gestures are disabled in options; disabling listener.");
+            shakeGestureListener.Disable();
+            return;
+        }
+        
+        if (!IsActive)
+        {
+            MaudeLogger.Info("Shake gesture enable requested while runtime is inactive; disabling instead.");
+            shakeGestureListener.Disable();
+            return;
+        }
+        
         shakeGestureListener.Enable();
         MaudeLogger.Info("Shake gesture listener enabled.");
     }

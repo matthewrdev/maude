@@ -107,9 +107,7 @@ public partial class MaudeEventsView : ContentView
             VisibleEvents.Add(new MaudeEventDisplay()
             {
                 Label = maudeEvent.Label,
-                Symbol = string.IsNullOrWhiteSpace(maudeEvent.Symbol)
-                    ? MaudeConstants.DefaultEventSymbol
-                    : maudeEvent.Symbol,
+                Symbol = MaudeEventLegend.GetSymbol(maudeEvent.Type),
                 ChannelColor = channel.Color,
                 Details = maudeEvent.Details,
                 HasDetails = !string.IsNullOrWhiteSpace(maudeEvent.Details),

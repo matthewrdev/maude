@@ -15,10 +15,12 @@ namespace Maude;
 
 internal sealed class NativeOverlayService : INativeOverlayService
 {
-    private FrameLayout? overlay;
-    private FrameLayout? contentHost;
+    private PassthroughFrameLayout? overlay;
+    private PassthroughFrameLayout? contentHost;
     private MaudeChartView? chartView;
     private IViewHandler? chartHandler;
+    private int overlayWidthPx;
+    private int overlayHeightPx;
 
     public bool IsVisible { get; private set; }
 
@@ -41,7 +43,7 @@ internal sealed class NativeOverlayService : INativeOverlayService
             }
 
             EnsureOverlay(activity, rootView);
-            EnsureChartView(mauiContext, dataSink);
+            EnsureChartView(activity, mauiContext, dataSink);
             UpdatePosition(activity, position);
 
             overlay!.Visibility = ViewStates.Visible;
@@ -56,11 +58,14 @@ internal sealed class NativeOverlayService : INativeOverlayService
             return;
         }
 
-        overlay = new FrameLayout(activity)
+        overlayWidthPx = DpToPx(activity, 320);
+        overlayHeightPx = DpToPx(activity, 180);
+
+        overlay = new PassthroughFrameLayout(activity)
         {
             LayoutParameters = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WrapContent,
-                ViewGroup.LayoutParams.WrapContent)
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.MatchParent)
         };
 
         overlay.SetBackgroundColor(Color.Transparent);
@@ -68,11 +73,11 @@ internal sealed class NativeOverlayService : INativeOverlayService
         overlay.Focusable = false;
         overlay.Touch += (_, _) => { }; // ensure we never handle touches
 
-        contentHost = new FrameLayout(activity)
+        contentHost = new PassthroughFrameLayout(activity)
         {
             LayoutParameters = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WrapContent,
-                ViewGroup.LayoutParams.WrapContent)
+                overlayWidthPx,
+                overlayHeightPx)
         };
 
         contentHost.SetPadding(0, 0, 0, 0);
@@ -81,15 +86,15 @@ internal sealed class NativeOverlayService : INativeOverlayService
         rootView.AddView(overlay);
     }
 
-    private void EnsureChartView(IMauiContext mauiContext, IMaudeDataSink dataSink)
+    private void EnsureChartView(Activity activity, IMauiContext mauiContext, IMaudeDataSink dataSink)
     {
         if (chartView == null)
             {
             chartView = new MaudeChartView
             {
                 RenderMode = MaudeChartRenderMode.Overlay,
-                WidthRequest = 320,
-                HeightRequest = 200
+                WidthRequest = overlayWidthPx,
+                HeightRequest = overlayHeightPx
             };
 
             chartView.InputTransparent = true;
@@ -108,10 +113,16 @@ internal sealed class NativeOverlayService : INativeOverlayService
                 platformView.FocusableInTouchMode = false;
                 platformView.Touch += (_, _) => { };
 
+                var lp = platformView.LayoutParameters as FrameLayout.LayoutParams
+                         ?? new FrameLayout.LayoutParams(
+                             overlayWidthPx,
+                             overlayHeightPx);
+
+                lp.Width = overlayWidthPx;
+                lp.Height = overlayHeightPx;
+
                 contentHost.RemoveAllViews();
-                contentHost.AddView(platformView, new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WrapContent,
-                    ViewGroup.LayoutParams.WrapContent));
+                contentHost.AddView(platformView, lp);
             }
         }
 
@@ -121,21 +132,21 @@ internal sealed class NativeOverlayService : INativeOverlayService
 
     private void UpdatePosition(Activity activity, MaudeOverlayPosition position)
     {
-        if (overlay == null)
+        if (contentHost == null)
         {
             return;
         }
 
-        var lp = new FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.WrapContent,
-            ViewGroup.LayoutParams.WrapContent)
-        {
-            Gravity = ConvertGravity(position)
-        };
+        var lp = contentHost.LayoutParameters as FrameLayout.LayoutParams
+                 ?? new FrameLayout.LayoutParams(
+                     ViewGroup.LayoutParams.WrapContent,
+                     ViewGroup.LayoutParams.WrapContent);
+
+        lp.Gravity = ConvertGravity(position);
 
         var margin = DpToPx(activity, 16);
         lp.SetMargins(margin, margin, margin, margin);
-        overlay.LayoutParameters = lp;
+        contentHost.LayoutParameters = lp;
     }
 
     private static int DpToPx(Context context, float dp) =>
@@ -178,5 +189,20 @@ internal sealed class NativeOverlayService : INativeOverlayService
         chartHandler?.DisconnectHandler();
         chartHandler = null;
     }
+}
+#endif
+
+#if ANDROID
+internal sealed class PassthroughFrameLayout : FrameLayout
+{
+    public PassthroughFrameLayout(Context context) : base(context)
+    {
+    }
+
+    public override bool DispatchTouchEvent(MotionEvent? e) => false;
+
+    public override bool OnInterceptTouchEvent(MotionEvent? ev) => false;
+
+    public override bool OnTouchEvent(MotionEvent? e) => false;
 }
 #endif

@@ -9,14 +9,13 @@ public class MaudeEvent : IComparable<MaudeEvent>
                       MaudeEventType type,
                       string details,
                       DateTime capturedAtUtc,
-                      object externalId,
+                      object? externalId,
                       byte channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
         Label = label;
         Type = type;
-        Symbol = MaudeEventLegend.GetSymbol(type);
         Details = details ?? string.Empty;
         CapturedAtUtc = capturedAtUtc;
         ExternalId = externalId;
@@ -27,11 +26,6 @@ public class MaudeEvent : IComparable<MaudeEvent>
     public string Label {get;}
     
     public MaudeEventType Type { get; }
-
-    /// <summary>
-    /// The single-character symbol rendered for this event type.
-    /// </summary>
-    public string Symbol { get; }
 
     public string Details { get; }
 
@@ -48,7 +42,7 @@ public class MaudeEvent : IComparable<MaudeEvent>
     /// <summary>
     /// An optional ID that you may use to identify this event to something within the outer application.
     /// </summary>
-    public object ExternalId { get;}
+    public object? ExternalId { get;}
     
     /// <summary>
     /// The <see cref="MaudeChannel"/> that this event is connected to.
