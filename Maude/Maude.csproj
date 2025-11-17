@@ -26,11 +26,11 @@
         <IsPackable>true</IsPackable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Maude</PackageId>
-        <PackageVersion>0.1.0</PackageVersion>
+        <PackageVersion>0.1.0-pre</PackageVersion>
         <Authors>Matthew Robbins</Authors>
         <Company>Matthew Robbins</Company>
         <Product>Maude</Product>
-        <Description>In-app observability for .NET MAUI: live memory sampling, charts, overlays, and event markers.</Description>
+        <Description>A plugin for .NET MAUI to monitor app memory at runtime and view it via live-rendered native-overlay chart.</Description>
         <PackageTags>MAUI;observability;memory;metrics;debugging</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
