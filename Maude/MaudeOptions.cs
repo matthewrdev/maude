@@ -13,7 +13,7 @@ public class MaudeOptions
         SampleFrequencyMilliseconds = MaudeConstants.DefaultSampleFrequencyMilliseconds,
         RetentionPeriodSeconds = MaudeConstants.DefaultRetentionPeriodSeconds,
         AdditionalChannels = new List<MaudeChannel>(),
-        AllowShakeGesture = true,
+        AllowShakeGesture = false,
         ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
         AdditionalLogger = new MaudeConsoleLogger(),
         DefaultOverlayPosition= MaudeOverlayPosition.TopRight

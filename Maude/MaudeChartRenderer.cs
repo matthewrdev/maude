@@ -354,7 +354,7 @@ public static class MaudeChartRenderer
         linePaint.StrokeWidth = 1f * layoutScale;
         var pointPaint = resources.PointPaint;
         var linePath = resources.LinePath;
-        var pointRadius = 2f * layoutScale;
+        var pointRadius = 1.5f * layoutScale;
 
         // Lines
         foreach (var span in channelSpans)

@@ -99,6 +99,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Activate()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }         
+        
         Instance.Activate();
     }
 
@@ -107,6 +112,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Deactivate()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }         
+        
         Instance.Deactivate();
     }
 
@@ -115,6 +125,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Clear()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }         
+        
         Instance.Clear();
     }
 
@@ -122,31 +137,97 @@ public static class MaudeRuntime
     /// If Maude is currently performing memory tracking. 
     /// </summary>
     /// <returns></returns>
-    public static bool IsActive()
+    public static bool IsActive
     {
-        return Instance.IsActive;
+        get
+        {
+            if (!IsInitialized)
+            {
+                return false;
+            }            
+            
+            return Instance.IsActive;
+        }
     }
 
     /// <summary>
     /// Returns true when the slide-in sheet UI is currently presented.
     /// </summary>
-    public static bool IsPresented => Instance.IsSheetPresented;
+    public static bool IsSheetPresented
+    {
+        get
+        {
+
+            if (!IsInitialized)
+            {
+                return false;
+            }            
+            
+            return Instance.IsSheetPresented;
+        }
+    }
+    
+    /// <summary>
+    /// Returns true when the slide-in sheet UI is currently presented.
+    /// </summary>
+    public static bool IsOverlayPresented
+    {
+        get
+        {
+
+            if (!IsInitialized)
+            {
+                return false;
+            }            
+            
+            return Instance.IsOverlayPresented;
+        }
+    }
 
     /// <summary>
     /// Should the slide sheet or overlay be allowed to be presented?
     /// </summary>
-    public static bool IsPresentationEnabled => Instance.IsPresentationEnabled;
-    
+    public static bool IsPresentationEnabled
+    {
+        get
+        {
+
+            if (!IsInitialized)
+            {
+                return false;
+            }            
+            
+            return Instance.IsPresentationEnabled;
+        }
+    }
+
     /// <summary>
     /// Returns true when the chart overlay is currently presented.
     /// </summary>
-    public static bool IsChartOverlayPresented => Instance.IsOverlayPresented;
+    public static bool IsChartOverlayPresented
+    {
+        get
+        {
+
+            if (!IsInitialized)
+            {
+                return false;
+            }            
+            
+            return Instance.IsOverlayPresented;
+        }
+    }
 
     /// <summary>
     /// Opens the charting presentation as a slide in sheet.
     /// </summary>
     public static void PresentSheet()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         Instance.PresentSheet();
     }
 
@@ -155,6 +236,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void DismissSheet()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         Instance.DismissSheet();
     }
 
@@ -163,6 +249,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void PresentOverlay()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         Instance.PresentOverlay();
     }
 
@@ -171,6 +262,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void PresentOverlay(MaudeOverlayPosition position)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         Instance.PresentOverlay(position);
     }
 
@@ -179,6 +275,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void EnableShakeGesture()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         Instance.EnableShakeGesture();
     }
 
@@ -187,6 +288,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void DisableShakeGesture()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+        
         Instance.DisableShakeGesture();
     }
 
@@ -195,6 +301,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void DismissOverlay()
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+        
         Instance.DismissOverlay();
     }
     
@@ -207,6 +318,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Metric(long value, byte channel)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+        
         Instance.Metric(value, channel);
     }
     
@@ -216,6 +332,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         Instance.Event(label);
     }
 
@@ -224,6 +345,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label, MaudeEventType type)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         Instance.Event(label, type);
     }
 
@@ -232,6 +358,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label, MaudeEventType type, string details)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(label))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
@@ -249,6 +380,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label, byte channel)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(label))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
@@ -266,6 +402,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label, MaudeEventType type, byte channel)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(label))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
@@ -283,6 +424,11 @@ public static class MaudeRuntime
     /// </summary>
     public static void Event(string label, MaudeEventType type, byte channel, string details)
     {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(label))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));

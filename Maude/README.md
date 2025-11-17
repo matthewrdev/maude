@@ -26,7 +26,7 @@ public static MauiApp CreateMauiApp()
 {
     var builder = MauiApp.CreateBuilder()
         .UseMauiApp<App>()
-        .UseMaude<App>();  // Initialises and registers the Maude runtime, configures required fonts + adds SkiaSharp.
+        .UseMaude<App>();  // Initialises and registers the Maude runtime.
     return builder.Build();
 }
 ```
@@ -135,7 +135,6 @@ UIApplication.Main(args, null, typeof(AppDelegate));
 | **Physical Footprint (Jetsam Footprint)** | Total physical RAM attributed to the process by the kernel — the metric Jetsam uses to terminate apps. [`task_vm_info_data_t`](https://developer.apple.com/documentation/kernel/task_vm_info_data_t) • [WWDC Memory Deep Dive](https://developer.apple.com/videos/play/wwdc2018/416/) |
 | **Available Headroom** | Approximate remaining memory the process can consume before triggering Jetsam pressure. [`os_proc_available_memory` source](https://github.com/apple-oss-distributions/libmalloc/blob/main/libmalloc/os_alloc_once_private.h) |
 | **CLR (Managed Heap)** | Managed memory used by the .NET/Mono runtime on iOS (AOT GC heap + metadata). [.NET GC Fundamentals](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals) |
-
 
 
 ## Limitations and Known Issues

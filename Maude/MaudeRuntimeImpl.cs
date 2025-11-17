@@ -227,7 +227,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             MaudeLogger.Warning("WirePopupLifecycle invoked without a MaudeView instance to unbind.");
         }
 
-        void Handler(object sender, EventArgs args)
+        void Handler(object? sender, EventArgs args)
         {
             popup.OnClosed -= Handler;
             MaudeLogger.Info("Maude slide sheet closed.");
