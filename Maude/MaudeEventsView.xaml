@@ -10,11 +10,11 @@
                     ItemsSource="{Binding VisibleEvents, Source={x:Reference self}}"
                     SelectionMode="None"
                     Margin="0,8,0,0">
-        <CollectionView.EmptyView>
+                   <CollectionView.EmptyView>
             <Label Text="No events captured yet."
                    HorizontalTextAlignment="Center"
                    Margin="0,12"
-                   TextColor="{AppThemeBinding Light=#747474' Dark=#c5c5c5'}"/>
+                   TextColor="#747474"/>
         </CollectionView.EmptyView>
         
         <CollectionView.ItemTemplate>
@@ -24,8 +24,7 @@
                       x:DataType="maude:MaudeEventDisplay"
                       ColumnSpacing="12">
                     
-                    <Label Text="{Binding Icon}"
-                           FontFamily="Maude-MaterialSymbols"
+                    <Label Text="{Binding Symbol}"
                            FontSize="20"
                            TextColor="{Binding ChannelColor}"
                            VerticalOptions="Center"/>
@@ -33,14 +32,14 @@
                     <VerticalStackLayout Grid.Column="1" Spacing="2">
                         <Label Text="{Binding Label}"
                                FontAttributes="Bold"
-                               TextColor="{AppThemeBinding Light=#1a1a1a Dark=#f2f2f2}"/>
+                               TextColor="#1a1a1a"/>
                         <Label Text="{Binding Details}"
                                IsVisible="{Binding HasDetails}"
                                LineBreakMode="WordWrap"
-                               TextColor="{AppThemeBinding Light=#2f2f2f Dark=#d9d9d9}"/>
+                               TextColor="#2f2f2f"/>
                         <Label Text="{Binding Timestamp}"
                                FontSize="12"
-                               TextColor="{AppThemeBinding Light=#6b6b6b Dark=#b0b0b0}"/>
+                               TextColor="#6b6b6b"/>
                     </VerticalStackLayout>
 
                 </Grid>

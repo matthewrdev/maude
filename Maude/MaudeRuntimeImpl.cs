@@ -380,20 +380,20 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         MutableDataSink.Event(label);
     }
 
-    public void Event(string label, string icon)
+    public void Event(string label, MaudeEventType type)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
         
-        MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' on detached channel.");
-        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon);
+        MaudeLogger.Info($"Recording event '{label}' with type '{type}' on detached channel.");
+        MutableDataSink.Event(label, type);
     }
 
-    public void Event(string label, string icon, string details)
+    public void Event(string label, MaudeEventType type, string details)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
-        MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' and details on detached channel.");
-        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon, details);
+        MaudeLogger.Info($"Recording event '{label}' with type '{type}' and details on detached channel.");
+        MutableDataSink.Event(label, type, details);
     }
 
     public void Event(string label, byte channel)
@@ -404,22 +404,22 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         MutableDataSink.Event(label, channel);
     }
 
-    public void Event(string label, string icon, byte channel)
+    public void Event(string label, MaudeEventType type, byte channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
         
-        MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' on channel {channel}.");
+        MaudeLogger.Info($"Recording event '{label}' with type '{type}' on channel {channel}.");
         
-        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon, channel);
+        MutableDataSink.Event(label, type, channel);
     }
 
-    public void Event(string label, string icon, byte channel, string details)
+    public void Event(string label, MaudeEventType type, byte channel, string details)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
-        MaudeLogger.Info($"Recording event '{label}' with icon '{(icon ?? "NA")}' and details on channel {channel}.");
+        MaudeLogger.Info($"Recording event '{label}' with type '{type}' and details on channel {channel}.");
 
-        MutableDataSink.Event(label, icon ?? MaudeConstants.DefaultEventIcon, channel, details);
+        MutableDataSink.Event(label, type, channel, details);
     }
 
     public void Clear()

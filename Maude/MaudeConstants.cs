@@ -9,7 +9,8 @@ public static class MaudeConstants
 {
     internal const string LoggingPrefix = " 🟣MAUDE: ";
 
-    public const string DefaultEventIcon = MaterialSymbols.Info;
+    public const MaudeEventType DefaultEventType = MaudeEventType.Info;
+    public const string DefaultEventSymbol = "i";
 
     public const ushort DefaultSampleFrequencyMilliseconds = 500;
     
@@ -22,8 +23,6 @@ public static class MaudeConstants
     public const ushort MinRetentionPeriodSeconds = 1 * 60;
     
     public const ushort MaxRetentionPeriodSeconds = 60 * 60;
-    
-    internal const string MaterialSymbolsFontName = "Maude-MaterialSymbols";
     
     public static readonly Color MaudeBrandColor = new Color(91, 58, 150);
     

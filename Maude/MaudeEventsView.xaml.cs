@@ -62,7 +62,7 @@ public partial class MaudeEventsView : ContentView
         RefreshEvents();
     }
 
-    private void Unsubscribe(IMaudeDataSink sink)
+    private void Unsubscribe(IMaudeDataSink? sink)
     {
         if (sink != null)
         {
@@ -75,7 +75,7 @@ public partial class MaudeEventsView : ContentView
         }
     }
 
-    private void HandleEventsUpdated(object sender, MaudeEventsUpdatedEventArgs e)
+    private void HandleEventsUpdated(object? sender, MaudeEventsUpdatedEventArgs e)
     {
         RefreshEvents();
     }
@@ -107,7 +107,9 @@ public partial class MaudeEventsView : ContentView
             VisibleEvents.Add(new MaudeEventDisplay()
             {
                 Label = maudeEvent.Label,
-                Icon = string.IsNullOrWhiteSpace(maudeEvent.Icon) ? MaterialSymbols.Info : maudeEvent.Icon,
+                Symbol = string.IsNullOrWhiteSpace(maudeEvent.Symbol)
+                    ? MaudeConstants.DefaultEventSymbol
+                    : maudeEvent.Symbol,
                 ChannelColor = channel.Color,
                 Details = maudeEvent.Details,
                 HasDetails = !string.IsNullOrWhiteSpace(maudeEvent.Details),

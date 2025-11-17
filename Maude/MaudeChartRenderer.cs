@@ -245,9 +245,9 @@ public static class MaudeChartRenderer
 
                 foreach (var maudeEvent in eventSpan)
                 {
-                    var icon = string.IsNullOrWhiteSpace(maudeEvent.Icon)
-                        ? MaudeConstants.DefaultEventIcon
-                        : maudeEvent.Icon;
+                    var icon = string.IsNullOrWhiteSpace(maudeEvent.Symbol)
+                        ? MaudeConstants.DefaultEventSymbol
+                        : maudeEvent.Symbol;
 
                     var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
                     float y;
@@ -573,19 +573,6 @@ public static class MaudeChartRenderer
         return bestIndex >= 0 ? metrics[bestIndex].Value : metrics[0].Value;
     }
 
-    private static SKTypeface LoadFontFromResources(string fontResourceName)
-    {
-        using (var stream = FileSystem.OpenAppPackageFileAsync(fontResourceName).Result)
-        {
-            if (stream == null)
-            {
-                throw new FileNotFoundException($"Font resource '{fontResourceName}' not found.");
-            }
-
-            return SKTypeface.FromStream(stream);
-        }
-    }
-
     private sealed class RenderResources
     {
         public RenderResources()
@@ -634,8 +621,7 @@ public static class MaudeChartRenderer
             };
             EventLabelFont = new SKFont();
 
-            MaterialSymbolsTypeface = LoadFontFromResources("MaterialSymbolsOutlined.ttf");
-            EventIconFont = new SKFont(MaterialSymbolsTypeface);
+            EventIconFont = new SKFont(SKTypeface.Default);
 
             EventIconPaint = new SKPaint
             {
@@ -702,7 +688,6 @@ public static class MaudeChartRenderer
         public SKFont EventIconFont { get; }
         public SKPaint EventIconPaint { get; }
         public SKPaint EventLinePaint { get; }
-        public SKTypeface MaterialSymbolsTypeface { get; }
         public SKPaint LegendPaint { get; }
         public SKPaint LinePaint { get; }
         public SKPaint PointPaint { get; }

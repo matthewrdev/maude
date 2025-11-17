@@ -5,17 +5,18 @@ namespace Maude;
 /// </summary>
 public class MaudeEvent : IComparable<MaudeEvent>
 {
-    public MaudeEvent(string label, 
-                      string icon, 
+    public MaudeEvent(string label,
+                      MaudeEventType type,
                       string details,
-                      DateTime capturedAtUtc, 
-                      object externalId, 
+                      DateTime capturedAtUtc,
+                      object externalId,
                       byte channel)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
         Label = label;
-        Icon = icon ?? MaudeConstants.DefaultEventIcon;
+        Type = type;
+        Symbol = MaudeEventLegend.GetSymbol(type);
         Details = details ?? string.Empty;
         CapturedAtUtc = capturedAtUtc;
         ExternalId = externalId;
@@ -25,12 +26,12 @@ public class MaudeEvent : IComparable<MaudeEvent>
 
     public string Label {get;}
     
+    public MaudeEventType Type { get; }
+
     /// <summary>
-    /// A <see cref="MaterialSymbols"/> icon code.
-    /// <para/>
-    /// 
+    /// The single-character symbol rendered for this event type.
     /// </summary>
-    public string Icon {get;}
+    public string Symbol { get; }
 
     public string Details { get; }
 

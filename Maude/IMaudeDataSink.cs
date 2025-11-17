@@ -86,32 +86,32 @@ public interface IMaudeDataSink
     void UseEventsInChannelForRange(byte channelId, DateTime fromUtc, DateTime toUtc, Action<ReadOnlySpan<MaudeEvent>> useAction);
 
     /// <summary>
-    /// Records an event on the unspecified channel using the default icon.
+    /// Records an event on the unspecified channel using the default event type.
     /// </summary>
     void Event(string label);
 
     /// <summary>
-    /// Records an event on the unspecified channel with a custom icon.
+    /// Records an event on the unspecified channel with a specific event type.
     /// </summary>
-    void Event(string label, string icon);
+    void Event(string label, MaudeEventType type);
 
     /// <summary>
-    /// Records an event on the unspecified channel with a custom icon and details.
+    /// Records an event on the unspecified channel with a specific event type and details.
     /// </summary>
-    void Event(string label, string icon, string details);
+    void Event(string label, MaudeEventType type, string details);
 
     /// <summary>
-    /// Records an event for the given channel using the default icon.
+    /// Records an event for the given channel using the default event type.
     /// </summary>
     void Event(string label, byte channel);
 
     /// <summary>
-    /// Records an event for the given channel with a custom icon.
+    /// Records an event for the given channel with a specific event type.
     /// </summary>
-    void Event(string label, string icon, byte channel);
+    void Event(string label, MaudeEventType type, byte channel);
 
     /// <summary>
-    /// Records an event for the given channel with a custom icon and details.
+    /// Records an event for the given channel with a specific event type and details.
     /// </summary>
-    void Event(string label, string icon, byte channel, string details);
+    void Event(string label, MaudeEventType type, byte channel, string details);
 }

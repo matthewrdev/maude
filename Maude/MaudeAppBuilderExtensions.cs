@@ -22,10 +22,7 @@ public static class MaudeAppBuilderExtensions
         builder.Services.AddSingleton<IMaudeRuntime>(_ => MaudeRuntime.Instance);
         builder.Services.AddSingleton<IMaudeDataSink>(_ => MaudeRuntime.Instance.DataSink);
         
-        return builder.ConfigureFonts(fonts =>
-        {
-            fonts.AddFont("MaterialSymbolsOutlined.ttf", MaudeConstants.MaterialSymbolsFontName);
-        }).UseSkiaSharp();
+        return builder.UseSkiaSharp();
     }
     /// <summary>
     /// Set's up the <see cref="MauiAppBuilder"/> to initialise the <see cref="MaudeRuntime"/> and registers required fonts and dependencies.

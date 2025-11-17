@@ -212,7 +212,7 @@ public static class MaudeRuntime
     
     
     /// <summary>
-    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the default icon.
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the default event type.
     /// </summary>
     public static void Event(string label)
     {
@@ -220,28 +220,28 @@ public static class MaudeRuntime
     }
 
     /// <summary>
-    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the provided icon.
+    /// Captures a new event using the given <paramref name="label"/> against the <see cref="MaudeConstants.ReservedChannels.ChannelNotSpecified_Id"/> channel using the provided type.
     /// </summary>
-    public static void Event(string label, string icon)
+    public static void Event(string label, MaudeEventType type)
     {
-        Instance.Event(label, icon);
+        Instance.Event(label, type);
     }
 
     /// <summary>
-    /// Captures a new event using the given <paramref name="label"/> and <paramref name="icon"/> with the provided <paramref name="details"/> against the unspecified channel.
+    /// Captures a new event using the given <paramref name="label"/> and <paramref name="type"/> with the provided <paramref name="details"/> against the unspecified channel.
     /// </summary>
-    public static void Event(string label, string icon, string details)
+    public static void Event(string label, MaudeEventType type, string details)
     {
         if (string.IsNullOrWhiteSpace(label))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
         }
 
-        Instance.Event(label, icon, details);
+        Instance.Event(label, type, details);
     }
     
     /// <summary>
-    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the default icon.
+    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the default event type.
     /// <para/>
     /// The provided <paramref name="channel"/> <b>must</b> be a built-in channel or predefined during your setup of Maude via <see cref="MaudeRuntime.Initialize"/>.
     /// <para/>
@@ -264,30 +264,30 @@ public static class MaudeRuntime
     /// <para/>
     /// Event's recorded against unknown channels will be discarded.
     /// </summary>
-    public static void Event(string label, string icon, byte channel)
+    public static void Event(string label, MaudeEventType type, byte channel)
     {
         if (string.IsNullOrWhiteSpace(label))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
         }
         
-        Instance.Event(label, icon, channel);
+        Instance.Event(label, type, channel);
     }
     
     /// <summary>
-    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the provided <paramref name="icon"/> with the additional <paramref name="details"/>.
+    /// Captures a new event using the given <paramref name="label"/> against the <paramref name="channel"/> using the provided <paramref name="type"/> with the additional <paramref name="details"/>.
     /// <para/>
     /// The provided <paramref name="channel"/> <b>must</b> be a built-in channel or predefined during your setup of Maude via <see cref="MaudeRuntime.Initialize"/>.
     /// <para/>
     /// Event's recorded against unknown channels will be discarded.
     /// </summary>
-    public static void Event(string label, string icon, byte channel, string details)
+    public static void Event(string label, MaudeEventType type, byte channel, string details)
     {
         if (string.IsNullOrWhiteSpace(label))
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
         }
         
-        Instance.Event(label, icon, channel, details);
+        Instance.Event(label, type, channel, details);
     }
 }

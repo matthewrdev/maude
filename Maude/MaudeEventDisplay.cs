@@ -5,7 +5,7 @@ namespace Maude;
 /// </summary>
 public class MaudeEventDisplay
 {
-    public string Icon { get; init; } = "";
+    public string Symbol { get; init; } = "";
     public string Label { get; init; } = "";
     public string Details { get; init; } = "";
     public bool HasDetails { get; init; }

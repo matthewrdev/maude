@@ -8,10 +8,6 @@
       Padding="4,12,4,0">
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
         <HorizontalStackLayout Grid.Column="0" Spacing="8">
-            <Image Source="maude_small.png"
-                   WidthRequest="24"
-                   HeightRequest="24"
-                   VerticalOptions="Center"/>
             <Label x:Name="titleLabel"
                    VerticalTextAlignment="Center"
                    VerticalOptions="Center"
@@ -23,7 +19,7 @@
                    VerticalTextAlignment="Center"
                    VerticalOptions="Center"
                    FontSize="14"
-                   TextColor="{AppThemeBinding Light=#666666 Dark=#dddddd}"/>
+                   TextColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"/>
         </HorizontalStackLayout>
 
         <Border Grid.Column="1"

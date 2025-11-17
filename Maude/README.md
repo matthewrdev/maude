@@ -70,10 +70,9 @@ MaudeRuntime.InitializeAndActivate(options);
 MaudeRuntime.Metric(currentCacheSizeBytes, 96);
 
 // Add events (rendered as vertical markers + items in the event list).
-MaudeRuntime.Event("Cache cleared", 96);                    // default icon
-MaudeRuntime.Event("GC requested", MaterialSymbols.Delete,  // custom icon
-                   MaudeConstants.ReservedChannels.ChannelNotSpecified_Id);
-MaudeRuntime.Event("Large download", "cloud_download", 97, "42 MB");
+MaudeRuntime.Event("Cache cleared", 96);                    // default type + icon "*"
+MaudeRuntime.Event("GC requested", MaudeEventType.Gc);      // GC event symbol "g"
+MaudeRuntime.Event("Large download", MaudeEventType.Event, 97, "42 MB");
 ```
 
 Events/metrics on unknown channels are ignored. Both the slide-in sheet and overlay display the channels and event markers, letting you correlate spikes with the moments you annotated.

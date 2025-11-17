@@ -86,7 +86,7 @@ internal sealed class MaudeShakeGestureListener : IDisposable
         }
     }
 
-    private void OnShakeDetected(object sender, EventArgs e)
+    private void OnShakeDetected(object? sender, EventArgs e)
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {

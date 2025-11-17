@@ -1,7 +1,0 @@
-<Project>
-  <ItemGroup>
-    <MauiImage Include="$(MSBuildThisFileDirectory)Resources\Images\**\*.*" />
-    <MauiFont Include="$(MSBuildThisFileDirectory)Resources\Fonts\**\*.*" />
-    <MauiAsset Include="$(MSBuildThisFileDirectory)Resources\Raw\**" />
-  </ItemGroup>
-</Project>

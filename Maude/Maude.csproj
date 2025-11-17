@@ -13,7 +13,7 @@
         <ApplicationTitle>Maude</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.Maude</ApplicationId>
+        <ApplicationId>com.alphaoutdoors.maude</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
@@ -38,31 +38,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- Images -->
-        <MauiImage Include="Resources\Images\**\*.*"
-                   Pack="true"
-                   PackagePath="buildTransitive\Resources\Images\%(RecursiveDir)%(Filename)%(Extension)" />
-
-        <!-- Custom Fonts -->
-        <MauiFont Include="Resources\Fonts\**\*.*"
-                  Pack="true"
-                  PackagePath="buildTransitive\Resources\Fonts\%(RecursiveDir)%(Filename)%(Extension)" />
-
-        <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
-        <MauiAsset Include="Resources\Raw\**"
-                   LogicalName="%(RecursiveDir)%(Filename)%(Extension)"
-                   Pack="true"
-                   PackagePath="buildTransitive\Resources\Raw\%(RecursiveDir)%(Filename)%(Extension)" />
-    </ItemGroup>
-
-    <!-- Pack physical resource files so buildTransitive can reference them -->
-    <ItemGroup>
-        <None Include="Resources\Images\**\*.*" Pack="true" PackagePath="buildTransitive\Resources\Images\%(RecursiveDir)%(Filename)%(Extension)" />
-        <None Include="Resources\Fonts\**\*.*" Pack="true" PackagePath="buildTransitive\Resources\Fonts\%(RecursiveDir)%(Filename)%(Extension)" />
-        <None Include="Resources\Raw\**" Pack="true" PackagePath="buildTransitive\Resources\Raw\%(RecursiveDir)%(Filename)%(Extension)" />
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="SkiaSharp" Version="3.116.1" />
         <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.116.1" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
@@ -73,7 +48,6 @@
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
         <None Include="..\img\maude_small.png" Pack="true" PackagePath="\"/>
-        <None Include="buildTransitive\Maude.targets" Pack="true" PackagePath="buildTransitive\" />
     </ItemGroup>
 
 </Project>

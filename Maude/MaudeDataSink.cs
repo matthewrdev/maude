@@ -612,42 +612,33 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
     public void Event(string label)
     {
-        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
-        
-        Event(label, MaudeConstants.DefaultEventIcon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, string.Empty);
+        Event(label, MaudeConstants.DefaultEventType, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, string.Empty);
     }
 
-    public void Event(string label, string icon)
+    public void Event(string label, MaudeEventType type)
     {
-        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
-
-        Event(label, icon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, string.Empty);
+        Event(label, type, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, string.Empty);
     }
 
-    public void Event(string label, string icon, string details)
+    public void Event(string label, MaudeEventType type, string details)
     {
-        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
-
-        Event(label, icon, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, details);
+        Event(label, type, MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, details);
     }
     
     public void Event(string label, byte channel)
     {
-        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
-        
-        Event(label, MaudeConstants.DefaultEventIcon, channel, string.Empty);
+        Event(label, MaudeConstants.DefaultEventType, channel, string.Empty);
     }
 
-    public void Event(string label, string icon, byte channel)
+    public void Event(string label, MaudeEventType type, byte channel)
     {
-        Event(label, icon, channel, string.Empty);
+        Event(label, type, channel, string.Empty);
     }
 
-    public void Event(string label, string icon, byte channel, string details)
+    public void Event(string label, MaudeEventType type, byte channel, string details)
     {
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
-        icon = icon ?? MaudeConstants.DefaultEventIcon;
         details ??= string.Empty;
         
         MutateEvents(metrics =>
@@ -657,7 +648,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 return Array.Empty<MaudeEvent>();
             }
 
-            var @event = new MaudeEvent(label, icon, details, DateTime.UtcNow, externalId: null, channel); 
+            var @event = new MaudeEvent(label, type, details, DateTime.UtcNow, externalId: null, channel); 
             
             channelEvents.Add(@event);
 
