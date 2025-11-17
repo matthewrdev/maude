@@ -38,26 +38,46 @@ internal static class MemorySampler
 
     static long TryReadProcStatusRssBytes()
     {
+        // /proc/self/status is small; read once into a stack buffer and scan for "VmRSS".
+        Span<byte> buffer = stackalloc byte[2048];
         try
         {
-            foreach (var line in File.ReadLines("/proc/self/status"))
+            using var fs = new FileStream("/proc/self/status", FileMode.Open, FileAccess.Read, FileShare.ReadWrite, buffer.Length, FileOptions.None);
+            var read = fs.Read(buffer);
+            if (read <= 0) return 0;
+
+            var span = buffer.Slice(0, read);
+            ReadOnlySpan<byte> key = "VmRSS:"u8;
+
+            for (int i = 0; i <= span.Length - key.Length; i++)
             {
-                if (line.StartsWith("VmRSS:", StringComparison.Ordinal))
+                if (!span.Slice(i, key.Length).SequenceEqual(key))
                 {
-                    var kb = ExtractFirstNumber(line);
-                    if (kb.HasValue) return kb.Value * 1024L;
+                    // fast-forward until the next potential 'V' to reduce comparisons
+                    while (i + 1 < span.Length && span[i + 1] != (byte)'V')
+                    {
+                        i++;
+                    }
+                    continue;
                 }
+
+                var j = i + key.Length;
+                while (j < span.Length && (span[j] == (byte)' ' || span[j] == (byte)'\t')) j++;
+
+                long valueKb = 0;
+                while (j < span.Length && span[j] >= (byte)'0' && span[j] <= (byte)'9')
+                {
+                    valueKb = (valueKb * 10) + (span[j] - (byte)'0');
+                    j++;
+                }
+
+                return valueKb * 1024L;
             }
+
+            return 0;
         }
         catch { }
         return 0;
-    }
-
-    static long? ExtractFirstNumber(string s)
-    {
-        var digits = new string(s.SkipWhile(c => !char.IsDigit(c)).TakeWhile(char.IsDigit).ToArray());
-        if (long.TryParse(digits, out var val)) return val;
-        return null;
     }
 
 #elif IOS

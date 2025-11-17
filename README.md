@@ -1,5 +1,5 @@
 
-# Maude - In-app observability for .NET MAUI.
+# In-app observability for .NET MAUI.
 
 Maude is a plugin for .NET MAUI to monitor app memory at runtime and view it via live-rendered chart.
 
@@ -19,7 +19,6 @@ Always use the native tools and platform specific profilers (Xcode Instruments, 
 
 ## Quickstart
 
-
 Add Maude to your MAUI app with minimal code.
 
 1) Configure the app builder:
@@ -27,24 +26,21 @@ Add Maude to your MAUI app with minimal code.
 // MauiProgram.cs
 using Maude;
 
-public static MauiApp CreateMauiApp()
-{
-    var builder = MauiApp.CreateBuilder()
-        .UseMauiApp<App>()
-        // Initialises and registers the Maude runtime, configures required fonts + adds SkiaSharp. 
-        // Optionally provide 'MaudeOptions' here to customise.
-        .UseMaude();  
-    return builder.Build();
-}
+// ...
+
+var builder = MauiApp.CreateBuilder()
+  .UseMauiApp<App>()
+  // Initialise and register the Maude runtime, configure required fonts + adds SkiaSharp. 
+  // Optionally provide 'MaudeOptions' here to customise.
+  .UseMaude();  
 ```
 
-2) Start tracking memory usage:
+1) Start tracking memory usage:
 ```csharp
     MaudeRuntime.Activate();
 ```
 
-
-3) Show Maude:
+1) Show Maude:
 ```csharp
 // Show Maude as a slide in sheet.
 MaudeRuntime.PresentSheet();   // Open the chart and events view as a slide in.
@@ -53,6 +49,20 @@ MaudeRuntime.DismissSheet();   // Close the slide in sheet.
 // Show Maude as a window overlay.
 MaudeRuntime.PresentOverlay();   // Show the chart as a window overlay.
 MaudeRuntime.DismissOverlay();   // Close the overlay.
+```
+
+Or, if you would prefer a one-liner, add the following to your MAUI app builder:
+
+```csharp
+// MauiProgram.cs
+using Maude;
+
+// ...
+
+var builder = MauiApp.CreateBuilder()
+  .UseMauiApp<App>()
+  // Register Maude and immediately start tracking.
+  .UseMaudeAndActivate();  
 ```
 
 ## Record Events
@@ -160,3 +170,23 @@ On iOS, a non-interactive `UIView` is injected into every active `UIWindow` (per
 Maude is explicitly built for .NET 9+ to leverage [`Span<T>` optimisations](https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0), which enables some performance oriented code in the chart rendering, and [MAUI native embedding](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding), which enables Maude's UIs to be built in MAUI but rendered inside native views.
 
 As such, target frameworks earlier than .NET 9 are unsupported.
+
+## Design Goals
+
+**Minimal External Dependencies**
+
+Maude *must not* add undue dependencies to the integrating application.
+
+As much as possible, Maude must use the core MAUI and platform APIs. Maudes only current external dependency is SkiaSharp.
+
+**Minimal Overhead**
+
+Maude *should not* impact the performance of the integrating application.
+
+Maude should capture and present telemetry in the most efficient method possible and ensure it adds minimal memory overhead.
+
+**Simple Integration**
+
+Maude *must* be simple for the integrating application to add and use.
+
+Currently, Maude can be added to an applicaton in one line `.UseMaudeAndActivate()`.
