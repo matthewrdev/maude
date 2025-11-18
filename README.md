@@ -28,8 +28,6 @@ using Maude;
 
 var builder = MauiApp.CreateBuilder()
   .UseMauiApp<App>()
-  // Initialise and register the Maude runtime, configure required fonts + adds SkiaSharp. 
-  // Optionally provide 'MaudeOptions' here to customise.
   .UseMaude();  
 ```
 
