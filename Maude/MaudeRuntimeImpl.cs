@@ -18,6 +18,8 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     private readonly Lock samplerLock = new Lock();
     
     private readonly MaudeMutableDataSink MutableDataSink;
+    private readonly IFrameRateMonitor frameRateMonitor;
+    private bool fpsTrackingEnabled;
     
     private readonly MaudeShakeGestureListener shakeGestureListener;
 
@@ -29,6 +31,8 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         MaudeLogger.Info($"Creating runtime with sample frequency {options.SampleFrequencyMilliseconds}ms, retention {options.RetentionPeriodSeconds}s, shake gesture allowed: {options.AllowShakeGesture}, additional channels: {options.AdditionalChannels?.Count ?? 0}.");
         MutableDataSink = new MaudeMutableDataSink(options);
         MaudeLogger.Info("Mutable data sink created.");
+        frameRateMonitor = FrameRateMonitorFactory.Create();
+        fpsTrackingEnabled = options.EnableFramesPerSecond;
         shakeGestureListener = new MaudeShakeGestureListener(this, options);
         MaudeLogger.Info("Shake gesture listener initialised.");
         overlayService = new NativeOverlayService();
@@ -39,6 +43,8 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     public bool IsSheetPresented => presentedMaudeViewReference != null && presentedMaudeViewReference.TryGetTarget(out _);
 
     public bool IsPresentationEnabled => true;
+
+    public bool IsFramesPerSecondEnabled => fpsTrackingEnabled;
     
     public bool IsOverlayPresented => overlayService?.IsVisible == true;
     
@@ -56,10 +62,15 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                 EnableShakeGesture();
                 return;
             }
-            
+
+            if (ShouldTrackFps())
+            {
+                frameRateMonitor.Start();
+            }
             samplerThread = new MemorySamplerThread(options.SampleFrequencyMilliseconds, snapshot =>
             {
                 MutableDataSink.RecordMemorySnapshot(snapshot);
+                RecordFrameSample();
             });
             
             IsActive = true;
@@ -87,9 +98,45 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
             MaudeLogger.Info("Memory sampler disposed and activity flag cleared.");
         }
 
+        frameRateMonitor.Stop();
         DisableShakeGesture();
         OnDeactivated?.Invoke(this, EventArgs.Empty);
     }
+
+    private void RecordFrameSample()
+    {
+        if (!ShouldTrackFps())
+        {
+            return;
+        }
+
+        var fps = frameRateMonitor.ConsumeFramesPerSecond();
+
+        // Skip recording until we have a meaningful sample.
+        if (fps <= 0)
+        {
+            return;
+        }
+
+        MutableDataSink.Metric(fps, MaudeConstants.ReservedChannels.FramesPerSecond_Id);
+    }
+
+    public void EnableFramesPerSecond()
+    {
+        fpsTrackingEnabled = true;
+        if (IsActive)
+        {
+            frameRateMonitor.Start();
+        }
+    }
+
+    public void DisableFramesPerSecond()
+    {
+        fpsTrackingEnabled = false;
+        frameRateMonitor.Stop();
+    }
+
+    private bool ShouldTrackFps() => fpsTrackingEnabled;
 
     public void PresentSheet()
     {

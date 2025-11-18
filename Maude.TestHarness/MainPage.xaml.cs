@@ -1,9 +1,15 @@
-﻿namespace Maude.TestHarness;
+﻿using System.Text.Json;
+using Microsoft.Maui.ApplicationModel.DataTransfer;
+using SkiaSharp;
+
+namespace Maude.TestHarness;
 
 public partial class MainPage : ContentPage
 {
     private readonly List<byte[]> spikes = new();
     private readonly List<object> nativeAllocations = new();
+    private readonly List<SKBitmap> leakedSkiaBitmaps = new();
+    private readonly List<SKImage> leakedSkiaImages = new();
     private readonly Stack<Action> releaseActions = new();
     private readonly object spikeLock = new();
     private readonly Random random = new();
@@ -22,8 +28,8 @@ public partial class MainPage : ContentPage
 
     private void UpdateRuntimeStatus()
     {
-        var isActive = MaudeRuntime.IsActive();
-        var isPresented = MaudeRuntime.IsPresented;
+        var isActive = MaudeRuntime.IsActive;
+        var isPresented = MaudeRuntime.IsSheetPresented;
         StatusLabel.Text = $"Runtime {(isActive ? "active" : "inactive")} • {(isPresented ? "presented" : "hidden")}";
     }
 
@@ -52,6 +58,18 @@ public partial class MainPage : ContentPage
     private void OnPresentSheetClicked(object? sender, EventArgs e)
     {
         MaudeRuntime.PresentSheet();
+        UpdateRuntimeStatus();
+    }
+
+    private void OnEnableFpsClicked(object? sender, EventArgs e)
+    {
+        MaudeRuntime.EnableFramesPerSecond();
+        UpdateRuntimeStatus();
+    }
+
+    private void OnDisableFpsClicked(object? sender, EventArgs e)
+    {
+        MaudeRuntime.DisableFramesPerSecond();
         UpdateRuntimeStatus();
     }
 
@@ -109,6 +127,27 @@ public partial class MainPage : ContentPage
     private  void OnHighNativeClicked(object? sender, EventArgs e) => RunNativeSpike("Native High", 4000).SafeFireAndForget();
 
     private  void OnExtremeNativeClicked(object? sender, EventArgs e) => RunNativeSpike("Native Extreme", 12000).SafeFireAndForget();
+
+    private void OnLeakImageClicked(object? sender, EventArgs e)
+    {
+        // simulate a retained native-backed image leak using Skia
+        const int width = 4096;
+        const int height = 4096; // ~67 MB for RGBA
+
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            canvas.Clear(new SKColor((uint)random.Next()));
+        }
+
+        var skImage = SKImage.FromBitmap(bitmap);
+
+        leakedSkiaBitmaps.Add(bitmap);
+        leakedSkiaImages.Add(skImage);
+
+        MaudeRuntime.Event("Leaked large Skia image (~67 MB)", CustomMaudeConfiguration.CustomEventChannelId);
+        UpdateRuntimeStatus();
+    }
 
     private Task RunClrMemorySpike(string label, int sizeMb)
     {
@@ -237,6 +276,7 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        MaudeRuntime.Event("Push NavigationTestPage", CustomMaudeConfiguration.CustomEventChannelId);
         await Navigation.PushAsync(new NavigationTestPage());
     }
 
@@ -247,6 +287,36 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        MaudeRuntime.Event("Push ModalTestPage", CustomMaudeConfiguration.CustomEventChannelId);
         await Navigation.PushModalAsync(new ModalTestPage());
+    }
+
+    private async void OnPushLeakyPageClicked(object? sender, EventArgs e)
+    {
+        if (Navigation == null)
+        {
+            return;
+        }
+
+        MaudeRuntime.Event("Push ImagePage", CustomMaudeConfiguration.CustomEventChannelId);
+        await Navigation.PushAsync(new ImagePage());
+    }
+
+    private async void OnExportSnapshotClicked(object? sender, EventArgs e)
+    {
+        if (!MaudeRuntime.IsInitialized)
+        {
+            await DisplayAlert("Snapshot", "Maude runtime is not initialized.", "OK");
+            return;
+        }
+
+        var snapshot = MaudeRuntime.Instance.DataSink.Snapshot();
+        var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        await Clipboard.Default.SetTextAsync(json);
+        await DisplayAlert("Snapshot", "Snapshot copied to clipboard as JSON.", "OK");
     }
 }

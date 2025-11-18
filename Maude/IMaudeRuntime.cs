@@ -31,6 +31,11 @@ public interface IMaudeRuntime
     bool IsOverlayPresented { get; }
 
     /// <summary>
+    /// Indicates whether FPS tracking is currently enabled.
+    /// </summary>
+    bool IsFramesPerSecondEnabled { get; }
+
+    /// <summary>
     /// Raised after activation finishes and sampling begins.
     /// </summary>
     event EventHandler OnActivated;
@@ -84,6 +89,16 @@ public interface IMaudeRuntime
     /// Disables shake gesture handling if previously enabled.
     /// </summary>
     void DisableShakeGesture();
+
+    /// <summary>
+    /// Enables frames-per-second tracking when allowed by <see cref="MaudeOptions"/>.
+    /// </summary>
+    void EnableFramesPerSecond();
+    
+    /// <summary>
+    /// Disables frames-per-second tracking.
+    /// </summary>
+    void DisableFramesPerSecond();
     
     /// <summary>
     /// Captures a new metric using the given <paramref name="value"/> against the <paramref name="channel"/>

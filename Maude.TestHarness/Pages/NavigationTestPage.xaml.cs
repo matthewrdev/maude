@@ -14,6 +14,7 @@ public partial class NavigationTestPage : ContentPage
             return;
         }
 
+        MaudeRuntime.Event("Pop NavigationTestPage", CustomMaudeConfiguration.CustomEventChannelId);
         await Navigation.PopAsync();
     }
 }

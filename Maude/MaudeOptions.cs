@@ -16,7 +16,8 @@ public class MaudeOptions
         AllowShakeGesture = false,
         ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
         AdditionalLogger = new MaudeConsoleLogger(),
-        DefaultOverlayPosition= MaudeOverlayPosition.TopRight
+        DefaultOverlayPosition= MaudeOverlayPosition.TopRight,
+        EnableFramesPerSecond = false
     };
     
     public ushort SampleFrequencyMilliseconds { get; private set; } =  MaudeConstants.DefaultSampleFrequencyMilliseconds;
@@ -30,6 +31,11 @@ public class MaudeOptions
     public bool AllowShakeGesture { get; private set; } = false;
     
     public MaudeShakeGestureBehaviour ShakeGestureBehaviour { get; private set; } = MaudeShakeGestureBehaviour.SlideSheet;
+
+    /// <summary>
+    /// Enable capturing and rendering frames-per-second metrics at startup.
+    /// </summary>
+    public bool EnableFramesPerSecond { get; private set; } = false;
     
     /// <summary>
     /// Default overlay anchor position when presented without an explicit position.
@@ -87,6 +93,12 @@ public class MaudeOptions
         public MaudeOptionsBuilder WithSampleFrequencyMilliseconds(ushort sampleFrequencyMilliseconds)
         {
             options.SampleFrequencyMilliseconds = sampleFrequencyMilliseconds;
+            return this;
+        }
+
+        public MaudeOptionsBuilder WithFramesPerSecond()
+        {
+            options.EnableFramesPerSecond = true;
             return this;
         }
         

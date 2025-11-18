@@ -114,4 +114,9 @@ public interface IMaudeDataSink
     /// Records an event for the given channel with a specific event type and details.
     /// </summary>
     void Event(string label, MaudeEventType type, byte channel, string details);
+
+    /// <summary>
+    /// Creates a full copy of the data currently in the data sink for export.
+    /// </summary>
+    MaudeSnapshot Snapshot();
 }

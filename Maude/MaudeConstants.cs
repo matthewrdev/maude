@@ -34,11 +34,15 @@ public static class MaudeConstants
     public static class ReservedChannels
     {
         public const byte ClrMemoryUsage_Id = 0;
+        public const byte FramesPerSecond_Id = 3;
 
         public const byte ChannelNotSpecified_Id = byte.MaxValue;
         
         public static readonly Color ClrMemoryUsage_Color = new Color(92, 45, 144);
         public const string ClrMemoryUsage_Name = ".NET";
+        
+        public const string FramesPerSecond_Name = "FPS";
+        public static readonly Color FramesPerSecond_Color = new Color(35, 181, 115);
     
 #if IOS
         public const byte PlatformMemoryUsage_Id = 1;
@@ -66,6 +70,7 @@ public static class MaudeConstants
         if (channel == null) throw new ArgumentNullException(nameof(channel));
         
         return channel.Id ==  MaudeConstants.ReservedChannels.ClrMemoryUsage_Id
+            || channel.Id == MaudeConstants.ReservedChannels.FramesPerSecond_Id
 #if IOS
             || channel.Id == MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id
 #elif ANDROID

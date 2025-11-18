@@ -14,6 +14,7 @@ public partial class ModalTestPage : ContentPage
             return;
         }
 
+        MaudeRuntime.Event("Pop ModalTestPage", CustomMaudeConfiguration.CustomEventChannelId);
         await Navigation.PopModalAsync();
     }
 }

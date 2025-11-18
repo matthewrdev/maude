@@ -54,8 +54,10 @@ public static class MaudeChartRenderer
         channelSpans.Clear();
         var channelSpanLookup = resources.ChannelSpanLookup;
         channelSpanLookup.Clear();
-        double maxValue = 0;
-        var hasMetrics = false;
+        double maxMemoryValue = 0;
+        double maxFpsValue = 0;
+        var hasMemoryMetrics = false;
+        var hasFpsMetrics = false;
 
         foreach (var channelId in visibleChannels)
         {
@@ -65,27 +67,36 @@ public static class MaudeChartRenderer
 
             if (span.Valid && span.Count > 0)
             {
-                hasMetrics = true;
-                if (span.MaxValue > maxValue)
+                var isFpsChannel = channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id;
+                if (isFpsChannel)
                 {
-                    maxValue = span.MaxValue;
+                    hasFpsMetrics = true;
+                    if (span.MaxValue > maxFpsValue)
+                    {
+                        maxFpsValue = span.MaxValue;
+                    }
+                }
+                else
+                {
+                    hasMemoryMetrics = true;
+                    if (span.MaxValue > maxMemoryValue)
+                    {
+                        maxMemoryValue = span.MaxValue;
+                    }
                 }
             }
         }
 
+        var hasMetrics = hasMemoryMetrics || hasFpsMetrics;
         if (!hasMetrics)
         {
             DrawEmptyState(canvas, info);
             return MaudeRenderResult.Empty;
         }
 
-        if (maxValue == 0)
-        {
-            maxValue = 1;
-        }
-        
         // Add a 10% buffer on top so lines never touch the top edge.
-        var maxDisplayValue = Math.Max(1d, maxValue * 1.1d);
+        var maxMemoryDisplayValue = Math.Max(1d, (hasMemoryMetrics ? maxMemoryValue : 1d) * 1.1d);
+        var maxFpsDisplayValue = Math.Max(1d, (hasFpsMetrics ? maxFpsValue : 1d) * 1.1d);
 
         var totalMilliseconds = (toUtc - fromUtc).TotalMilliseconds;
         if (totalMilliseconds <= 0)
@@ -137,12 +148,27 @@ public static class MaudeChartRenderer
         for (int i = 0; i <= gridLines; i++)
         {
             var valueRatio = 1f - (float)i / gridLines;
-            var value = (long)Math.Ceiling(maxDisplayValue * valueRatio);
+            var value = (long)Math.Ceiling(maxMemoryDisplayValue * valueRatio);
             labelSamples.Add(FormatBytes(value));
+        }
+
+        var fpsLabelSamples = resources.FpsLabelSamples;
+        fpsLabelSamples.Clear();
+        if (hasFpsMetrics)
+        {
+            for (int i = 0; i <= gridLines; i++)
+            {
+                var valueRatio = 1f - (float)i / gridLines;
+                var value = (long)Math.Ceiling(maxFpsDisplayValue * valueRatio);
+                fpsLabelSamples.Add(FormatFps(value));
+            }
         }
 
         var maxLabelWidth = labelSamples.Count > 0
             ? labelSamples.Max(label => textFont.MeasureText(label, textPaint))
+            : 0f;
+        var maxRightLabelWidth = fpsLabelSamples.Count > 0
+            ? fpsLabelSamples.Max(label => textFont.MeasureText(label, textPaint))
             : 0f;
 
         var legendChannels = resources.LegendChannels;
@@ -160,7 +186,7 @@ public static class MaudeChartRenderer
 
         var baseTopMargin = 24f * layoutScale;
         var bottomMargin = 48f * layoutScale;
-        var rightMargin = 24f * layoutScale;
+        var rightMargin = Math.Max(24f * layoutScale, maxRightLabelWidth + 22f * layoutScale);
         var leftMargin = Math.Max(60f * layoutScale, maxLabelWidth + 22f * layoutScale);
 
         var legendEntries = resources.LegendEntries;
@@ -222,6 +248,25 @@ public static class MaudeChartRenderer
             return MaudeRenderResult.Empty;
         }
 
+        float CalculateY(byte channelId, long value)
+        {
+            var max = channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id
+                ? maxFpsDisplayValue
+                : maxMemoryDisplayValue;
+
+            if (max <= 0)
+            {
+                max = 1;
+            }
+
+            return chartRect.Bottom - (float)(value / max) * chartRect.Height;
+        }
+
+        string FormatValue(byte channelId, long value) =>
+            channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id
+                ? FormatFps(value)
+                : FormatBytes(value);
+
         // Prepare event visuals so backing lines can render behind the chart data.
         foreach (var channelId in visibleChannels)
         {
@@ -257,7 +302,7 @@ public static class MaudeChartRenderer
                         });
 
                         y = metricValue.HasValue
-                            ? chartRect.Bottom - (float)(metricValue.Value / maxDisplayValue) * chartRect.Height
+                            ? CalculateY(channelId, metricValue.Value)
                             : chartRect.Bottom - (8f * layoutScale);
                     }
                     else
@@ -280,6 +325,7 @@ public static class MaudeChartRenderer
         // Axes
         canvas.DrawLine(chartRect.Left, chartRect.Bottom, chartRect.Right, chartRect.Bottom, axisPaint);
         canvas.DrawLine(chartRect.Left, chartRect.Top, chartRect.Left, chartRect.Bottom, axisPaint);
+        canvas.DrawLine(chartRect.Right, chartRect.Top, chartRect.Right, chartRect.Bottom, axisPaint);
 
         // Horizontal grid lines & labels
         for (int i = 0; i <= gridLines; i++)
@@ -294,6 +340,17 @@ public static class MaudeChartRenderer
                             SKTextAlign.Left,
                             textFont,
                             textPaint);
+            
+            if (fpsLabelSamples.Count > i)
+            {
+                var fpsLabel = fpsLabelSamples[i];
+                canvas.DrawText(fpsLabel,
+                    chartRect.Right + 10 * layoutScale,
+                    y + (textFont.Size / 3),
+                    SKTextAlign.Left,
+                    textFont,
+                    textPaint);
+            }
         }
 
         // Time labels
@@ -352,9 +409,7 @@ public static class MaudeChartRenderer
 
         var linePaint = resources.LinePaint;
         linePaint.StrokeWidth = 1f * layoutScale;
-        var pointPaint = resources.PointPaint;
         var linePath = resources.LinePath;
-        var pointRadius = 1.5f * layoutScale;
 
         // Lines
         foreach (var span in channelSpans)
@@ -371,7 +426,6 @@ public static class MaudeChartRenderer
             var channelColor = ToSkColor(channel.Color);
 
             linePaint.Color = channelColor;
-            pointPaint.Color = channelColor;
 
             dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
             {
@@ -385,7 +439,7 @@ public static class MaudeChartRenderer
                 foreach (var metric in metricsSpan)
                 {
                     var x = chartRect.Left + (float)((metric.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                    var y = chartRect.Bottom - (float)(metric.Value / maxDisplayValue) * chartRect.Height;
+                    var y = CalculateY(channelId, metric.Value);
 
                     if (firstPoint)
                     {
@@ -396,8 +450,6 @@ public static class MaudeChartRenderer
                     {
                         linePath.LineTo(x, y);
                     }
-
-                    canvas.DrawCircle(x, y, pointRadius, pointPaint);
                 }
 
                 canvas.DrawPath(linePath, linePaint);
@@ -449,7 +501,7 @@ public static class MaudeChartRenderer
                 });
                 if (value.HasValue)
                 {
-                    highlightLines.Add(($"{channelInfo.Name}: {FormatBytes(value.Value)}", ToSkColor(channelInfo.Color)));
+                    highlightLines.Add(($"{channelInfo.Name}: {FormatValue(channelInfo.Id, value.Value)}", ToSkColor(channelInfo.Color)));
                 }
             }
 
@@ -537,6 +589,12 @@ public static class MaudeChartRenderer
         }
 
         return $"{bytes:0.#} {units[unit]}";
+    }
+
+    internal static string FormatFps(long value, bool includeUnit = true)
+    {
+        var rounded = Math.Max(0, value);
+        return includeUnit ? $"{rounded} FPS" : $"{rounded}";
     }
 
     private static long? GetMetricValueAt(ReadOnlySpan<MaudeMetric> metrics, DateTime targetUtc)
@@ -696,6 +754,7 @@ public static class MaudeChartRenderer
         public Dictionary<byte, MaudeChannelSpan> ChannelSpanLookup { get; } = new();
         public List<MaudeChannelSpan> ChannelSpans { get; } = new();
         public List<string> LabelSamples { get; } = new();
+        public List<string> FpsLabelSamples { get; } = new();
         public List<MaudeChannel> LegendChannels { get; } = new();
         public List<LegendEntry> LegendEntries { get; } = new();
         public List<int> LegendLineStarts { get; } = new();

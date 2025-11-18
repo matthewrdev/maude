@@ -174,13 +174,28 @@ public static class MaudeRuntime
     {
         get
         {
-
             if (!IsInitialized)
             {
                 return false;
             }            
             
             return Instance.IsOverlayPresented;
+        }
+    }
+
+    /// <summary>
+    /// Indicates whether FPS tracking is currently enabled.
+    /// </summary>
+    public static bool IsFramesPerSecondEnabled
+    {
+        get
+        {
+            if (!IsInitialized)
+            {
+                return false;
+            }
+
+            return Instance.IsFramesPerSecondEnabled;
         }
     }
 
@@ -294,6 +309,32 @@ public static class MaudeRuntime
         }
         
         Instance.DisableShakeGesture();
+    }
+
+    /// <summary>
+    /// Enables frames-per-second tracking when allowed by options.
+    /// </summary>
+    public static void EnableFramesPerSecond()
+    {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
+        Instance.EnableFramesPerSecond();
+    }
+
+    /// <summary>
+    /// Disables frames-per-second tracking.
+    /// </summary>
+    public static void DisableFramesPerSecond()
+    {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
+        Instance.DisableFramesPerSecond();
     }
 
     /// <summary>

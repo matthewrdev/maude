@@ -21,6 +21,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         options.Validate();
 
         channels[MaudeConstants.ReservedChannels.ClrMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.ClrMemoryUsage_Id, MaudeConstants.ReservedChannels.ClrMemoryUsage_Name, MaudeConstants.ReservedChannels.ClrMemoryUsage_Color);
+        channels[MaudeConstants.ReservedChannels.FramesPerSecond_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.FramesPerSecond_Id, MaudeConstants.ReservedChannels.FramesPerSecond_Name, MaudeConstants.ReservedChannels.FramesPerSecond_Color);
         
 #if IOS
         channels[MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Name, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Color);
@@ -658,8 +659,52 @@ internal class MaudeMutableDataSink : IMaudeDataSink
             };
         });
     }
-    
-    
+
+    public MaudeSnapshot Snapshot()
+    {
+        var snapshot = new MaudeSnapshot();
+        
+        lock (channelLock)
+        {
+            snapshot.Channels = channels.Values.ToList();
+        }
+
+        lock (metricsLock)
+        {
+            var channelSnapshots = new List<MaudeMetricsSnapshot>(metricsByChannel.Count);
+
+            foreach (var channel in metricsByChannel)
+            {
+                channelSnapshots.Add(new MaudeMetricsSnapshot()
+                {
+                    ChannelId = channel.Key,
+                    Metrics = channel.Value.ToList()
+                });
+            }
+
+            snapshot.Metrics = channelSnapshots;
+        }
+        
+        lock (eventsLock)
+        {
+            var channelSnapshots = new List<MaudeEventsSnapshot>(eventsByChannel.Count);
+
+            foreach (var channel in eventsByChannel)
+            {
+                channelSnapshots.Add(new MaudeEventsSnapshot()
+                {
+                    ChannelId = channel.Key,
+                    Events = channel.Value.ToList()
+                });
+            }
+
+            snapshot.Events = channelSnapshots;
+        }
+
+        return snapshot;
+    }
+
+
     private void MutateEvents(Func<Dictionary<byte, List<MaudeEvent>>, IReadOnlyList<MaudeEvent>> mutator)
     {
         if (mutator == null) throw new ArgumentNullException(nameof(mutator));
