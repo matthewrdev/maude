@@ -11,6 +11,7 @@ public class Program
         var options = MaudeOptions.CreateBuilder()
             .WithAdditionalLogger(new CustomMaudeLogCallback())
             .WithShakeGesture()
+            .WithSampleFrequencyMilliseconds(250)
             .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)
             .WithAdditionalChannels(CustomMaudeConfiguration.AdditionalChannels)
             .Build();

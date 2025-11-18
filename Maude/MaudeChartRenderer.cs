@@ -1,3 +1,4 @@
+using System;
 using SkiaSharp;
 
 namespace Maude;
@@ -8,6 +9,7 @@ namespace Maude;
 public static class MaudeChartRenderer
 {
     private static readonly ThreadLocal<RenderResources> ThreadResources = new(() => new RenderResources());
+    private static readonly TimeSpan AxisLabelCacheTtl = TimeSpan.FromSeconds(20);
 
     public static MaudeRenderResult Render(SKCanvas canvas,
                                            SKImageInfo info, 
@@ -144,32 +146,69 @@ public static class MaudeChartRenderer
 
         var gridLines = 4;
         var labelSamples = resources.LabelSamples;
+        var fpsLabelSamples = resources.FpsLabelSamples;
+
+        // cache key: (maxValue, gridLines, fontSize, isFps)
         labelSamples.Clear();
+        fpsLabelSamples.Clear();
+
+        float MeasureLabel(string text)
+        {
+            var cacheKey = (text, textFont.Size);
+            var nowTicks = DateTime.UtcNow.Ticks;
+
+            if (resources.LabelWidthCache.TryGetValue(cacheKey, out var entry))
+            {
+                if (nowTicks - entry.LastUseTicks <= AxisLabelCacheTtl.Ticks)
+                {
+                    entry.LastUseTicks = nowTicks;
+                    resources.LabelWidthCache[cacheKey] = entry;
+                    return entry.Width;
+                }
+            }
+
+            var width = textFont.MeasureText(text, textPaint);
+            resources.LabelWidthCache[cacheKey] = new LabelMeasureCacheEntry(width, nowTicks);
+
+            // Opportunistic cache cleanup
+            if (nowTicks - resources.LastAxisLabelCacheCleanupTicks > AxisLabelCacheTtl.Ticks)
+            {
+                CleanupAxisLabelCache(resources, nowTicks);
+            }
+
+            return width;
+        }
+
+        var maxLabelWidth = 0f;
         for (int i = 0; i <= gridLines; i++)
         {
             var valueRatio = 1f - (float)i / gridLines;
             var value = (long)Math.Ceiling(maxMemoryDisplayValue * valueRatio);
-            labelSamples.Add(FormatBytes(value));
+            var text = FormatBytes(value);
+            labelSamples.Add(text);
+            var width = MeasureLabel(text);
+            if (width > maxLabelWidth)
+            {
+                maxLabelWidth = width;
+            }
         }
 
-        var fpsLabelSamples = resources.FpsLabelSamples;
-        fpsLabelSamples.Clear();
+        var maxRightLabelWidth = 0f;
         if (hasFpsMetrics)
         {
             for (int i = 0; i <= gridLines; i++)
             {
                 var valueRatio = 1f - (float)i / gridLines;
                 var value = (long)Math.Ceiling(maxFpsDisplayValue * valueRatio);
-                fpsLabelSamples.Add(FormatFps(value));
+                var text = FormatFps(value);
+                fpsLabelSamples.Add(text);
+                var width = MeasureLabel(text);
+                if (width > maxRightLabelWidth)
+                {
+                    maxRightLabelWidth = width;
+                }
             }
         }
-
-        var maxLabelWidth = labelSamples.Count > 0
-            ? labelSamples.Max(label => textFont.MeasureText(label, textPaint))
-            : 0f;
-        var maxRightLabelWidth = fpsLabelSamples.Count > 0
-            ? fpsLabelSamples.Max(label => textFont.MeasureText(label, textPaint))
-            : 0f;
 
         var legendChannels = resources.LegendChannels;
         legendChannels.Clear();
@@ -457,14 +496,17 @@ public static class MaudeChartRenderer
         }
 
         // Events
-        var iconMetrics = eventIconFont.Metrics;
         foreach (var visual in eventVisuals)
         {
+            var iconText = MaudeEventLegend.GetSymbol(visual.EventType);
+            var iconMetrics = eventIconFont.Metrics;
+            var _ = MeasureEventText(iconText, eventIconFont, eventIconPaint); // cache measurement even if not used
             var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
-            canvas.DrawText(MaudeEventLegend.GetSymbol(visual.EventType), visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
+            canvas.DrawText(iconText, visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
 
             var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
-            var labelX = visual.X - (eventLabelFont.MeasureText(visual.Label, eventLabelPaint) / 2f);
+            var labelWidth = MeasureEventText(visual.Label, eventLabelFont, eventLabelPaint);
+            var labelX = visual.X - (labelWidth / 2f);
             canvas.DrawText(visual.Label,
                             labelX,
                             visual.Y - labelOffset,
@@ -595,6 +637,19 @@ public static class MaudeChartRenderer
     {
         var rounded = Math.Max(0, value);
         return includeUnit ? $"{rounded} FPS" : $"{rounded}";
+    }
+
+    private static float MeasureEventText(string text, SKFont font, SKPaint paint)
+    {
+        var resources = ThreadResources.Value!;
+        var key = (text, font.Size);
+        if (!resources.EventTextWidthCache.TryGetValue(key, out var width))
+        {
+            width = font.MeasureText(text, paint);
+            resources.EventTextWidthCache[key] = width;
+        }
+
+        return width;
     }
 
     private static long? GetMetricValueAt(ReadOnlySpan<MaudeMetric> metrics, DateTime targetUtc)
@@ -749,6 +804,9 @@ public static class MaudeChartRenderer
         public SKPaint MarkerPaint { get; }
         public SKPathEffect MarkerPathEffect { get; }
         public SKPath LinePath { get; }
+        public Dictionary<(string Text, float FontSize), LabelMeasureCacheEntry> LabelWidthCache { get; } = new();
+        public long LastAxisLabelCacheCleanupTicks { get; set; }
+        public Dictionary<(string Text, float FontSize), float> EventTextWidthCache { get; } = new();
 
         public Dictionary<byte, MaudeChannel> ChannelLookup { get; } = new();
         public Dictionary<byte, MaudeChannelSpan> ChannelSpanLookup { get; } = new();
@@ -787,5 +845,33 @@ public static class MaudeChartRenderer
         public MaudeEventType EventType { get; init; }
         public string Label { get; init; }
         public SKColor Color { get; init; }
+    }
+
+    private struct LabelMeasureCacheEntry
+    {
+        public LabelMeasureCacheEntry(float width, long lastUseTicks)
+        {
+            Width = width;
+            LastUseTicks = lastUseTicks;
+        }
+
+        public float Width { get; }
+        public long LastUseTicks { get; set; }
+    }
+
+    private static void CleanupAxisLabelCache(RenderResources resources, long nowTicks)
+    {
+        var ttlTicks = AxisLabelCacheTtl.Ticks;
+        var keysToRemove = resources.LabelWidthCache
+            .Where(kvp => nowTicks - kvp.Value.LastUseTicks > ttlTicks)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in keysToRemove)
+        {
+            resources.LabelWidthCache.Remove(key);
+        }
+
+        resources.LastAxisLabelCacheCleanupTicks = nowTicks;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Threading;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
 using SkiaSharp;
 
@@ -13,6 +14,7 @@ public partial class MainPage : ContentPage
     private readonly Stack<Action> releaseActions = new();
     private readonly object spikeLock = new();
     private readonly Random random = new();
+    private CancellationTokenSource? frameDropCts;
 
     public MainPage()
     {
@@ -38,6 +40,12 @@ public partial class MainPage : ContentPage
         MaudeRuntime.Activate();
         UpdateRuntimeStatus();
     }
+
+    private void OnLowFrameDropClicked(object? sender, EventArgs e) => StartFrameDrop(TimeSpan.FromMilliseconds(800), TimeSpan.FromMilliseconds(50));
+    private void OnMediumFrameDropClicked(object? sender, EventArgs e) => StartFrameDrop(TimeSpan.FromMilliseconds(600), TimeSpan.FromMilliseconds(150));
+    private void OnHeavyFrameDropClicked(object? sender, EventArgs e) => StartFrameDrop(TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(350));
+    private void OnExtremeFrameDropClicked(object? sender, EventArgs e) => StartFrameDrop(TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(600));
+    private void OnStopFrameDropClicked(object? sender, EventArgs e) => StopFrameDrop();
 
     private void OnDeactivateClicked(object? sender, EventArgs e)
     {
@@ -71,6 +79,51 @@ public partial class MainPage : ContentPage
     {
         MaudeRuntime.DisableFramesPerSecond();
         UpdateRuntimeStatus();
+    }
+
+    private void StartFrameDrop(TimeSpan interval, TimeSpan blockDuration)
+    {
+        StopFrameDrop();
+        frameDropCts = new CancellationTokenSource();
+        var token = frameDropCts.Token;
+
+        Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        // Intentional UI thread stall to simulate jank/fps drops.
+                        Thread.Sleep(blockDuration);
+                    });
+
+                    await Task.Delay(interval, token);
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+                catch (Exception)
+                {
+                    // swallow to keep the loop alive for test purposes
+                }
+            }
+        }, token);
+    }
+
+    private void StopFrameDrop()
+    {
+        try
+        {
+            frameDropCts?.Cancel();
+            frameDropCts?.Dispose();
+        }
+        finally
+        {
+            frameDropCts = null;
+        }
     }
 
     private void OnPresentChartOverlayClicked(object? sender, EventArgs e)

@@ -62,6 +62,35 @@
                                     JustifyContent="Start"
                                     AlignItems="Center"
                                     AlignContent="Start">
+                            <Button Text="Overlay top-left" Clicked="OnOverlayTopLeftClicked" Margin="0,0,10,10"/>
+                            <Button Text="Overlay top-right" Clicked="OnOverlayTopRightClicked" Margin="0,0,10,10"/>
+                            <Button Text="Overlay bottom-left" Clicked="OnOverlayBottomLeftClicked" Margin="0,0,10,10"/>
+                            <Button Text="Overlay bottom-right" Clicked="OnOverlayBottomRightClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Stroke="#dcdcdc"
+                        StrokeThickness="1"
+                        BackgroundColor="#ffffff"
+                        Padding="14,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="FPS controls"
+                               FontAttributes="Bold"
+                               FontSize="16"
+                               TextColor="#111111"/>
+                        <Label Text="Toggle FPS tracking and simulate deliberate frame drops for testing."
+                               FontSize="12"
+                               TextColor="#666666"/>
+
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
                             <Button Text="Enable FPS" Clicked="OnEnableFpsClicked" Margin="0,0,10,10"/>
                             <Button Text="Disable FPS" Clicked="OnDisableFpsClicked" Margin="0,0,10,10"/>
                         </FlexLayout>
@@ -71,10 +100,11 @@
                                     JustifyContent="Start"
                                     AlignItems="Center"
                                     AlignContent="Start">
-                            <Button Text="Overlay top-left" Clicked="OnOverlayTopLeftClicked" Margin="0,0,10,10"/>
-                            <Button Text="Overlay top-right" Clicked="OnOverlayTopRightClicked" Margin="0,0,10,10"/>
-                            <Button Text="Overlay bottom-left" Clicked="OnOverlayBottomLeftClicked" Margin="0,0,10,10"/>
-                            <Button Text="Overlay bottom-right" Clicked="OnOverlayBottomRightClicked" Margin="0,0,10,10"/>
+                            <Button Text="Low FPS drop" Clicked="OnLowFrameDropClicked" Margin="0,0,10,10"/>
+                            <Button Text="Medium FPS drop" Clicked="OnMediumFrameDropClicked" Margin="0,0,10,10"/>
+                            <Button Text="Heavy FPS drop" Clicked="OnHeavyFrameDropClicked" Margin="0,0,10,10"/>
+                            <Button Text="Extreme FPS drop" Clicked="OnExtremeFrameDropClicked" Margin="0,0,10,10"/>
+                            <Button Text="Stop FPS drop" Clicked="OnStopFrameDropClicked" Margin="0,0,10,10"/>
                         </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
