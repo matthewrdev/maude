@@ -102,9 +102,12 @@ var options = MaudeOptions.CreateBuilder()
     .WithShakeGesture()                       // enable shake-to-toggle
     .WithDefaultOverlayPosition(MaudeOverlayPosition.TopRight) // default anchor when showing overlay without an explicit position
     .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay) // or SlideSheet
+    .WithEventRenderingBehaviour(MaudeEventRenderingBehaviour.IconsOnly) // LabelsAndIcons, IconsOnly (default), None
     .WithAdditionalLogger(new MyLogger())     // or .WithBuiltInLogger()
     .Build();
 ```
+
+Use `WithEventRenderingBehaviour` (or change `MaudeRuntime.EventRenderingBehaviour` at runtime) to choose between icons with labels, icons only, or hiding events entirely. This applies to both the slide sheet and overlay chart.
 
 ### Platform initialisation
 
@@ -130,6 +133,18 @@ var options = /* build options */;
 MaudeRuntime.InitializeAndActivate(options);
 UIApplication.Main(args, null, typeof(AppDelegate));
 ```
+
+## FPS Tracking
+
+Maude can sample frames-per-second alongside memory metrics and overlay the results on the chart. Enable FPS capture when building options:
+
+```csharp
+var options = MaudeOptions.CreateBuilder()
+    .WithFramesPerSecond()
+    .Build();
+```
+
+At runtime you can call `MaudeRuntime.EnableFramesPerSecond()` or `.DisableFramesPerSecond()` to toggle sampling without rebuilding the options. FPS series segments automatically change color as the rate crosses the built-in thresholds (Optimal ≥50, Stable 40–49, Fair 30–39, Poor 20–29, Critical <20) so jank is easy to spot.
 
 ## What does Maude capture?
 
