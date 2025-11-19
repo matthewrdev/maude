@@ -34,6 +34,11 @@ public interface IMaudeRuntime
     /// Indicates whether FPS tracking is currently enabled.
     /// </summary>
     bool IsFramesPerSecondEnabled { get; }
+    
+    /// <summary>
+    /// Gets or sets how events should be rendered on the chart.
+    /// </summary>
+    MaudeEventRenderingBehaviour EventRenderingBehaviour { get; set; }
 
     /// <summary>
     /// Raised after activation finishes and sampling begins.

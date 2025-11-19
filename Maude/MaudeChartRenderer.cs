@@ -10,6 +10,14 @@ public static class MaudeChartRenderer
 {
     private static readonly ThreadLocal<RenderResources> ThreadResources = new(() => new RenderResources());
     private static readonly TimeSpan AxisLabelCacheTtl = TimeSpan.FromSeconds(20);
+    private static readonly FpsThreshold[] FpsThresholds =
+    {
+        new FpsThreshold("Optimal", 50, new SKColor(35, 181, 115)),
+        new FpsThreshold("Stable", 40, new SKColor(116, 188, 71)),
+        new FpsThreshold("Fair", 30, new SKColor(218, 165, 32)),
+        new FpsThreshold("Poor", 20, new SKColor(221, 112, 34)),
+        new FpsThreshold("Critical", int.MinValue, new SKColor(200, 46, 60))
+    };
 
     public static MaudeRenderResult Render(SKCanvas canvas,
                                            SKImageInfo info, 
@@ -143,6 +151,9 @@ public static class MaudeChartRenderer
 
         var eventVisuals = resources.EventVisuals;
         eventVisuals.Clear();
+        var eventBehaviour = renderOptions.EventRenderingBehaviour;
+        var shouldRenderEvents = eventBehaviour != MaudeEventRenderingBehaviour.None;
+        var shouldRenderLabels = eventBehaviour == MaudeEventRenderingBehaviour.LabelsAndIcons;
 
         var gridLines = 4;
         var labelSamples = resources.LabelSamples;
@@ -306,59 +317,62 @@ public static class MaudeChartRenderer
                 ? FormatFps(value)
                 : FormatBytes(value);
 
-        // Prepare event visuals so backing lines can render behind the chart data.
-        foreach (var channelId in visibleChannels)
+        if (shouldRenderEvents)
         {
-            var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
-                ? channelInfo
-                : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
-
-            var channelColor = ToSkColor(channel.Color);
-            var isDetached = channelId == MaudeConstants.ReservedChannels.ChannelNotSpecified_Id;
-            var span = channelSpanLookup.TryGetValue(channelId, out var lookupSpan) ? lookupSpan : default;
-            var hasMetricsForChannel = span.Valid;
-
-            dataSink.UseEventsInChannelForRange(channelId, fromUtc, toUtc, eventSpan =>
+            // Prepare event visuals so backing lines can render behind the chart data.
+            foreach (var channelId in visibleChannels)
             {
-                if (eventSpan.IsEmpty)
+                var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
+                    ? channelInfo
+                    : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
+
+                var channelColor = ToSkColor(channel.Color);
+                var isDetached = channelId == MaudeConstants.ReservedChannels.ChannelNotSpecified_Id;
+                var span = channelSpanLookup.TryGetValue(channelId, out var lookupSpan) ? lookupSpan : default;
+                var hasMetricsForChannel = span.Valid;
+
+                dataSink.UseEventsInChannelForRange(channelId, fromUtc, toUtc, eventSpan =>
                 {
-                    return;
-                }
-
-                var useMetrics = hasMetricsForChannel && !isDetached;
-
-                foreach (var maudeEvent in eventSpan)
-                {
-                    var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                    float y;
-
-                    if (useMetrics)
+                    if (eventSpan.IsEmpty)
                     {
-                        long? metricValue = null;
-                        dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
+                        return;
+                    }
+
+                    var useMetrics = hasMetricsForChannel && !isDetached;
+
+                    foreach (var maudeEvent in eventSpan)
+                    {
+                        var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                        float y;
+
+                        if (useMetrics)
                         {
-                            metricValue = GetMetricValueAt(metricsSpan, maudeEvent.CapturedAtUtc);
+                            long? metricValue = null;
+                            dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
+                            {
+                                metricValue = GetMetricValueAt(metricsSpan, maudeEvent.CapturedAtUtc);
+                            });
+
+                            y = metricValue.HasValue
+                                ? CalculateY(channelId, metricValue.Value)
+                                : chartRect.Bottom - (8f * layoutScale);
+                        }
+                        else
+                        {
+                            y = chartRect.Bottom - (8f * layoutScale);
+                        }
+
+                        eventVisuals.Add(new EventVisual
+                        {
+                            X = x,
+                            Y = y,
+                            EventType = maudeEvent.Type,
+                            Label = maudeEvent.Label,
+                            Color = channelColor
                         });
-
-                        y = metricValue.HasValue
-                            ? CalculateY(channelId, metricValue.Value)
-                            : chartRect.Bottom - (8f * layoutScale);
                     }
-                    else
-                    {
-                        y = chartRect.Bottom - (8f * layoutScale);
-                    }
-
-                    eventVisuals.Add(new EventVisual
-                    {
-                        X = x,
-                        Y = y,
-                        EventType = maudeEvent.Type,
-                        Label = maudeEvent.Label,
-                        Color = channelColor
-                    });
-                }
-            });
+                });
+            }
         }
 
         // Axes
@@ -440,10 +454,13 @@ public static class MaudeChartRenderer
             legendY += legendLineHeight;
         }
 
-        foreach (var visual in eventVisuals)
+        if (shouldRenderEvents)
         {
-            eventLinePaint.Color = visual.Color.WithAlpha(120);
-            canvas.DrawLine(visual.X, chartRect.Top, visual.X, chartRect.Bottom, eventLinePaint);
+            foreach (var visual in eventVisuals)
+            {
+                eventLinePaint.Color = visual.Color.WithAlpha(120);
+                canvas.DrawLine(visual.X, chartRect.Top, visual.X, chartRect.Bottom, eventLinePaint);
+            }
         }
 
         var linePaint = resources.LinePaint;
@@ -473,6 +490,12 @@ public static class MaudeChartRenderer
                     return;
                 }
 
+                if (channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id)
+                {
+                    DrawFpsGradientLine(metricsSpan);
+                    return;
+                }
+
                 linePath.Reset();
                 var firstPoint = true;
                 foreach (var metric in metricsSpan)
@@ -493,26 +516,75 @@ public static class MaudeChartRenderer
 
                 canvas.DrawPath(linePath, linePaint);
             });
+
+            void DrawFpsGradientLine(ReadOnlySpan<MaudeMetric> metricsSpan)
+            {
+                if (metricsSpan.Length < 2)
+                {
+                    return;
+                }
+
+                for (var i = 1; i < metricsSpan.Length; i++)
+                {
+                    var start = metricsSpan[i - 1];
+                    var end = metricsSpan[i];
+
+                    var startX = chartRect.Left + (float)((start.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                    var endX = chartRect.Left + (float)((end.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                    var startY = CalculateY(channelId, start.Value);
+                    var endY = CalculateY(channelId, end.Value);
+
+                    var startColor = GetFpsColor(start.Value);
+                    var endColor = GetFpsColor(end.Value);
+
+                    if (startColor == endColor)
+                    {
+                        linePaint.Shader = null;
+                        linePaint.Color = startColor;
+                    }
+                    else
+                    {
+                        using var shader = SKShader.CreateLinearGradient(
+                            new SKPoint(startX, startY),
+                            new SKPoint(endX, endY),
+                            new[] { startColor, endColor },
+                            null,
+                            SKShaderTileMode.Clamp);
+                        linePaint.Shader = shader;
+                    }
+
+                    canvas.DrawLine(startX, startY, endX, endY, linePaint);
+                    linePaint.Shader = null;
+                }
+
+                linePaint.Color = GetFpsColor(metricsSpan[^1].Value);
+            }
         }
 
         // Events
-        foreach (var visual in eventVisuals)
+        if (shouldRenderEvents)
         {
-            var iconText = MaudeEventLegend.GetSymbol(visual.EventType);
-            var iconMetrics = eventIconFont.Metrics;
-            var _ = MeasureEventText(iconText, eventIconFont, eventIconPaint); // cache measurement even if not used
-            var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
-            canvas.DrawText(iconText, visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
+            foreach (var visual in eventVisuals)
+            {
+                var iconText = MaudeEventLegend.GetSymbol(visual.EventType);
+                var iconMetrics = eventIconFont.Metrics;
+                var _ = MeasureEventText(iconText, eventIconFont, eventIconPaint); // cache measurement even if not used
+                var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
+                canvas.DrawText(iconText, visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
 
-            var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
-            var labelWidth = MeasureEventText(visual.Label, eventLabelFont, eventLabelPaint);
-            var labelX = visual.X - (labelWidth / 2f);
-            canvas.DrawText(visual.Label,
-                            labelX,
-                            visual.Y - labelOffset,
-                            SKTextAlign.Left,
-                            eventLabelFont,
-                            eventLabelPaint);
+                if (shouldRenderLabels)
+                {
+                    var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
+                    var labelWidth = MeasureEventText(visual.Label, eventLabelFont, eventLabelPaint);
+                    var labelX = visual.X - (labelWidth / 2f);
+                    canvas.DrawText(visual.Label,
+                        labelX,
+                        visual.Y - labelOffset,
+                        SKTextAlign.Left,
+                        eventLabelFont,
+                        eventLabelPaint);
+                }
+            }
         }
 
         // Current position marker or probe marker
@@ -874,4 +946,19 @@ public static class MaudeChartRenderer
 
         resources.LastAxisLabelCacheCleanupTicks = nowTicks;
     }
+
+    private static SKColor GetFpsColor(long fps)
+    {
+        foreach (var threshold in FpsThresholds)
+        {
+            if (fps >= threshold.MinimumValueInclusive)
+            {
+                return threshold.Color;
+            }
+        }
+
+        return FpsThresholds[^1].Color;
+    }
+
+    private readonly record struct FpsThreshold(string Name, int MinimumValueInclusive, SKColor Color);
 }

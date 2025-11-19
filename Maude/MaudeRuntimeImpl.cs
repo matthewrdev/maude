@@ -20,6 +20,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     private readonly MaudeMutableDataSink MutableDataSink;
     private readonly IFrameRateMonitor frameRateMonitor;
     private bool fpsTrackingEnabled;
+    private MaudeEventRenderingBehaviour eventRenderingBehaviour;
     
     private readonly MaudeShakeGestureListener shakeGestureListener;
 
@@ -33,6 +34,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         MaudeLogger.Info("Mutable data sink created.");
         frameRateMonitor = FrameRateMonitorFactory.Create();
         fpsTrackingEnabled = options.EnableFramesPerSecond;
+        eventRenderingBehaviour = options.EventRenderingBehaviour;
         shakeGestureListener = new MaudeShakeGestureListener(this, options);
         MaudeLogger.Info("Shake gesture listener initialised.");
         overlayService = new NativeOverlayService();
@@ -45,6 +47,12 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     public bool IsPresentationEnabled => true;
 
     public bool IsFramesPerSecondEnabled => fpsTrackingEnabled;
+    
+    public MaudeEventRenderingBehaviour EventRenderingBehaviour
+    {
+        get => eventRenderingBehaviour;
+        set => eventRenderingBehaviour = value;
+    }
     
     public bool IsOverlayPresented => overlayService?.IsVisible == true;
     

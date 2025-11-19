@@ -16,4 +16,6 @@ public struct MaudeRenderOptions
     public required MaudeChartRenderMode Mode { get; init; }
 
     public required float? ProbePosition { get; init; }
+    
+    public required MaudeEventRenderingBehaviour EventRenderingBehaviour { get; init; }
 }

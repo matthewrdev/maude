@@ -203,6 +203,36 @@
                         </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
+                
+                <Border Stroke="#dcdcdc"
+                        StrokeThickness="1"
+                        BackgroundColor="#ffffff"
+                        Padding="14,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Event rendering"
+                               FontAttributes="Bold"
+                               FontSize="16"
+                               TextColor="#111111"/>
+                        <Label Text="Toggle how event markers appear on the chart."
+                               FontSize="12"
+                               TextColor="#666666"/>
+                        <Label x:Name="EventRenderingStatusLabel"
+                               FontSize="12"
+                               TextColor="#444444"/>
+                        <FlexLayout Direction="Row"
+                                    Wrap="Wrap"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start">
+                            <Button Text="Labels + icons" Clicked="OnEventLabelsAndIconsClicked" Margin="0,0,10,10"/>
+                            <Button Text="Icons only" Clicked="OnEventIconsOnlyClicked" Margin="0,0,10,10"/>
+                            <Button Text="Hide events" Clicked="OnEventHiddenClicked" Margin="0,0,10,10"/>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
 
                 <Border Stroke="#dcdcdc"
                         StrokeThickness="1"

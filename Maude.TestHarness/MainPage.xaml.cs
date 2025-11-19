@@ -33,6 +33,12 @@ public partial class MainPage : ContentPage
         var isActive = MaudeRuntime.IsActive;
         var isPresented = MaudeRuntime.IsSheetPresented;
         StatusLabel.Text = $"Runtime {(isActive ? "active" : "inactive")} • {(isPresented ? "presented" : "hidden")}";
+        UpdateEventRenderingStatus();
+    }
+
+    private void UpdateEventRenderingStatus()
+    {
+        EventRenderingStatusLabel.Text = $"Current: {MaudeRuntime.EventRenderingBehaviour}";
     }
 
     private void OnActivateClicked(object? sender, EventArgs e)
@@ -79,6 +85,18 @@ public partial class MainPage : ContentPage
     {
         MaudeRuntime.DisableFramesPerSecond();
         UpdateRuntimeStatus();
+    }
+    
+    private void OnEventLabelsAndIconsClicked(object? sender, EventArgs e) => SetEventRenderingBehaviour(MaudeEventRenderingBehaviour.LabelsAndIcons);
+
+    private void OnEventIconsOnlyClicked(object? sender, EventArgs e) => SetEventRenderingBehaviour(MaudeEventRenderingBehaviour.IconsOnly);
+
+    private void OnEventHiddenClicked(object? sender, EventArgs e) => SetEventRenderingBehaviour(MaudeEventRenderingBehaviour.None);
+
+    private void SetEventRenderingBehaviour(MaudeEventRenderingBehaviour behaviour)
+    {
+        MaudeRuntime.EventRenderingBehaviour = behaviour;
+        UpdateEventRenderingStatus();
     }
 
     private void StartFrameDrop(TimeSpan interval, TimeSpan blockDuration)

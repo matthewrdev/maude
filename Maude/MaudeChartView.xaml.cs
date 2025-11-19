@@ -217,7 +217,8 @@ public partial class MaudeChartView : SKCanvasView
                 ToUtc = now,
                 CurrentUtc = now,
                 Mode = RenderMode,
-                ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null
+                ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
+                EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour
             };
 
             var renderResult = MaudeChartRenderer.Render(canvas, e.Info, sink, renderOptions);

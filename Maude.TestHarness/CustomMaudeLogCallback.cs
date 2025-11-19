@@ -11,16 +11,16 @@ public class CustomMaudeLogCallback : IMaudeLogCallback
 
     public void Warning(string message)
     {
-        Console.WriteLine("🟠 Warning: "+ message);
+        Console.WriteLine("🟠 Warning: " + message);
     }
 
     public void Info(string message)
     {
-        Console.WriteLine(message);
+        Console.WriteLine("🔵 Info: " + message);
     }
 
     public void Exception(Exception exception)
     {
-        Console.WriteLine("🚩Exception: "+ exception);
+        Console.WriteLine("🚩 Exception: "+ exception);
     }
 }

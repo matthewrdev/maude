@@ -198,6 +198,31 @@ public static class MaudeRuntime
             return Instance.IsFramesPerSecondEnabled;
         }
     }
+    
+    /// <summary>
+    /// Gets or sets how annotated events should render on the chart.
+    /// </summary>
+    public static MaudeEventRenderingBehaviour EventRenderingBehaviour
+    {
+        get
+        {
+            if (!IsInitialized)
+            {
+                return MaudeEventRenderingBehaviour.IconsOnly;
+            }
+
+            return Instance.EventRenderingBehaviour;
+        }
+        set
+        {
+            if (!IsInitialized)
+            {
+                return;
+            }
+
+            Instance.EventRenderingBehaviour = value;
+        }
+    }
 
     /// <summary>
     /// Should the slide sheet or overlay be allowed to be presented?

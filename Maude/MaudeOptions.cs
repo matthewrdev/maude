@@ -20,7 +20,8 @@ using System.Linq;
         ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
         AdditionalLogger = new MaudeConsoleLogger(),
             DefaultOverlayPosition= MaudeOverlayPosition.TopRight,
-            EnableFramesPerSecond = false
+            EnableFramesPerSecond = false,
+            EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly
         };
         
         /// <summary>
@@ -67,6 +68,11 @@ using System.Linq;
         /// Optional additional logger to receive Maude log messages.
         /// </summary>
         public IMaudeLogCallback? AdditionalLogger { get; private set; }
+        
+        /// <summary>
+        /// Configures how annotated events should appear on the chart.
+        /// </summary>
+        public MaudeEventRenderingBehaviour EventRenderingBehaviour { get; private set; } = MaudeEventRenderingBehaviour.IconsOnly;
 
     public void Validate()
     {
@@ -199,6 +205,15 @@ using System.Linq;
                 if (logger == null) throw new ArgumentNullException(nameof(logger));
                 
                 options.AdditionalLogger = logger;
+                return this;
+            }
+            
+            /// <summary>
+            /// Configures how events are rendered on the chart.
+            /// </summary>
+            public MaudeOptionsBuilder WithEventRenderingBehaviour(MaudeEventRenderingBehaviour behaviour)
+            {
+                options.EventRenderingBehaviour = behaviour;
                 return this;
             }
             
