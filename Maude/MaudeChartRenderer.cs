@@ -19,6 +19,8 @@ public static class MaudeChartRenderer
         new FpsThreshold("Critical", int.MinValue, new SKColor(200, 46, 60))
     };
 
+    private const double BytesPerMegabyte = 1024d * 1024d;
+
     public static MaudeRenderResult Render(SKCanvas canvas,
                                            SKImageInfo info, 
                                            IMaudeDataSink dataSink,
@@ -124,8 +126,6 @@ public static class MaudeChartRenderer
             probeUtc = fromUtc.AddMilliseconds(totalMilliseconds * probeRatio.Value);
         }
 
-        var markerUtc = probeUtc ?? renderOptions.CurrentUtc;
-
         var axisPaint = resources.AxisPaint;
         var gridPaint = resources.GridPaint;
 
@@ -133,6 +133,18 @@ public static class MaudeChartRenderer
         var textPaint = resources.TextPaint;
         var textFont = resources.TextFont;
         textFont.Size = 14 * layoutScale;
+
+        var axisLabelFont = resources.AxisLabelFont;
+        axisLabelFont.Size = 12f * layoutScale;
+
+        var axisUnitFont = resources.AxisUnitFont;
+        axisUnitFont.Size = Math.Max(9.5f * layoutScale, axisLabelFont.Size * 0.85f);
+        var axisLabelPadding = 10f * layoutScale;
+        var axisUnitPadding = 10f * layoutScale;
+        const string leftAxisUnitLabel = "(MB)";
+        const string rightAxisUnitLabel = "(FPS)";
+        var leftAxisUnitWidth = axisUnitFont.MeasureText(leftAxisUnitLabel, textPaint);
+        var rightAxisUnitWidth = axisUnitFont.MeasureText(rightAxisUnitLabel, textPaint);
 
         var legendTextPaint = resources.LegendTextPaint;
         var legendFont = resources.LegendFont;
@@ -165,7 +177,7 @@ public static class MaudeChartRenderer
 
         float MeasureLabel(string text)
         {
-            var cacheKey = (text, textFont.Size);
+            var cacheKey = (text, axisLabelFont.Size);
             var nowTicks = DateTime.UtcNow.Ticks;
 
             if (resources.LabelWidthCache.TryGetValue(cacheKey, out var entry))
@@ -178,7 +190,7 @@ public static class MaudeChartRenderer
                 }
             }
 
-            var width = textFont.MeasureText(text, textPaint);
+            var width = axisLabelFont.MeasureText(text, textPaint);
             resources.LabelWidthCache[cacheKey] = new LabelMeasureCacheEntry(width, nowTicks);
 
             // Opportunistic cache cleanup
@@ -195,7 +207,7 @@ public static class MaudeChartRenderer
         {
             var valueRatio = 1f - (float)i / gridLines;
             var value = (long)Math.Ceiling(maxMemoryDisplayValue * valueRatio);
-            var text = FormatBytes(value);
+            var text = FormatMemoryAxisLabel(value);
             labelSamples.Add(text);
             var width = MeasureLabel(text);
             if (width > maxLabelWidth)
@@ -211,7 +223,7 @@ public static class MaudeChartRenderer
             {
                 var valueRatio = 1f - (float)i / gridLines;
                 var value = (long)Math.Ceiling(maxFpsDisplayValue * valueRatio);
-                var text = FormatFps(value);
+                var text = FormatFps(value, includeUnit: false);
                 fpsLabelSamples.Add(text);
                 var width = MeasureLabel(text);
                 if (width > maxRightLabelWidth)
@@ -236,8 +248,10 @@ public static class MaudeChartRenderer
 
         var baseTopMargin = 24f * layoutScale;
         var bottomMargin = 48f * layoutScale;
-        var rightMargin = Math.Max(24f * layoutScale, maxRightLabelWidth + 22f * layoutScale);
-        var leftMargin = Math.Max(60f * layoutScale, maxLabelWidth + 22f * layoutScale);
+        var marginPadding = 22f * layoutScale;
+        var rightMargin = Math.Max(24f * layoutScale,
+            Math.Max(maxRightLabelWidth + marginPadding, hasFpsMetrics ? rightAxisUnitWidth + marginPadding : 0f));
+        var leftMargin = Math.Max(60f * layoutScale, Math.Max(maxLabelWidth + marginPadding, leftAxisUnitWidth + marginPadding));
 
         var legendEntries = resources.LegendEntries;
         legendEntries.Clear();
@@ -287,9 +301,10 @@ public static class MaudeChartRenderer
 
         var legendLineCount = legendLineStarts.Count > 0 ? legendLineStarts.Count - 1 : 0;
         var legendHeight = legendLineCount * legendLineHeight;
+        var legendSpacing = legendLineCount > 0 ? 8f * layoutScale : axisUnitFont.Size + 4f * layoutScale;
 
         var chartRect = new SKRect(leftMargin,
-                                   baseTopMargin + legendHeight + (legendHeight > 0 ? 8f * layoutScale : 0f),
+                                   baseTopMargin + legendHeight + legendSpacing,
                                    info.Width - rightMargin,
                                    info.Height - bottomMargin);
 
@@ -387,41 +402,68 @@ public static class MaudeChartRenderer
             canvas.DrawLine(chartRect.Left, y, chartRect.Right, y, gridPaint);
 
             var label = labelSamples[i];
+            var leftLabelWidth = axisLabelFont.MeasureText(label, textPaint);
             canvas.DrawText(label,
-                            chartRect.Left - 10 - textFont.MeasureText(label, textPaint),
-                            y + (textFont.Size / 3),
+                            chartRect.Left - axisLabelPadding - leftLabelWidth,
+                            y + (axisLabelFont.Size / 3),
                             SKTextAlign.Left,
-                            textFont,
+                            axisLabelFont,
                             textPaint);
             
             if (fpsLabelSamples.Count > i)
             {
                 var fpsLabel = fpsLabelSamples[i];
                 canvas.DrawText(fpsLabel,
-                    chartRect.Right + 10 * layoutScale,
-                    y + (textFont.Size / 3),
+                    chartRect.Right + axisLabelPadding,
+                    y + (axisLabelFont.Size / 3),
                     SKTextAlign.Left,
-                    textFont,
+                    axisLabelFont,
                     textPaint);
             }
+        }
+
+        var legendBaselineY = legendLineCount > 0
+            ? baseTopMargin + legendFont.Size + (legendLineCount - 1) * legendLineHeight
+            : baseTopMargin + axisUnitFont.Size;
+        var axisUnitY = legendBaselineY;
+        canvas.DrawText(leftAxisUnitLabel,
+                        chartRect.Left - axisUnitPadding - leftAxisUnitWidth,
+                        axisUnitY,
+                        SKTextAlign.Left,
+                        axisUnitFont,
+                        textPaint);
+
+        if (hasFpsMetrics)
+        {
+            canvas.DrawText(rightAxisUnitLabel,
+                            chartRect.Right + axisUnitPadding,
+                            axisUnitY,
+                            SKTextAlign.Left,
+                            axisUnitFont,
+                            textPaint);
         }
 
         // Time labels
         var startLabel = fromUtc.ToLocalTime().ToString("HH:mm:ss");
         var endLabel = toUtc.ToLocalTime().ToString("HH:mm:ss");
         var midLabel = fromUtc.AddMilliseconds(totalMilliseconds / 2).ToLocalTime().ToString("HH:mm:ss");
-        canvas.DrawText(startLabel, chartRect.Left, chartRect.Bottom + textFont.Size + 4, SKTextAlign.Left, textFont, textPaint);
-        canvas.DrawText(midLabel,
-                        chartRect.MidX - textFont.MeasureText(midLabel, textPaint) / 2,
-                        chartRect.Bottom + textFont.Size + 4,
+        canvas.DrawText(startLabel,
+                        chartRect.Left,
+                        chartRect.Bottom + axisLabelFont.Size + 4,
                         SKTextAlign.Left,
-                        textFont,
+                        axisLabelFont,
+                        textPaint);
+        canvas.DrawText(midLabel,
+                        chartRect.MidX - axisLabelFont.MeasureText(midLabel, textPaint) / 2,
+                        chartRect.Bottom + axisLabelFont.Size + 4,
+                        SKTextAlign.Left,
+                        axisLabelFont,
                         textPaint);
         canvas.DrawText(endLabel,
-                        chartRect.Right - textFont.MeasureText(endLabel, textPaint),
-                        chartRect.Bottom + textFont.Size + 4,
+                        chartRect.Right - axisLabelFont.MeasureText(endLabel, textPaint),
+                        chartRect.Bottom + axisLabelFont.Size + 4,
                         SKTextAlign.Left,
-                        textFont,
+                        axisLabelFont,
                         textPaint);
 
         // Legend
@@ -587,12 +629,12 @@ public static class MaudeChartRenderer
             }
         }
 
-        // Current position marker or probe marker
-        if (markerUtc.HasValue
-            && markerUtc.Value >= fromUtc
-            && markerUtc.Value <= toUtc)
+        // Probe marker (touch indicator)
+        if (probeUtc.HasValue
+            && probeUtc.Value >= fromUtc
+            && probeUtc.Value <= toUtc)
         {
-            var x = chartRect.Left + (float)((markerUtc.Value - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+            var x = chartRect.Left + (float)((probeUtc.Value - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
             var markerPaint = resources.MarkerPaint;
             canvas.DrawLine(x, chartRect.Top, x, chartRect.Bottom, markerPaint);
         }
@@ -705,6 +747,14 @@ public static class MaudeChartRenderer
         return $"{bytes:0.#} {units[unit]}";
     }
 
+    private static string FormatMemoryAxisLabel(long value)
+    {
+        var megabytes = value / BytesPerMegabyte;
+        return megabytes >= 10
+            ? $"{megabytes:0}"
+            : $"{megabytes:0.#}";
+    }
+
     internal static string FormatFps(long value, bool includeUnit = true)
     {
         var rounded = Math.Max(0, value);
@@ -787,6 +837,8 @@ public static class MaudeChartRenderer
                 IsAntialias = true
             };
             TextFont = new SKFont();
+            AxisLabelFont = new SKFont();
+            AxisUnitFont = new SKFont();
 
             LegendTextPaint = new SKPaint
             {
@@ -864,6 +916,8 @@ public static class MaudeChartRenderer
         public SKPaint LegendTextPaint { get; }
         public SKPaint EventLabelPaint { get; }
         public SKFont TextFont { get; }
+        public SKFont AxisLabelFont { get; }
+        public SKFont AxisUnitFont { get; }
         public SKFont LegendFont { get; }
         public SKFont EventLabelFont { get; }
         public SKFont EventIconFont { get; }

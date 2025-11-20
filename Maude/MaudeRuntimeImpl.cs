@@ -332,7 +332,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
                     return;
                 }
 
-                if (this.presentedMaudeViewReference.TryGetTarget(out var view))
+                if (presentedMaudeViewReference != null && presentedMaudeViewReference.TryGetTarget(out var view))
                 {
                     MaudeLogger.Info("Closing presented Maude sheet.");
                     view.Close();

@@ -90,7 +90,7 @@ internal sealed class MemorySamplerThread : IDisposable
                     
                     this.onSampleCaptured(snapshot);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     // Suppressed, should not happen.
                 }

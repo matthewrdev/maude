@@ -29,6 +29,15 @@ public partial class MaudeView : Grid
         UpdateWindowLabel();
     }
     
+    protected override void OnHandlerChanging(HandlerChangingEventArgs args)
+    {
+        base.OnHandlerChanging(args);
+        if (args.NewHandler == null)
+        {
+            UnbindRuntime();
+        }
+    }
+    
     private void OnToggleOverlayTapped(object sender, TappedEventArgs e)
     {
         if (MaudeRuntime.IsChartOverlayPresented)
@@ -51,14 +60,8 @@ public partial class MaudeView : Grid
     {
         intervalSelector.Items = windowOptions;
         intervalSelector.SelectedItem = windowOptions.FirstOrDefault(o => o.Duration == TimeSpan.FromSeconds(60)) ?? windowOptions.First();
-        intervalSelector.SelectionChanged += (_, args) =>
-        {
-            if (args.Selected?.Duration is TimeSpan duration && duration > TimeSpan.Zero)
-            {
-                chartView.WindowDuration = duration;
-                UpdateWindowLabel();
-            }
-        };
+        intervalSelector.SelectionChanged -= OnIntervalSelectionChanged;
+        intervalSelector.SelectionChanged += OnIntervalSelectionChanged;
 
         chartView.WindowDuration = intervalSelector.SelectedItem?.Duration ?? TimeSpan.FromSeconds(60);
         UpdateWindowLabel();
@@ -68,11 +71,29 @@ public partial class MaudeView : Grid
     {
         chartView.Detach();
         eventsView.Detach();
+        DetachWindowSelector();
     }
 
     private void UpdateWindowLabel()
     {
         var seconds = Math.Max(1, (int)Math.Round(chartView.WindowDuration.TotalSeconds));
         windowLabel.Text = $"Last {seconds}s";
+    }
+
+    private void DetachWindowSelector()
+    {
+        if (intervalSelector != null)
+        {
+            intervalSelector.SelectionChanged -= OnIntervalSelectionChanged;
+        }
+    }
+
+    private void OnIntervalSelectionChanged(object? sender, TagSelectorSelectionChangedEventArgs args)
+    {
+        if (args?.Selected?.Duration is TimeSpan duration && duration > TimeSpan.Zero)
+        {
+            chartView.WindowDuration = duration;
+            UpdateWindowLabel();
+        }
     }
 }

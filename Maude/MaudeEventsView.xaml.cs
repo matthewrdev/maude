@@ -13,7 +13,7 @@ namespace Maude;
 public partial class MaudeEventsView : ContentView
 {
     private const int MaxEvents = 50;
-    private IMaudeDataSink dataSink;
+    private IMaudeDataSink? dataSink;
 
     public ObservableCollection<MaudeEventDisplay> VisibleEvents { get; } = new();
 
@@ -51,12 +51,13 @@ public partial class MaudeEventsView : ContentView
         }
     }
 
-    private void Subscribe(IMaudeDataSink sink)
+    private void Subscribe(IMaudeDataSink? sink)
     {
         dataSink = sink;
         if (sink != null)
         {
-            dataSink.OnEventsUpdated += HandleEventsUpdated;
+            sink.OnEventsUpdated -= HandleEventsUpdated;
+            sink.OnEventsUpdated += HandleEventsUpdated;
         }
 
         RefreshEvents();

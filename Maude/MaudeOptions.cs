@@ -16,11 +16,11 @@ using System.Linq;
             SampleFrequencyMilliseconds = MaudeConstants.DefaultSampleFrequencyMilliseconds,
             RetentionPeriodSeconds = MaudeConstants.DefaultRetentionPeriodSeconds,
             AdditionalChannels = new List<MaudeChannel>(),
-        AllowShakeGesture = false,
-        ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
-        AdditionalLogger = new MaudeConsoleLogger(),
+            AllowShakeGesture = false,
+            ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
+            AdditionalLogger = new MaudeConsoleLogger(),
             DefaultOverlayPosition= MaudeOverlayPosition.TopRight,
-            EnableFramesPerSecond = false,
+            EnableFramesPerSecond = true,
             EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly
         };
         
@@ -42,7 +42,7 @@ using System.Linq;
         /// <summary>
         /// Additional metric/event channels to plot besides the built-in ones.
         /// </summary>
-        public List<MaudeChannel> AdditionalChannels { get; set; } = new();
+        public List<MaudeChannel> AdditionalChannels { get; private set; } = new();
 
         /// <summary>
         /// Allow shake gesture to present the UI.

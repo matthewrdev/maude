@@ -132,7 +132,7 @@ internal class TagSelector : HorizontalStackLayout
         }
     }
 
-    private void OnTapped(object sender, TappedEventArgs e)
+    private void OnTapped(object? sender, TappedEventArgs e)
     {
         if (sender is Border border)
         {
