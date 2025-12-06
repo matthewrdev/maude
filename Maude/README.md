@@ -96,6 +96,35 @@ var options = MaudeOptions.CreateBuilder()
 
 Use `WithEventRenderingBehaviour` (or adjust `MaudeRuntime.EventRenderingBehaviour`) to control whether the chart shows event icons with labels, icons only, or hides events. The selection applies to both the slide sheet and the overlay rendering modes.
 
+### Control the Default Memory Metrics
+
+Use `WithDefaultMemoryChannels` (or `WithoutDefaultMemoryChannels`) to choose which of the built-in memory series Maude should create. The `MaudeDefaultMemoryChannels` flags represent the CLR managed heap, Android's native heap, Android's RSS channel, and iOS's physical footprint.
+
+```csharp
+var managedOnly = MaudeOptions.CreateBuilder()
+    .WithDefaultMemoryChannels(MaudeDefaultMemoryChannels.ManagedHeap)
+    .Build();
+
+var hideNoise = MaudeOptions.CreateBuilder()
+    .WithoutDefaultMemoryChannels(MaudeDefaultMemoryChannels.NativeHeap | MaudeDefaultMemoryChannels.ResidentSetSize)
+    .Build();
+```
+
+Maude enables the platform-appropriate channels by default (CLR + Native + RSS on Android, CLR + Physical Footprint on iOS). Pass `MaudeDefaultMemoryChannels.None` when you want to hide every default memory series and rely solely on custom channels.
+
+### On-demand Shake Predicate
+
+Provide `WithShakeGesturePredicate` when you want your own configuration to decide if the shake gesture should respond. Maude evaluates the predicate before enabling the listener and on every shake, so you don't need to juggle `MaudeRuntime.EnableShakeGesture()`/`DisableShakeGesture()` as your flags change.
+
+```csharp
+var options = MaudeOptions.CreateBuilder()
+    .WithShakeGesture()
+    .WithShakeGesturePredicate(() => MyDebugConfig.IsShakeAllowed)
+    .Build();
+```
+
+A predicate that returns `false` leaves the accelerometer running but ignores the shake; if it throws, Maude logs the exception and suppresses the gesture.
+
 ### Platform initialisation
 
 While the MauiAppBuilder extension registers and initialises Maude, it may be desireable to ensure that Maude is sampling immediately when you're app starts.

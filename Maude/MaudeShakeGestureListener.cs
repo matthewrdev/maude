@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
 
@@ -32,6 +33,12 @@ internal sealed class MaudeShakeGestureListener : IDisposable
         {
             MaudeLogger.Warning("Shake gesture is not supported on this device.");
             return;
+        }
+
+        var predicateAllows = EvaluateShakePredicate("enabling shake gesture");
+        if (!predicateAllows)
+        {
+            MaudeLogger.Info("Shake gesture predicate returned false; listener will remain idle until predicate allows it.");
         }
 
         try
@@ -88,6 +95,11 @@ internal sealed class MaudeShakeGestureListener : IDisposable
 
     private void OnShakeDetected(object? sender, EventArgs e)
     {
+        if (!EvaluateShakePredicate("processing shake gesture"))
+        {
+            return;
+        }
+
         MainThread.BeginInvokeOnMainThread(() =>
         {
             switch (options.ShakeGestureBehaviour)
@@ -120,5 +132,24 @@ internal sealed class MaudeShakeGestureListener : IDisposable
     public void Dispose()
     {
         Disable();
+    }
+
+    private bool EvaluateShakePredicate(string context)
+    {
+        if (options.ShakeGesturePredicate == null)
+        {
+            return true;
+        }
+
+        try
+        {
+            return options.ShakeGesturePredicate();
+        }
+        catch (Exception ex)
+        {
+            MaudeLogger.Error($"Shake gesture predicate threw while {context}.");
+            MaudeLogger.Exception(ex);
+            return false;
+        }
     }
 }

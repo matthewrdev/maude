@@ -1,5 +1,6 @@
 namespace Maude;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,6 +17,7 @@ using System.Linq;
             SampleFrequencyMilliseconds = MaudeConstants.DefaultSampleFrequencyMilliseconds,
             RetentionPeriodSeconds = MaudeConstants.DefaultRetentionPeriodSeconds,
             AdditionalChannels = new List<MaudeChannel>(),
+            DefaultMemoryChannels = MaudeDefaultMemoryChannels.PlatformDefaults,
             AllowShakeGesture = false,
             ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
             AdditionalLogger = new MaudeConsoleLogger(),
@@ -43,11 +45,21 @@ using System.Linq;
         /// Additional metric/event channels to plot besides the built-in ones.
         /// </summary>
         public List<MaudeChannel> AdditionalChannels { get; private set; } = new();
+        
+        /// <summary>
+        /// Controls which of the built-in memory channels should be exposed.
+        /// </summary>
+        public MaudeDefaultMemoryChannels DefaultMemoryChannels { get; private set; } = MaudeDefaultMemoryChannels.PlatformDefaults;
 
         /// <summary>
         /// Allow shake gesture to present the UI.
         /// </summary>
         public bool AllowShakeGesture { get; private set; } = false;
+        
+        /// <summary>
+        /// Optional predicate that determines whether the shake gesture should be considered active.
+        /// </summary>
+        public Func<bool>? ShakeGesturePredicate { get; private set; }
         
         /// <summary>
         /// Behaviour applied when a shake is detected.
@@ -171,6 +183,24 @@ using System.Linq;
             }
 
             /// <summary>
+            /// Specifies which of the built-in memory channels should be displayed.
+            /// </summary>
+            public MaudeOptionsBuilder WithDefaultMemoryChannels(MaudeDefaultMemoryChannels memoryChannels)
+            {
+                options.DefaultMemoryChannels = memoryChannels;
+                return this;
+            }
+
+            /// <summary>
+            /// Removes the provided built-in memory channels from the configuration.
+            /// </summary>
+            public MaudeOptionsBuilder WithoutDefaultMemoryChannels(MaudeDefaultMemoryChannels memoryChannels)
+            {
+                options.DefaultMemoryChannels &= ~memoryChannels;
+                return this;
+            }
+
+            /// <summary>
             /// Configures the shake gesture behaviour.
             /// </summary>
             public MaudeOptionsBuilder WithShakeGestureBehaviour(MaudeShakeGestureBehaviour  shakeGestureBehaviour)
@@ -185,6 +215,17 @@ using System.Linq;
             public MaudeOptionsBuilder WithShakeGesture()
             {
                 options.AllowShakeGesture = true;
+                return this;
+            }
+
+            /// <summary>
+            /// Configures a predicate evaluated before enabling or responding to shake gestures.
+            /// </summary>
+            public MaudeOptionsBuilder WithShakeGesturePredicate(Func<bool> predicate)
+            {
+                if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+                
+                options.ShakeGesturePredicate = predicate;
                 return this;
             }
 

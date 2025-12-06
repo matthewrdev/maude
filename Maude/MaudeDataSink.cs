@@ -20,14 +20,27 @@ internal class MaudeMutableDataSink : IMaudeDataSink
 
         options.Validate();
 
-        channels[MaudeConstants.ReservedChannels.ClrMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.ClrMemoryUsage_Id, MaudeConstants.ReservedChannels.ClrMemoryUsage_Name, MaudeConstants.ReservedChannels.ClrMemoryUsage_Color);
+        if (options.DefaultMemoryChannels.HasFlag(MaudeDefaultMemoryChannels.ManagedHeap))
+        {
+            channels[MaudeConstants.ReservedChannels.ClrMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.ClrMemoryUsage_Id, MaudeConstants.ReservedChannels.ClrMemoryUsage_Name, MaudeConstants.ReservedChannels.ClrMemoryUsage_Color);
+        }
         channels[MaudeConstants.ReservedChannels.FramesPerSecond_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.FramesPerSecond_Id, MaudeConstants.ReservedChannels.FramesPerSecond_Name, MaudeConstants.ReservedChannels.FramesPerSecond_Color);
         
 #if IOS
-        channels[MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Name, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Color);
+        if (options.DefaultMemoryChannels.HasFlag(MaudeDefaultMemoryChannels.PhysicalFootprint))
+        {
+            channels[MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Name, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Color);
+        }
 #elif ANDROID
-        channels[MaudeConstants.ReservedChannels.NativeHeapAllocated_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.NativeHeapAllocated_Id, MaudeConstants.ReservedChannels.NativeHeapAllocated_Name, MaudeConstants.ReservedChannels.NativeHeapAllocated_Color);
-        channels[MaudeConstants.ReservedChannels.Rss_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.Rss_Id, MaudeConstants.ReservedChannels.Rss_Name, MaudeConstants.ReservedChannels.Rss_Color);
+        if (options.DefaultMemoryChannels.HasFlag(MaudeDefaultMemoryChannels.NativeHeap))
+        {
+            channels[MaudeConstants.ReservedChannels.NativeHeapAllocated_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.NativeHeapAllocated_Id, MaudeConstants.ReservedChannels.NativeHeapAllocated_Name, MaudeConstants.ReservedChannels.NativeHeapAllocated_Color);
+        }
+
+        if (options.DefaultMemoryChannels.HasFlag(MaudeDefaultMemoryChannels.ResidentSetSize))
+        {
+            channels[MaudeConstants.ReservedChannels.Rss_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.Rss_Id, MaudeConstants.ReservedChannels.Rss_Name, MaudeConstants.ReservedChannels.Rss_Color);
+        }
 #endif
         
         channels[MaudeConstants.ReservedChannels.ChannelNotSpecified_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.ChannelNotSpecified_Id, "Not Specified", default(Color));

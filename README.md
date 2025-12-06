@@ -111,6 +111,35 @@ var options = MaudeOptions.CreateBuilder()
 
 Use `WithEventRenderingBehaviour` (or change `MaudeRuntime.EventRenderingBehaviour` at runtime) to choose between icons with labels, icons only, or hiding events entirely. This applies to both the slide sheet and overlay chart.
 
+### Control the Default Memory Metrics
+
+`MaudeOptions` now exposes `WithDefaultMemoryChannels` and `WithoutDefaultMemoryChannels` so you can decide which of Maude's built-in metrics appear. The flags in `MaudeDefaultMemoryChannels` cover the CLR managed heap, Android's native heap, Android's RSS, and iOS's physical footprint channel.
+
+```csharp
+var options = MaudeOptions.CreateBuilder()
+    .WithDefaultMemoryChannels(MaudeDefaultMemoryChannels.ManagedHeap) // managed heap only
+    .Build();
+
+var hideNoise = MaudeOptions.CreateBuilder()
+    .WithoutDefaultMemoryChannels(MaudeDefaultMemoryChannels.NativeHeap | MaudeDefaultMemoryChannels.ResidentSetSize)
+    .Build();
+```
+
+By default Maude enables the platform-appropriate channels (CLR + Native + RSS on Android, CLR + Physical Footprint on iOS). Supplying `MaudeDefaultMemoryChannels.None` hides every built-in memory series so you can overlay only your custom channels.
+
+### On-demand Shake Predicate
+
+When you need to gate the shake gesture behind your own runtime configuration, provide a predicate. Maude consults it before activating the listener and each time a shake occurs, so you don't have to manually call `EnableShakeGesture` or `DisableShakeGesture` as your config changes.
+
+```csharp
+var options = MaudeOptions.CreateBuilder()
+    .WithShakeGesture()
+    .WithShakeGesturePredicate(() => MyDebugConfig.IsShakeAllowed)
+    .Build();
+```
+
+If the predicate returns `false`, the accelerometer remains registered but shakes are ignored until the predicate later returns `true`. If it throws, Maude logs the exception and suppresses the shake.
+
 ### Platform initialisation
 
 While the MauiAppBuilder extension registers and initialises Maude, it may be desireable to ensure that Maude is sampling immediately when you're app starts.
