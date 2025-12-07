@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Platform;
 
@@ -8,6 +9,7 @@ namespace Maude;
 internal class MaudeRuntimeImpl : IMaudeRuntime
 {
     private readonly MaudeOptions options;
+    
     private readonly SemaphoreSlim presentationSemaphore = new SemaphoreSlim(1, 1);
     private WeakReference<IMaudePopup>? presentedMaudeViewReference;
     
@@ -25,6 +27,8 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     private readonly MaudeShakeGestureListener shakeGestureListener;
 
     public IMaudeDataSink DataSink => MutableDataSink;
+
+    internal MaudeSaveSnapshotAction? SaveSnapshotAction => options.SaveSnapshotAction;
 
     public MaudeRuntimeImpl(MaudeOptions options)
     {
@@ -59,6 +63,37 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     public event EventHandler? OnActivated;
     
     public event EventHandler? OnDeactivated;
+
+    internal async Task ExecuteSaveSnapshotActionAsync()
+    {
+        var action = options.SaveSnapshotAction;
+        if (action == null)
+        {
+            return;
+        }
+
+        MaudeSnapshot snapshot;
+        try
+        {
+            snapshot = MutableDataSink.Snapshot();
+        }
+        catch (Exception ex)
+        {
+            MaudeLogger.Error("Failed to capture snapshot for save action.");
+            MaudeLogger.Exception(ex);
+            return;
+        }
+
+        try
+        {
+            await action.CopyDelegate(snapshot);
+        }
+        catch (Exception ex)
+        {
+            MaudeLogger.Error("Save snapshot action delegate threw an exception.");
+            MaudeLogger.Exception(ex);
+        }
+    }
 
     public void Activate()
     {

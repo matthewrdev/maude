@@ -27,6 +27,7 @@ public partial class MaudeView : Grid
         BindRuntime();
         BindWindowSelector();
         UpdateWindowLabel();
+        InitializeSnapshotAction();
     }
     
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
@@ -48,6 +49,27 @@ public partial class MaudeView : Grid
         {
             MaudeRuntime.PresentOverlay();
         }
+    }
+
+    private void InitializeSnapshotAction()
+    {
+        var action = MaudeRuntime.MutableInstance.SaveSnapshotAction;
+        var isEnabled = action != null;
+        snapshotActionButton.IsVisible = isEnabled;
+
+        if (isEnabled && action != null)
+        {
+            snapshotActionLabel.Text = action.Label;
+            if (string.IsNullOrWhiteSpace(action.Label))
+            {
+                snapshotActionLabel.Text = "COPY";
+            }
+        }
+    }
+
+    private async void OnSaveSnapshotTapped(object? sender, TappedEventArgs e)
+    {
+        await MaudeRuntime.MutableInstance.ExecuteSaveSnapshotActionAsync();
     }
 
     private void BindRuntime()

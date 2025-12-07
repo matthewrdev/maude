@@ -19,13 +19,17 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
+        ShakePredicateCodeOneEntry.Text = ShakePredicateCoordinator.CodeOne;
+        ShakePredicateCodeTwoEntry.Text = ShakePredicateCoordinator.CodeTwo;
         UpdateRuntimeStatus();
+        UpdateShakePredicateStatus();
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
         UpdateRuntimeStatus();
+        UpdateShakePredicateStatus();
     }
 
     private void UpdateRuntimeStatus()
@@ -34,6 +38,19 @@ public partial class MainPage : ContentPage
         var isPresented = MaudeRuntime.IsSheetPresented;
         StatusLabel.Text = $"Runtime {(isActive ? "active" : "inactive")} • {(isPresented ? "presented" : "hidden")}";
         UpdateEventRenderingStatus();
+    }
+
+    private void UpdateShakePredicateStatus()
+    {
+        if (ShakePredicateStatusLabel == null)
+        {
+            return;
+        }
+
+        var allowed = ShakePredicateCoordinator.ShouldAllowShake;
+        ShakePredicateStatusLabel.Text = allowed
+            ? "Current: Allowed (tokens match)"
+            : "Current: Blocked (tokens mismatch)";
     }
 
     private void UpdateEventRenderingStatus()
@@ -181,6 +198,18 @@ public partial class MainPage : ContentPage
     private void OnOverlayBottomLeftClicked(object? sender, EventArgs e) => PresentOverlay(MaudeOverlayPosition.BottomLeft);
 
     private void OnOverlayBottomRightClicked(object? sender, EventArgs e) => PresentOverlay(MaudeOverlayPosition.BottomRight);
+
+    private void OnShakePredicateCodeOneChanged(object? sender, TextChangedEventArgs e)
+    {
+        ShakePredicateCoordinator.UpdateCodeOne(e.NewTextValue);
+        UpdateShakePredicateStatus();
+    }
+
+    private void OnShakePredicateCodeTwoChanged(object? sender, TextChangedEventArgs e)
+    {
+        ShakePredicateCoordinator.UpdateCodeTwo(e.NewTextValue);
+        UpdateShakePredicateStatus();
+    }
 
 
     private void OnLowSpikeClicked(object? sender, EventArgs e) => RunClrMemorySpike("Low", 4).SafeFireAndForget();

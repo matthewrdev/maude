@@ -14,7 +14,9 @@ public class Program
             .WithSampleFrequencyMilliseconds(400)
             .WithRetentionPeriodSeconds(120)
             .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)
+            .WithShakeGesturePredicate(() => ShakePredicateCoordinator.ShouldAllowShake)
             .WithAdditionalChannels(CustomMaudeConfiguration.AdditionalChannels)
+            .WithSaveSnapshotAction(SnapshotActionHelper.CopySnapshotToClipboardAsync, "COPY")
             .Build();
         
         MaudeRuntime.InitializeAndActivate(options);

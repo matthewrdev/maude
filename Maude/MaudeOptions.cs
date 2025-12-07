@@ -3,6 +3,7 @@ namespace Maude;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Configures how Maude samples, retains, logs, and presents runtime data.
@@ -85,6 +86,11 @@ using System.Linq;
         /// Configures how annotated events should appear on the chart.
         /// </summary>
         public MaudeEventRenderingBehaviour EventRenderingBehaviour { get; private set; } = MaudeEventRenderingBehaviour.IconsOnly;
+
+        /// <summary>
+        /// Optional save snapshot action rendered in the slide sheet.
+        /// </summary>
+        internal MaudeSaveSnapshotAction? SaveSnapshotAction { get; private set; }
 
     public void Validate()
     {
@@ -255,6 +261,20 @@ using System.Linq;
             public MaudeOptionsBuilder WithEventRenderingBehaviour(MaudeEventRenderingBehaviour behaviour)
             {
                 options.EventRenderingBehaviour = behaviour;
+                return this;
+            }
+
+            /// <summary>
+            /// Enables a custom save snapshot action in the slide sheet.
+            /// </summary>
+            /// <param name="copyDelegate">Delegate invoked with the captured <see cref="MaudeSnapshot"/>.</param>
+            /// <param name="label">Text displayed on the action button.</param>
+            public MaudeOptionsBuilder WithSaveSnapshotAction(Func<MaudeSnapshot, Task> copyDelegate, string label)
+            {
+                if (copyDelegate == null) throw new ArgumentNullException(nameof(copyDelegate));
+                if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+
+                options.SaveSnapshotAction = new MaudeSaveSnapshotAction(label, copyDelegate);
                 return this;
             }
             

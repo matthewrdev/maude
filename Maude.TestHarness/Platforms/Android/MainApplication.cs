@@ -13,7 +13,9 @@ public class MainApplication : MauiApplication
             .WithAdditionalLogger(new CustomMaudeLogCallback())
             .WithShakeGesture()
             .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)
+            .WithShakeGesturePredicate(() => ShakePredicateCoordinator.ShouldAllowShake)
             .WithAdditionalChannels(CustomMaudeConfiguration.AdditionalChannels)
+            .WithSaveSnapshotAction(SnapshotActionHelper.CopySnapshotToClipboardAsync, "COPY")
             .Build();
         
         MaudeRuntime.InitializeAndActivate(options);

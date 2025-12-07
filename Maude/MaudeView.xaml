@@ -22,23 +22,41 @@
                    TextColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"/>
         </HorizontalStackLayout>
 
-        <Border Grid.Column="1"
-                HorizontalOptions="End"
-                VerticalOptions="Center"
-                Margin="0,0,6,0"
-                Padding="12,6"
-                Stroke="{x:Static local:MaudeConstants.MaudeBrandColor}"
-                BackgroundColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"
-                StrokeShape="RoundRectangle 10">
-            <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnToggleOverlayTapped"/>
-            </Border.GestureRecognizers>
-            <Label Text="OVERLAY"
-                   TextColor="White"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center"/>
-        </Border>
+        <HorizontalStackLayout Grid.Column="1"
+                               Margin="0,0,6,0"
+                               HorizontalOptions="End"
+                               VerticalOptions="Center"
+                               Spacing="6">
+            <Border x:Name="snapshotActionButton"
+                    IsVisible="False"
+                    Padding="12,6"
+                    Stroke="{x:Static local:MaudeConstants.MaudeBrandColor}"
+                    BackgroundColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"
+                    StrokeShape="RoundRectangle 10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSaveSnapshotTapped"/>
+                </Border.GestureRecognizers>
+                <Label x:Name="snapshotActionLabel"
+                       Text="ACTION"
+                       TextColor="White"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+            </Border>
+            <Border Padding="12,6"
+                    Stroke="{x:Static local:MaudeConstants.MaudeBrandColor}"
+                    BackgroundColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"
+                    StrokeShape="RoundRectangle 10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnToggleOverlayTapped"/>
+                </Border.GestureRecognizers>
+                <Label Text="OVERLAY"
+                       TextColor="White"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+            </Border>
+        </HorizontalStackLayout>
     </Grid>
 
     <local:MaudeChartView Grid.Row="1" x:Name="chartView" />

@@ -78,6 +78,35 @@
                         <RoundRectangle CornerRadius="12"/>
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
+                        <Label Text="Shake predicate"
+                               FontAttributes="Bold"
+                               FontSize="16"
+                               TextColor="#111111"/>
+                        <Label Text="Shake detection fires only when both tokens match."
+                               FontSize="12"
+                               TextColor="#666666"/>
+                        <Label x:Name="ShakePredicateStatusLabel"
+                               FontSize="12"
+                               TextColor="#444444"/>
+                        <Entry x:Name="ShakePredicateCodeOneEntry"
+                               Placeholder="Token A"
+                               ClearButtonVisibility="WhileEditing"
+                               TextChanged="OnShakePredicateCodeOneChanged"/>
+                        <Entry x:Name="ShakePredicateCodeTwoEntry"
+                               Placeholder="Token B"
+                               ClearButtonVisibility="WhileEditing"
+                               TextChanged="OnShakePredicateCodeTwoChanged"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Stroke="#dcdcdc"
+                        StrokeThickness="1"
+                        BackgroundColor="#ffffff"
+                        Padding="14,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
                         <Label Text="FPS controls"
                                FontAttributes="Bold"
                                FontSize="16"
