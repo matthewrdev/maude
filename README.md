@@ -47,7 +47,7 @@ MaudeRuntime.PresentOverlay();
 MaudeRuntime.DismissOverlay();
 ```
 
-Or, if you would prefer a one-liner, add the following to your MAUI app builder:
+If you would prefer a one-liner, add the following to your MAUI app builder:
 
 ```csharp
 // MauiProgram.cs

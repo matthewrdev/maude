@@ -1,9 +1,11 @@
 
-# Maude - In-app observability for .NET MAUI.
+# In-app observability for .NET MAUI.
 
 Maude is a plugin for .NET MAUI to monitor app memory at runtime and view it via live-rendered chart.
 
-Maude, aka Maui-Debug, is a powerful, lightweight tool to help you in your debugging battles.
+| <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
+| --- | --- | --- |
+| **Shake to open Maude** | **Memory chart overlay** | **Slide-in events sheet** |
 
 ## Disclaimer ⚠️
 
@@ -17,150 +19,40 @@ Always use the native tools and platform specific profilers (Xcode Instruments, 
 
 Add Maude to your MAUI app with minimal code.
 
-1) Configure the app builder:
+1. Configure the app builder:
+
 ```csharp
 // MauiProgram.cs
 using Maude;
 
-public static MauiApp CreateMauiApp()
-{
-    var builder = MauiApp.CreateBuilder()
-        .UseMauiApp<App>()
-        .UseMaude<App>();  // Initialises and registers the Maude runtime.
-    return builder.Build();
-}
+var builder = MauiApp.CreateBuilder()
+  .UseMauiApp<App>()
+  .UseMaude();
 ```
 
-2) Start tracking memory usage:
+2. Start tracking memory usage:
+
 ```csharp
-    MaudeRuntime.Activate();
+MaudeRuntime.Activate();
 ```
 
+3. Show Maude:
 
-3) Show Maude:
 ```csharp
 // Show Maude as a slide in sheet.
-MaudeRuntime.PresentSheet();   // Open the chart and events view as a slide in.
-MaudeRuntime.DismissSheet();   // Close the slide in sheet.
+MaudeRuntime.PresentSheet();
+MaudeRuntime.DismissSheet();
 
 // Show Maude as a window overlay.
-MaudeRuntime.PresentOverlay();   // Show the chart as a window overlay.
-MaudeRuntime.DismissOverlay();   // Close the overlay.
+MaudeRuntime.PresentOverlay();
+MaudeRuntime.DismissOverlay();
 ```
 
-## Record Events
+Prefer a one-liner? Call `.UseMaudeAndActivate()` to register Maude and immediately start sampling.
 
-Record markers and additional metrics so memory spikes have context.
+## Documentation
 
-```csharp
-// Define channels first (avoid reserved IDs 0, 1 and 255).
-var channels = new []
-{
-    new MaudeChannel(96, "Image Cache", Colors.Orange),
-    new MaudeChannel(97, "Network Buffers", Colors.Green)
-};
-
-// Initialise Maude with those channels.
-var options = MaudeOptions.CreateBuilder()
-    .WithAdditionalChannels(channels)
-    .Build();
-MaudeRuntime.InitializeAndActivate(options);
-
-// Add metrics (rendered as extra series).
-MaudeRuntime.Metric(currentCacheSizeBytes, 96);
-
-// Add events (rendered as vertical markers + items in the event list).
-MaudeRuntime.Event("Cache cleared", 96);                    // default type + icon "*"
-MaudeRuntime.Event("GC requested", MaudeEventType.Gc);      // GC event symbol "g"
-MaudeRuntime.Event("Large download", MaudeEventType.Event, 97, "42 MB");
-```
-
-Events/metrics on unknown channels are ignored. Both the slide-in sheet and overlay display the channels and event markers, letting you correlate spikes with the moments you annotated.
-
-## Customize Maude
-
-Use the `MaudeOptionsBuilder` to tune sampling, channels, gestures and logging:
-
-```csharp
-var options = MaudeOptions.CreateBuilder()
-    .WithSampleFrequencyMilliseconds(500)     // clamp: 200–2000 ms
-    .WithRetentionPeriodSeconds(10 * 60)      // clamp: 60–3600 s
-    .WithAdditionalChannels(customChannels)   // extra metric/event series
-    .WithShakeGesture()                       // enable shake-to-toggle
-    .WithDefaultOverlayPosition(MaudeOverlayPosition.TopRight) // default anchor when showing overlay without an explicit position
-    .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay) // or SlideSheet
-    .WithEventRenderingBehaviour(MaudeEventRenderingBehaviour.IconsOnly) // LabelsAndIcons, IconsOnly (default), None
-    .WithAdditionalLogger(new MyLogger())     // or .WithBuiltInLogger()
-    .Build();
-```
-
-Use `WithEventRenderingBehaviour` (or adjust `MaudeRuntime.EventRenderingBehaviour`) to control whether the chart shows event icons with labels, icons only, or hides events. The selection applies to both the slide sheet and the overlay rendering modes.
-
-### Control the Default Memory Metrics
-
-Use `WithDefaultMemoryChannels` (or `WithoutDefaultMemoryChannels`) to choose which of the built-in memory series Maude should create. The `MaudeDefaultMemoryChannels` flags represent the CLR managed heap, Android's native heap, Android's RSS channel, and iOS's physical footprint.
-
-```csharp
-var managedOnly = MaudeOptions.CreateBuilder()
-    .WithDefaultMemoryChannels(MaudeDefaultMemoryChannels.ManagedHeap)
-    .Build();
-
-var hideNoise = MaudeOptions.CreateBuilder()
-    .WithoutDefaultMemoryChannels(MaudeDefaultMemoryChannels.NativeHeap | MaudeDefaultMemoryChannels.ResidentSetSize)
-    .Build();
-```
-
-Maude enables the platform-appropriate channels by default (CLR + Native + RSS on Android, CLR + Physical Footprint on iOS). Pass `MaudeDefaultMemoryChannels.None` when you want to hide every default memory series and rely solely on custom channels.
-
-### On-demand Shake Predicate
-
-Provide `WithShakeGesturePredicate` when you want your own configuration to decide if the shake gesture should respond. Maude evaluates the predicate before enabling the listener and on every shake, so you don't need to juggle `MaudeRuntime.EnableShakeGesture()`/`DisableShakeGesture()` as your flags change.
-
-```csharp
-var options = MaudeOptions.CreateBuilder()
-    .WithShakeGesture()
-    .WithShakeGesturePredicate(() => MyDebugConfig.IsShakeAllowed)
-    .Build();
-```
-
-A predicate that returns `false` leaves the accelerometer running but ignores the shake; if it throws, Maude logs the exception and suppresses the gesture.
-
-### Platform initialisation
-
-While the MauiAppBuilder extension registers and initialises Maude, it may be desireable to ensure that Maude is sampling immediately when you're app starts.
-
-To do so:
-
-- **Android**: initialise inside `MainApplication` so the runtime is ready before `CreateMauiApp()`:
-
-```csharp
-public MainApplication(IntPtr handle, JniHandleOwnership ownership)
-    : base(handle, ownership)
-{
-    var options = /* build options as above */;
-    MaudeRuntime.InitializeAndActivate(options);
-}
-```
-
-- **iOS/macOS Catalyst**: initialise before `UIApplication.Main` in `Program.cs`:
-
-```csharp
-var options = /* build options */;
-MaudeRuntime.InitializeAndActivate(options);
-UIApplication.Main(args, null, typeof(AppDelegate));
-```
-
-## FPS Tracking
-
-Maude can track frames-per-second in addition to memory usage, letting you correlate performance drops with allocations or GC pressure. Enable FPS sampling via the builder:
-
-```csharp
-var options = MaudeOptions.CreateBuilder()
-    .WithFramesPerSecond()
-    .Build();
-```
-
-You can also toggle capture dynamically with `MaudeRuntime.EnableFramesPerSecond()` and `.DisableFramesPerSecond()`. The FPS line uses color-coded segments (Optimal, Stable, Fair, Poor, Critical) so slowdowns stand out even when you’re not looking at the numeric axis.
+Looking for builder options, event recording, FPS sampling, or platform-specific tips? Read the full guide at https://github.com/matthewrdev/maude/blob/main/docs.md.
 
 ## What does Maude capture?
 
@@ -177,16 +69,18 @@ You can also toggle capture dynamically with `MaudeRuntime.EnableFramesPerSecond
 | Metric | Description + Documentation |
 |--------|-----------------------------|
 | **Physical Footprint (Jetsam Footprint)** | Total physical RAM attributed to the process by the kernel — the metric Jetsam uses to terminate apps. [`task_vm_info_data_t`](https://developer.apple.com/documentation/kernel/task_vm_info_data_t) • [WWDC Memory Deep Dive](https://developer.apple.com/videos/play/wwdc2018/416/) |
-| **Available Headroom** | Approximate remaining memory the process can consume before triggering Jetsam pressure. [`os_proc_available_memory` source](https://github.com/apple-oss-distributions/libmalloc/blob/main/libmalloc/os_alloc_once_private.h) |
 | **CLR (Managed Heap)** | Managed memory used by the .NET/Mono runtime on iOS (AOT GC heap + metadata). [.NET GC Fundamentals](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals) |
-
 
 ## Limitations and Known Issues
 
 ### Modal Pages
 
-MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`Present`) for modal-heavy flows.
+MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`PresentSheet`) for modal-heavy flows.
 
-### Target framework
+### Only Supported on .NET 9 and higher
 
 Maude is explicitly built for .NET 9+ to leverage [`Span<T>` optimisations](https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0) and [MAUI native embedding](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding); earlier target frameworks are unsupported.
+
+## More
+
+Source, issues, and release notes live at https://github.com/matthewrdev/maude.

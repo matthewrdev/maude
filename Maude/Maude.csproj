@@ -31,6 +31,8 @@
         <Company>Matthew Robbins</Company>
         <Product>Maude</Product>
         <Description>A .NET MAUI plugin to monitor app memory through a live-rendered native-overlay chart.</Description>
+        <PackageProjectUrl>https://github.com/matthewrdev/maude</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/matthewrdev/maude</RepositoryUrl>
         <PackageTags>MAUI;observability;memory;metrics;debugging</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
