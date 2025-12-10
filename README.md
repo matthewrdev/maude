@@ -3,7 +3,7 @@
 
 [![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
 
-Maude is a plugin for .NET MAUI to monitor app memory at runtime and view it via live-rendered chart.
+Maude is a plugin for .NET MAUI plugin to monitor and visualise app performance at runtime.
 
 | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
 | --- | --- | --- |
@@ -58,9 +58,11 @@ var builder = MauiApp.CreateBuilder()
   .UseMaudeAndActivate();  // Register Maude and immediately start tracking.
 ```
 
-## Documentation
+## [Documentation](docs.md) 
 
-Looking for integration steps, builder options, and runtime usage guidance beyond the quickstart? See [docs.md](docs.md) for the full walkthrough, including event recording, customisation options, platform-specific initialisation, and FPS sampling tips.
+Looking for integration steps, builder options, and runtime usage guidance beyond the quickstart? 
+
+See [docs.md](docs.md) for the full walkthrough, including event recording, customisation options, platform-specific initialisation, and FPS sampling tips.
 
 ## What does Maude capture?
 
