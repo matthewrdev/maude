@@ -51,7 +51,7 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
             {
                 DismissSheetInternal();
 
-                sheet = new BottomSheetDialog(activity, Resource.Style.ThemeOverlay_Material3_BottomSheetDialog);
+                sheet = new BottomSheetDialog(activity);
                 var root = BuildSheetLayout(activity);
                 sheet.SetContentView(root);
                 sheet.SetOnDismissListener(new OnDismissListener(() =>
@@ -300,7 +300,6 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 internal sealed class NativeOverlayHost
 {
     private readonly Activity activity;
-    private FrameLayout? overlay;
     private MaudeNativeChartViewAndroid? chart;
 
     public NativeOverlayHost(Activity activity) => this.activity = activity;
@@ -309,50 +308,44 @@ internal sealed class NativeOverlayHost
 
     public void Show(IMaudeDataSink sink, MaudeOverlayPosition position)
     {
-        if (overlay == null)
+        chart ??= new MaudeNativeChartViewAndroid(activity)
         {
-            overlay = new FrameLayout(activity)
-            {
-                LayoutParameters = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent)
-            };
-            overlay.SetBackgroundColor(Android.Graphics.Color.Transparent);
-            overlay.Clickable = false;
-            overlay.Focusable = false;
-            overlay.Touch += (_, _) => { };
+            RenderMode = MaudeChartRenderMode.Overlay,
+            WindowDuration = TimeSpan.FromMinutes(1)
+        };
+        chart.DataSink = sink;
 
-            chart = new MaudeNativeChartViewAndroid(activity)
-            {
-                RenderMode = MaudeChartRenderMode.Overlay,
-                WindowDuration = TimeSpan.FromMinutes(1),
-                DataSink = sink
-            };
-
-            var lp = new FrameLayout.LayoutParams(DpToPx(activity, 320), DpToPx(activity, 180))
-            {
-                Gravity = ToGravity(position),
-                LeftMargin = DpToPx(activity, 12),
-                RightMargin = DpToPx(activity, 12),
-                TopMargin = DpToPx(activity, 12),
-                BottomMargin = DpToPx(activity, 12),
-            };
-
-            overlay.AddView(chart, lp);
-            (activity.Window?.DecorView as ViewGroup)?.AddView(overlay);
+        var decor = activity.Window?.DecorView as ViewGroup;
+        if (decor == null)
+        {
+            return;
         }
 
-        overlay.Visibility = ViewStates.Visible;
+        if (chart.Parent is ViewGroup parent)
+        {
+            parent.RemoveView(chart);
+        }
+
+        var lp = new FrameLayout.LayoutParams(DpToPx(activity, 320), DpToPx(activity, 180))
+        {
+            Gravity = ToGravity(position),
+            LeftMargin = DpToPx(activity, 12),
+            RightMargin = DpToPx(activity, 12),
+            TopMargin = DpToPx(activity, 12),
+            BottomMargin = DpToPx(activity, 12),
+        };
+
+        decor.AddView(chart, lp);
+        chart.BringToFront();
         IsVisible = true;
     }
 
     public void Hide()
     {
-        if (overlay == null)
+        if (chart?.Parent is ViewGroup parent)
         {
-            return;
+            parent.RemoveView(chart);
         }
-
-        overlay.Visibility = ViewStates.Gone;
-        chart?.Detach();
         IsVisible = false;
     }
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Material theme for the harness so Material bottom sheets can resolve required attributes -->
+  <style name="Theme.MaudeHarness" parent="Theme.Material3.DayNight.NoActionBar">
+    <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Material3.BottomSheetDialog</item>
+  </style>
+</resources>

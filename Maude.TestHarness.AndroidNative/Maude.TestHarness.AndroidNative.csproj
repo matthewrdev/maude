@@ -15,4 +15,12 @@
     <ProjectReference Include="..\Maude.Android\Maude.Android.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AndroidManifest Include="AndroidManifest.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidResource Include="Resources\**\*.*" />
+  </ItemGroup>
+
 </Project>
