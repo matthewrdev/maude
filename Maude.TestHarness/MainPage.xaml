@@ -10,8 +10,9 @@
                 <Setter Property="TextColor">
                     <Setter.Value>
                         <OnPlatform x:TypeArguments="Color"
-                                    Default="White"
-                                    MacCatalyst="Black" />
+                                    Default="White">
+                            <On Platform="MacCatalyst" Value="Black"/>
+                        </OnPlatform>
                     </Setter.Value>
                 </Setter>
                 <Setter Property="FontAttributes" Value="Bold" />
