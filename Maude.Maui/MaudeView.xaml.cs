@@ -1,4 +1,4 @@
-using Microsoft.Maui.Controls;
+using System.Text.Json;
 
 namespace Maude;
 
@@ -29,6 +29,11 @@ public partial class MaudeView : Grid
         UpdateWindowLabel();
         InitializeSnapshotAction();
     }
+
+    private static readonly JsonSerializerOptions SnapshotSerializerOptions = new JsonSerializerOptions
+    {
+        WriteIndented = true
+    };
     
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
     {
@@ -53,23 +58,23 @@ public partial class MaudeView : Grid
 
     private void InitializeSnapshotAction()
     {
-        var action = MaudeRuntime.MutableInstance.SaveSnapshotAction;
-        var isEnabled = action != null;
-        snapshotActionButton.IsVisible = isEnabled;
-
-        if (isEnabled && action != null)
-        {
-            snapshotActionLabel.Text = action.Label;
-            if (string.IsNullOrWhiteSpace(action.Label))
-            {
-                snapshotActionLabel.Text = "COPY";
-            }
-        }
+        snapshotActionLabel.Text = "COPY";
     }
 
     private async void OnSaveSnapshotTapped(object? sender, TappedEventArgs e)
     {
-        await MaudeRuntime.MutableInstance.ExecuteSaveSnapshotActionAsync();
+        try
+        {
+            var sink = MaudeRuntime.Instance.DataSink;
+            var snapshot = sink.Snapshot();
+            var json = JsonSerializer.Serialize(snapshot, SnapshotSerializerOptions);
+            await Clipboard.Default.SetTextAsync(json);
+        }
+        catch (Exception ex)
+        {
+            MaudeLogger.Error("Failed to copy snapshot to clipboard.");
+            MaudeLogger.Exception(ex);
+        }
     }
 
     private void BindRuntime()

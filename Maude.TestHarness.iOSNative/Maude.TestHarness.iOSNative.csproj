@@ -11,8 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Maude.Core\Maude.Core.csproj" />
-    <ProjectReference Include="..\Maude.iOS\Maude.iOS.csproj" />
+    <ProjectReference Include="..\Maude\Maude.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -16,16 +16,18 @@ internal sealed class MacCatalystNativePresentationService : IMaudePresentationS
 {
     private readonly MaudeOptions options;
     private readonly IMaudeDataSink dataSink;
+    private readonly Func<UIWindow?> windowProvider;
     private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
     private UIViewController? sheetController;
     private DismissablePresentationDelegate? sheetPresentationDelegate;
     private UIView? overlayView;
     private MaudeNativeChartViewMacCatalyst? overlayChart;
 
-    public MacCatalystNativePresentationService(MaudeOptions options, IMaudeDataSink dataSink)
+    public MacCatalystNativePresentationService(MaudeOptions options, IMaudeDataSink dataSink, Func<UIWindow?> windowProvider)
     {
         this.options = options ?? throw new ArgumentNullException(nameof(options));
         this.dataSink = dataSink ?? throw new ArgumentNullException(nameof(dataSink));
+        this.windowProvider = windowProvider ?? throw new ArgumentNullException(nameof(windowProvider));
     }
 
     public bool IsPresentationEnabled => true;
@@ -34,11 +36,11 @@ internal sealed class MacCatalystNativePresentationService : IMaudePresentationS
 
     public void PresentSheet()
     {
-        var window = PlatformContext.CurrentWindowProvider?.Invoke();
+        var window = windowProvider();
         var root = window?.RootViewController;
         if (root == null)
         {
-            MaudeLogger.Error("PresentSheet failed: no UIWindow provided in PlatformContext.");
+            MaudeLogger.Error("PresentSheet failed: no UIWindow available.");
             return;
         }
 
@@ -92,10 +94,10 @@ internal sealed class MacCatalystNativePresentationService : IMaudePresentationS
 
     public void PresentOverlay(MaudeOverlayPosition position)
     {
-        var window = PlatformContext.CurrentWindowProvider?.Invoke();
+        var window = windowProvider();
         if (window == null)
         {
-            MaudeLogger.Error("PresentOverlay failed: no UIWindow provided in PlatformContext.");
+            MaudeLogger.Error("PresentOverlay failed: no UIWindow available.");
             return;
         }
 

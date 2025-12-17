@@ -11,8 +11,11 @@ public class MainActivity : Activity
     {
         base.OnCreate(savedInstanceState);
 
-        MaudeAndroidPlatform.Configure(() => this);
-        MaudeRuntime.InitializeAndActivate();
+        var options = MaudeOptions.CreateBuilder()
+            .WithPresentationWindowProvider(() => this)
+            .Build();
+
+        MaudeRuntime.InitializeAndActivate(options);
 
         var layout = new LinearLayout(this)
         {

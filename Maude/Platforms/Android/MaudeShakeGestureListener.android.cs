@@ -12,7 +12,7 @@ internal partial class MaudeShakeGestureListener
 
     partial void OnEnable()
     {
-        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        var activity = MaudeRuntimePlatform.CurrentActivityProvider?.Invoke();
         if (activity == null)
         {
             MaudeLogger.Warning("Shake gesture enable requested but no current Activity is available.");

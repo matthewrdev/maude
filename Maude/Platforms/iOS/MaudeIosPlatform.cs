@@ -13,9 +13,10 @@ public static class MaudeIosPlatform
     {
         if (windowProvider == null) throw new ArgumentNullException(nameof(windowProvider));
 
-        PlatformContext.Configure(windowProvider);
-        MaudeRuntimePlatform.RegisterPresentationFactory((options, sink) => new IosNativePresentationService(options, sink));
+        MaudeRuntimePlatform.Configure(windowProvider);
+        MaudeRuntimePlatform.RegisterPresentationFactory((options, sink) => new IosNativePresentationService(options, sink, windowProvider));
         MaudeRuntimePlatform.RegisterFrameRateMonitorFactory(() => new IosFrameRateMonitor());
+        MaudeLogger.Warning("MaudeIosPlatform.Configure is deprecated; platform setup now happens inside MaudeRuntime.Initialize. This call is safe to keep but no longer required.");
     }
 }
 #endif

@@ -51,6 +51,7 @@ public static class MaudeRuntime
                                             IMaudePresentationService? presentationService)
     {
         MaudeLogger.Info($"Initialising MaudeRuntime (activateImmediately: {activateImmediately}).");
+        
         lock (runtimeLock)
         {
             if (runtime != null)
@@ -59,6 +60,7 @@ public static class MaudeRuntime
             }
 
             options = options ?? MaudeOptions.Default;
+            PlatformBootstrapper.EnsureConfigured(options);
             MaudeLogger.Info($"Using options: sample frequency {options.SampleFrequencyMilliseconds}ms, retention {options.RetentionPeriodSeconds}s, additional channels {options.AdditionalChannels?.Count ?? 0}.");
             
             if (options.AdditionalLogger != null)

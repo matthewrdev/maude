@@ -14,12 +14,12 @@
                    Text="MEMORY OVERVIEW"
                    FontSize="16"
                    FontAttributes="Bold"
-                   TextColor="{x:Static local:MaudeConstants.MaudeBrandColor}"/>
+                   TextColor="{x:Static local:MaudeColors.BrandColor}"/>
             <Label x:Name="windowLabel"
                    VerticalTextAlignment="Center"
                    VerticalOptions="Center"
                    FontSize="14"
-                   TextColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"/>
+                   TextColor="{x:Static local:MaudeColors.BrandColorFaded}"/>
         </HorizontalStackLayout>
 
         <HorizontalStackLayout Grid.Column="1"
@@ -30,8 +30,8 @@
             <Border x:Name="snapshotActionButton"
                     IsVisible="False"
                     Padding="12,6"
-                    Stroke="{x:Static local:MaudeConstants.MaudeBrandColor}"
-                    BackgroundColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"
+                    Stroke="{x:Static local:MaudeColors.BrandColor}"
+                    BackgroundColor="{x:Static local:MaudeColors.BrandColorFaded}"
                     StrokeShape="RoundRectangle 10">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnSaveSnapshotTapped"/>
@@ -44,8 +44,8 @@
                        VerticalOptions="Center"/>
             </Border>
             <Border Padding="12,6"
-                    Stroke="{x:Static local:MaudeConstants.MaudeBrandColor}"
-                    BackgroundColor="{x:Static local:MaudeConstants.MaudeBrandColor_Faded}"
+                    Stroke="{x:Static local:MaudeColors.BrandColor}"
+                    BackgroundColor="{x:Static local:MaudeColors.BrandColorFaded}"
                     StrokeShape="RoundRectangle 10">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnToggleOverlayTapped"/>

@@ -9,8 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Maude.Core\Maude.Core.csproj" />
-    <ProjectReference Include="..\Maude.MacCatalyst\Maude.MacCatalyst.csproj" />
+    <ProjectReference Include="..\Maude\Maude.csproj" />
   </ItemGroup>
 
 

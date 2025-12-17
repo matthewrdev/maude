@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Maui.Controls.Shapes;
+using MauiColors = Microsoft.Maui.Graphics.Colors;
 
 namespace Maude;
 
@@ -123,11 +124,11 @@ internal class TagSelector : HorizontalStackLayout
         foreach (var kvp in optionViews)
         {
             var isSelected = kvp.Key.Equals(SelectedItem);
-            kvp.Value.BackgroundColor = isSelected ? MaudeConstants.MaudeBrandColor : Colors.Transparent;
-            kvp.Value.Stroke = isSelected ? MaudeConstants.MaudeBrandColor : Colors.Gray;
+            kvp.Value.BackgroundColor = isSelected ? MaudeColors.BrandColor : MauiColors.Transparent;
+            kvp.Value.Stroke = isSelected ? MaudeColors.BrandColor : MauiColors.Gray;
             if (kvp.Value.Content is Label label)
             {
-                label.TextColor = isSelected ? Colors.White : Colors.Black;
+                label.TextColor = isSelected ? MauiColors.White : MauiColors.Black;
             }
         }
     }

@@ -7,10 +7,24 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        PlatformMaudeConfigurator.Configure();
+
         var builder = MauiApp.CreateBuilder();
+        var maudeOptions = MaudeOptions.CreateBuilder()
+            .WithAdditionalLogger(new CustomMaudeLogCallback())
+            .WithShakeGesture()
+            .WithMauiWindowProvider()
+            .WithSampleFrequencyMilliseconds(400)
+            .WithRetentionPeriodSeconds(120)
+            .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)
+            .WithShakeGesturePredicate(() => ShakePredicateCoordinator.ShouldAllowShake)
+            .WithAdditionalChannels(CustomMaudeConfiguration.AdditionalChannels)
+            .WithSaveSnapshotAction(SnapshotActionHelper.CopySnapshotToClipboardAsync, "COPY")
+            .Build();
+
         builder
             .UseMauiApp<App>()
-            .UseMaude()
+            .UseMaude(maudeOptions)
             .UseSkiaSharp()
             .ConfigureFonts(fonts =>
             {
@@ -22,6 +36,11 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        var app = builder.Build();
+
+        // Activate after platform services are registered by UseMaude.
+        MaudeRuntime.Activate();
+
+        return app;
     }
 }

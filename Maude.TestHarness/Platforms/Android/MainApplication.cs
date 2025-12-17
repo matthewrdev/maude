@@ -11,6 +11,7 @@ public class MainApplication : MauiApplication
     {
         var options = MaudeOptions.CreateBuilder()
             .WithAdditionalLogger(new CustomMaudeLogCallback())
+            .WithMauiWindowProvider()
             .WithShakeGesture()
             .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)
             .WithShakeGesturePredicate(() => ShakePredicateCoordinator.ShouldAllowShake)

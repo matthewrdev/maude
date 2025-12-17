@@ -14,8 +14,9 @@ public static class MaudeAndroidPlatform
     {
         if (currentActivityProvider == null) throw new ArgumentNullException(nameof(currentActivityProvider));
 
-        PlatformContext.Configure(currentActivityProvider);
-        MaudeRuntimePlatform.RegisterPresentationFactory((options, sink) => new AndroidNativePresentationService(options, sink));
+        MaudeRuntimePlatform.Configure(currentActivityProvider);
+        MaudeRuntimePlatform.RegisterPresentationFactory((options, sink) => new AndroidNativePresentationService(options, sink, currentActivityProvider));
+        MaudeRuntimePlatform.RegisterFrameRateMonitorFactory(() => new AndroidFrameRateMonitor());
     }
 }
 #endif

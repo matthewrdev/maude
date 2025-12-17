@@ -19,14 +19,16 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 {
     private readonly MaudeOptions options;
     private readonly IMaudeDataSink dataSink;
+    private readonly Func<Activity?> activityProvider;
     private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
     private BottomSheetDialog? sheet;
     private NativeOverlayHost? overlayHost;
 
-    public AndroidNativePresentationService(MaudeOptions options, IMaudeDataSink dataSink)
+    public AndroidNativePresentationService(MaudeOptions options, IMaudeDataSink dataSink, Func<Activity?> activityProvider)
     {
         this.options = options ?? throw new ArgumentNullException(nameof(options));
         this.dataSink = dataSink ?? throw new ArgumentNullException(nameof(dataSink));
+        this.activityProvider = activityProvider ?? throw new ArgumentNullException(nameof(activityProvider));
     }
 
     public bool IsPresentationEnabled => true;
@@ -37,10 +39,10 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 
     public void PresentSheet()
     {
-        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        var activity = activityProvider();
         if (activity == null)
         {
-            MaudeLogger.Error("PresentSheet failed: no current Activity registered in PlatformContext.");
+            MaudeLogger.Error("PresentSheet failed: no current Activity registered.");
             return;
         }
 
@@ -72,7 +74,7 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 
     public void DismissSheet()
     {
-        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        var activity = activityProvider();
         if (activity == null)
         {
             return;
@@ -94,10 +96,10 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 
     public void PresentOverlay(MaudeOverlayPosition position)
     {
-        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        var activity = activityProvider();
         if (activity == null)
         {
-            MaudeLogger.Error("PresentOverlay failed: no current Activity registered in PlatformContext.");
+            MaudeLogger.Error("PresentOverlay failed: no current Activity registered.");
             return;
         }
 
@@ -110,7 +112,7 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 
     public void DismissOverlay()
     {
-        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        var activity = activityProvider();
         if (activity == null || overlayHost == null)
         {
             return;

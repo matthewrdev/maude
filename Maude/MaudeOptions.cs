@@ -92,6 +92,12 @@ using System.Threading.Tasks;
         /// </summary>
         public MaudeSaveSnapshotAction? SaveSnapshotAction { get; internal set; }
 
+        /// <summary>
+        /// Provides the native window/activity handle Maude should use for presentation.
+        /// On iOS/Mac Catalyst this can default to the key window. On Android this must be provided.
+        /// </summary>
+        public Func<object?>? PresentationWindowProvider { get; private set; }
+
     public void Validate()
     {
         if (SampleFrequencyMilliseconds > MaudeConstants.MaxSampleFrequencyMilliseconds)
@@ -261,6 +267,17 @@ using System.Threading.Tasks;
             public MaudeOptionsBuilder WithEventRenderingBehaviour(MaudeEventRenderingBehaviour behaviour)
             {
                 options.EventRenderingBehaviour = behaviour;
+                return this;
+            }
+
+            /// <summary>
+            /// Provides the native window/activity handle Maude should use for presentation.
+            /// On Android this is required. On iOS/Mac Catalyst you may omit to fall back to the key window lookup.
+            /// </summary>
+            public MaudeOptionsBuilder WithPresentationWindowProvider(Func<object?> provider)
+            {
+                if (provider == null) throw new ArgumentNullException(nameof(provider));
+                options.PresentationWindowProvider = provider;
                 return this;
             }
 

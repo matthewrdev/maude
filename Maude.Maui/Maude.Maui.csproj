@@ -11,26 +11,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Maude.Core\Maude.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net9.0-android'">
-    <ProjectReference Include="..\Maude.Android\Maude.Android.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net9.0-ios'">
-    <ProjectReference Include="..\Maude.iOS\Maude.iOS.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net9.0-maccatalyst'">
-    <ProjectReference Include="..\Maude.MacCatalyst\Maude.MacCatalyst.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Maude\MaudeAppBuilderExtensions.cs" />
+    <ProjectReference Include="..\Maude\Maude.csproj" />
   </ItemGroup>
 
 </Project>

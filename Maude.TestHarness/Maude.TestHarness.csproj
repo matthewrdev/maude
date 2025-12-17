@@ -53,6 +53,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Maude\Maude.csproj" />
       <ProjectReference Include="..\Maude.Maui\Maude.Maui.csproj" />
     </ItemGroup>
 

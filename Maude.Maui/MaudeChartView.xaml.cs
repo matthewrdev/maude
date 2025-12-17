@@ -1,3 +1,4 @@
+using System.Linq;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Devices;

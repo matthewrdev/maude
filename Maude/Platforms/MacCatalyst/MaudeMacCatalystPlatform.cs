@@ -13,9 +13,10 @@ public static class MaudeMacCatalystPlatform
     {
         if (windowProvider == null) throw new ArgumentNullException(nameof(windowProvider));
 
-        PlatformContext.Configure(windowProvider);
-        MaudeRuntimePlatform.RegisterPresentationFactory((options, sink) => new MacCatalystNativePresentationService(options, sink));
+        MaudeRuntimePlatform.Configure(windowProvider);
+        MaudeRuntimePlatform.RegisterPresentationFactory((options, sink) => new MacCatalystNativePresentationService(options, sink, windowProvider));
         MaudeRuntimePlatform.RegisterFrameRateMonitorFactory(() => new MacCatalystFrameRateMonitor());
+        MaudeLogger.Warning("MaudeMacCatalystPlatform.Configure is deprecated; platform setup now happens inside MaudeRuntime.Initialize. This call is safe to keep but no longer required.");
     }
 }
 #endif
