@@ -7,13 +7,12 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        PlatformMaudeConfigurator.Configure();
-
         var builder = MauiApp.CreateBuilder();
         var maudeOptions = MaudeOptions.CreateBuilder()
             .WithAdditionalLogger(new CustomMaudeLogCallback())
             .WithShakeGesture()
             .WithMauiWindowProvider()
+            .WithFramesPerSecond()
             .WithSampleFrequencyMilliseconds(400)
             .WithRetentionPeriodSeconds(120)
             .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay)

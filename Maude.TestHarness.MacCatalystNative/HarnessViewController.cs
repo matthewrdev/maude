@@ -1,4 +1,5 @@
 using UIKit;
+using Maude;
 
 namespace Maude.TestHarness.MacCatalystNative;
 
@@ -30,6 +31,17 @@ internal sealed class HarnessViewController : UIViewController
         var button = UIButton.FromType(UIButtonType.System);
         button.SetTitle(text, UIControlState.Normal);
         button.TouchUpInside += (_, _) => action();
+
+        button.BackgroundColor = ToUiColor(MaudeConstants.MaudeBrandColor);
+        button.SetTitleColor(UIColor.White, UIControlState.Normal);
+        button.Layer.CornerRadius = 10;
+        button.ContentEdgeInsets = new UIEdgeInsets(10, 16, 10, 16);
+
         return button;
+    }
+
+    private static UIColor ToUiColor(Color color)
+    {
+        return UIColor.FromRGBA(color.RedNormalized, color.GreenNormalized, color.BlueNormalized, color.AlphaNormalized);
     }
 }

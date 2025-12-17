@@ -15,7 +15,6 @@ public class AppDelegate : UIApplicationDelegate
         Window.RootViewController = root;
         Window.MakeKeyAndVisible();
 
-        MaudeIosPlatform.Configure(() => Window);
         MaudeRuntime.InitializeAndActivate();
 
         return true;

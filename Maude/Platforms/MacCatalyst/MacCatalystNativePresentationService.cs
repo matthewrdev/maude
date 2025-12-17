@@ -327,6 +327,7 @@ internal sealed class MaudeSheetView : UIView
 {
     private readonly UILabel titleLabel;
     private readonly UIButton overlayButton;
+    private readonly UIButton closeButton;
     private readonly UIButton? copyButton;
     private readonly MaudeNativeChartViewMacCatalyst chart;
     private readonly UITableView table;
@@ -352,6 +353,9 @@ internal sealed class MaudeSheetView : UIView
 
         overlayButton = CreatePillButton("OVERLAY");
         overlayButton.TouchUpInside += (_, _) => ToggleOverlay();
+
+        closeButton = CreatePillButton("CLOSE");
+        closeButton.TouchUpInside += (_, _) => MaudeRuntime.DismissSheet();
 
         if (options.SaveSnapshotAction != null)
         {
@@ -379,6 +383,7 @@ internal sealed class MaudeSheetView : UIView
 
         AddSubview(titleLabel);
         AddSubview(overlayButton);
+        AddSubview(closeButton);
         AddSubview(chart);
         AddSubview(table);
     }
@@ -391,6 +396,11 @@ internal sealed class MaudeSheetView : UIView
         var width = Bounds.Width;
         var y = safe.Top + VerticalPadding;
         var availableRight = width - HorizontalPadding;
+
+        var closeSize = closeButton.SizeThatFits(new CGSize(width, ButtonHeight));
+        var closeWidth = Math.Max(closeSize.Width + 12, 90);
+        closeButton.Frame = new CGRect(availableRight - closeWidth, y, closeWidth, ButtonHeight);
+        availableRight -= (nfloat)closeWidth + 8;
 
         if (copyButton != null)
         {

@@ -24,8 +24,6 @@ public class SceneDelegate : UIResponder, IUIWindowSceneDelegate
 
         Window = window;
 
-        // Configure Maude after a window exists so presentation services have a valid provider.
-        MaudeMacCatalystPlatform.Configure(() => window);
         MaudeRuntime.InitializeAndActivate();
     }
 }
