@@ -12,40 +12,52 @@ public sealed class IosFrameRateMonitor : NSObject, IFrameRateMonitor
     
     private readonly object sync = new object();
     private CADisplayLink? displayLink;
+    private NSObject? didEnterBackgroundObserver;
+    private NSObject? didBecomeActiveObserver;
     private double lastReportTimestamp;
     private int framesSinceLastReport;
     private int lastReportedFps;
+    private bool running;
 
     public void Start()
     {
-        if (displayLink != null)
+        if (running)
         {
             return;
         }
 
+        running = true;
         lastReportTimestamp = 0;
         framesSinceLastReport = 0;
 
         UIApplication.SharedApplication.InvokeOnMainThread(() =>
         {
-            displayLink = CADisplayLink.Create(OnTick);
-            displayLink.PreferredFramesPerSecond = 0; // use device default
-            displayLink.AddToRunLoop(NSRunLoop.Main, NSRunLoopMode.Common);
+            EnsureDisplayLink();
+        });
+
+        didEnterBackgroundObserver ??= UIApplication.Notifications.ObserveDidEnterBackground((_, _) =>
+        {
+            UIApplication.SharedApplication.InvokeOnMainThread(PauseDisplayLink);
+        });
+
+        didBecomeActiveObserver ??= UIApplication.Notifications.ObserveDidBecomeActive((_, _) =>
+        {
+            UIApplication.SharedApplication.InvokeOnMainThread(EnsureDisplayLink);
         });
     }
 
     public void Stop()
     {
-        if (displayLink == null)
+        if (!running)
         {
             return;
         }
 
+        running = false;
+
         UIApplication.SharedApplication.InvokeOnMainThread(() =>
         {
-            displayLink?.Invalidate();
-            displayLink?.Dispose();
-            displayLink = null;
+            TearDownDisplayLink();
             lock (sync)
             {
                 lastReportedFps = 0;
@@ -53,6 +65,11 @@ public sealed class IosFrameRateMonitor : NSObject, IFrameRateMonitor
                 lastReportTimestamp = 0;
             }
         });
+
+        didEnterBackgroundObserver?.Dispose();
+        didEnterBackgroundObserver = null;
+        didBecomeActiveObserver?.Dispose();
+        didBecomeActiveObserver = null;
     }
 
     public int ConsumeFramesPerSecond()
@@ -67,7 +84,7 @@ public sealed class IosFrameRateMonitor : NSObject, IFrameRateMonitor
 
     private void OnTick()
     {
-        if (displayLink == null)
+        if (displayLink == null || !running)
         {
             return;
         }
@@ -100,6 +117,41 @@ public sealed class IosFrameRateMonitor : NSObject, IFrameRateMonitor
         Stop();
         
         base.Dispose(disposing);
+    }
+
+    private void EnsureDisplayLink()
+    {
+        if (!running)
+        {
+            return;
+        }
+
+        if (displayLink == null)
+        {
+            displayLink = CADisplayLink.Create(OnTick);
+            displayLink.PreferredFramesPerSecond = 0; // use device default
+            displayLink.AddToRunLoop(NSRunLoop.Main, NSRunLoopMode.Common);
+        }
+
+        displayLink.Paused = false;
+    }
+
+    private void PauseDisplayLink()
+    {
+        if (displayLink != null)
+        {
+            displayLink.Paused = true;
+        }
+    }
+
+    private void TearDownDisplayLink()
+    {
+        if (displayLink != null)
+        {
+            displayLink.Invalidate();
+            displayLink.Dispose();
+            displayLink = null;
+        }
     }
 }
 #endif

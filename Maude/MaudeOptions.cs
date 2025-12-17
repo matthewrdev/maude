@@ -90,7 +90,7 @@ using System.Threading.Tasks;
         /// <summary>
         /// Optional save snapshot action rendered in the slide sheet.
         /// </summary>
-        internal MaudeSaveSnapshotAction? SaveSnapshotAction { get; private set; }
+        public MaudeSaveSnapshotAction? SaveSnapshotAction { get; internal set; }
 
     public void Validate()
     {

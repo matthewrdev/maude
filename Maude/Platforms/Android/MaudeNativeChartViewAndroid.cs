@@ -20,6 +20,7 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
 
     public MaudeNativeChartViewAndroid(Context context) : base(context)
     {
+        IgnorePixelScaling = true;
         Touch += OnCanvasTouch;
         PaintSurface += OnPaintSurface;
         StartTimer();

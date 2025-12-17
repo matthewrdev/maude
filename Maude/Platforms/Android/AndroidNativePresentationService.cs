@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Util;
@@ -125,6 +126,8 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
     {
         var metrics = activity.Resources?.DisplayMetrics ?? new DisplayMetrics();
         var paddingPx = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 12, metrics);
+        var buttonPadding = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 10, metrics);
+        var buttonCorner = (float)TypedValue.ApplyDimension(ComplexUnitType.Dip, 10, metrics);
 
         var root = new LinearLayout(activity)
         {
@@ -133,12 +136,47 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
         };
         root.SetPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
-        var header = new TextView(activity)
+        var headerRow = new LinearLayout(activity)
         {
-            Text = "MAUDE",
-            TextSize = 20,
+            Orientation = Orientation.Horizontal,
+            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
         };
-        root.AddView(header);
+        headerRow.SetGravity(GravityFlags.CenterVertical);
+
+        var title = new TextView(activity)
+        {
+            Text = "MEMORY OVERVIEW",
+            TextSize = 18f,
+            Typeface = Android.Graphics.Typeface.DefaultBold,
+            LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+        };
+        headerRow.AddView(title);
+
+        Button? copyButton = null;
+        if (options.SaveSnapshotAction != null)
+        {
+            var action = options.SaveSnapshotAction;
+            copyButton = CreatePillButton(activity, action.Label, buttonPadding, buttonCorner);
+            copyButton.Text = string.IsNullOrWhiteSpace(action.Label) ? "COPY" : action.Label;
+            copyButton.Click += async (_, _) => await ExecuteSaveSnapshotAsync(dataSink, action);
+            headerRow.AddView(copyButton);
+        }
+
+        var overlayButton = CreatePillButton(activity, "OVERLAY", buttonPadding, buttonCorner);
+        overlayButton.Click += (_, _) =>
+        {
+            if (MaudeRuntime.IsChartOverlayPresented)
+            {
+                MaudeRuntime.DismissOverlay();
+            }
+            else
+            {
+                MaudeRuntime.PresentOverlay();
+            }
+        };
+        headerRow.AddView(overlayButton);
+
+        root.AddView(headerRow);
 
         var chart = new MaudeNativeChartViewAndroid(activity)
         {
@@ -151,7 +189,7 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 
         var eventsList = new RecyclerView(activity)
         {
-            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
+            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 0, 1f)
         };
         var adapter = new MaudeEventAdapter(dataSink);
         eventsList.SetAdapter(adapter);
@@ -215,6 +253,41 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
 
     private static int DpToPx(Context context, float dp) =>
         (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, dp, context.Resources?.DisplayMetrics);
+
+    private static Button CreatePillButton(Context context, string text, int paddingPx, float cornerRadiusPx)
+    {
+        var button = new Button(context)
+        {
+            Text = text,
+            TextSize = 14f,
+            Typeface = Android.Graphics.Typeface.DefaultBold,
+            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent)
+        };
+        button.SetTextColor(Android.Graphics.Color.White);
+        var drawable = new Android.Graphics.Drawables.GradientDrawable();
+        drawable.SetColor(ToColor(MaudeConstants.MaudeBrandColor_Faded));
+        drawable.SetCornerRadius(cornerRadiusPx);
+        button.Background = drawable;
+        button.SetPadding(paddingPx, paddingPx / 2, paddingPx, paddingPx / 2);
+        return button;
+    }
+
+    private static async Task ExecuteSaveSnapshotAsync(IMaudeDataSink dataSink, MaudeSaveSnapshotAction action)
+    {
+        try
+        {
+            var snapshot = dataSink.Snapshot();
+            await action.CopyDelegate(snapshot);
+        }
+        catch (Exception ex)
+        {
+            MaudeLogger.Error("Failed to execute save snapshot action.");
+            MaudeLogger.Exception(ex);
+        }
+    }
+
+    private static Android.Graphics.Color ToColor(Color color) =>
+        Android.Graphics.Color.Argb(color.Alpha, color.Red, color.Green, color.Blue);
 
     private sealed class OnDismissListener : Java.Lang.Object, IDialogInterfaceOnDismissListener
     {

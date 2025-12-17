@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using CoreGraphics;
 using Foundation;
 using SkiaSharp.Views.iOS;
@@ -47,34 +48,8 @@ internal sealed class IosNativePresentationService : IMaudePresentationService
             {
                 DismissSheetInternal();
 
-                var chart = new MaudeNativeChartViewIos(new CGRect(0, 0, window.Bounds.Width, 220))
-                {
-                    DataSink = dataSink,
-                    RenderMode = MaudeChartRenderMode.Inline,
-                    WindowDuration = TimeSpan.FromSeconds(60)
-                };
-
-                var table = new UITableView(new CGRect(0, 220, window.Bounds.Width, window.Bounds.Height - 220))
-                {
-                    SeparatorStyle = UITableViewCellSeparatorStyle.SingleLine,
-                    Source = new MaudeEventsTableSource(dataSink)
-                };
-
-                var stack = new UIStackView(new UIView[] { chart, table })
-                {
-                    Axis = UILayoutConstraintAxis.Vertical,
-                    Distribution = UIStackViewDistribution.Fill,
-                    Alignment = UIStackViewAlignment.Fill
-                };
-
                 sheetController = new UIViewController();
-                sheetController.View = new UIView(window.Bounds)
-                {
-                    BackgroundColor = UIColor.SystemBackground
-                };
-                stack.Frame = sheetController.View.Bounds;
-                sheetController.View.AddSubview(stack);
-
+                sheetController.View = new MaudeSheetView(window.Bounds, dataSink, options);
                 sheetController.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
 
                 root.PresentViewController(sheetController, true, null);
@@ -113,25 +88,7 @@ internal sealed class IosNativePresentationService : IMaudePresentationService
 
         UIApplication.SharedApplication.InvokeOnMainThread(() =>
         {
-            if (overlayView == null)
-            {
-                overlayView = new UIView(window.Bounds)
-                {
-                    BackgroundColor = UIColor.Clear,
-                    UserInteractionEnabled = false,
-                    AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
-                };
-
-                overlayChart = new MaudeNativeChartViewIos(new CGRect(0, 0, 220, 130))
-                {
-                    DataSink = dataSink,
-                    RenderMode = MaudeChartRenderMode.Overlay,
-                    WindowDuration = TimeSpan.FromMinutes(1)
-                };
-
-                overlayView.AddSubview(overlayChart);
-                window.AddSubview(overlayView);
-            }
+            EnsureOverlay(window);
 
             PositionOverlay(window, position);
             overlayView.Hidden = false;
@@ -145,9 +102,36 @@ internal sealed class IosNativePresentationService : IMaudePresentationService
             if (overlayView != null)
             {
                 overlayView.Hidden = true;
-                overlayChart?.Detach();
             }
         });
+    }
+
+    private void EnsureOverlay(UIWindow window)
+    {
+        if (overlayView == null)
+        {
+            overlayView = new UIView(window.Bounds)
+            {
+                BackgroundColor = UIColor.Clear,
+                UserInteractionEnabled = false,
+                AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
+            };
+
+            window.AddSubview(overlayView);
+        }
+
+        if (overlayChart == null || overlayChart.DataSink == null || overlayChart.Superview == null)
+        {
+            overlayChart = new MaudeNativeChartViewIos(new CGRect(0, 0, 220, 130))
+            {
+                DataSink = dataSink,
+                RenderMode = MaudeChartRenderMode.Overlay,
+                WindowDuration = TimeSpan.FromMinutes(1)
+            };
+
+            overlayView.Subviews?.FirstOrDefault()?.RemoveFromSuperview();
+            overlayView.AddSubview(overlayChart);
+        }
     }
 
     private void PositionOverlay(UIWindow window, MaudeOverlayPosition position)
@@ -218,10 +202,11 @@ internal sealed class MaudeNativeChartViewIos : SKCanvasView
 
     public MaudeNativeChartViewIos(CGRect frame) : base(frame)
     {
+        IgnorePixelScaling = true;
         PaintSurface += OnPaintSurface;
         var recognizer = new UITapGestureRecognizer(OnTapped);
         AddGestureRecognizer(recognizer);
-        timer = NSTimer.CreateRepeatingScheduledTimer(TimeSpan.FromMilliseconds(500), _ => SetNeedsDisplay());
+        timer = NSTimer.CreateRepeatingScheduledTimer(TimeSpan.FromMilliseconds(500), _ => RequestRedraw());
     }
 
     public TimeSpan WindowDuration { get; set; } = TimeSpan.FromMinutes(1);
@@ -246,12 +231,23 @@ internal sealed class MaudeNativeChartViewIos : SKCanvasView
                 dataSink.OnEventsUpdated += HandleEventsUpdated;
             }
 
-            SetNeedsDisplay();
+            RequestRedraw();
         }
     }
 
-    private void HandleMetricsUpdated(object? sender, MaudeMetricsUpdatedEventArgs e) => SetNeedsDisplay();
-    private void HandleEventsUpdated(object? sender, MaudeEventsUpdatedEventArgs e) => SetNeedsDisplay();
+    private void HandleMetricsUpdated(object? sender, MaudeMetricsUpdatedEventArgs e) => RequestRedraw();
+    private void HandleEventsUpdated(object? sender, MaudeEventsUpdatedEventArgs e) => RequestRedraw();
+
+    private void RequestRedraw()
+    {
+        if (NSThread.IsMain)
+        {
+            SetNeedsDisplay();
+            return;
+        }
+
+        UIApplication.SharedApplication.InvokeOnMainThread(SetNeedsDisplay);
+    }
 
     private void OnPaintSurface(object? sender, SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs e)
     {
@@ -316,6 +312,146 @@ internal sealed class MaudeNativeChartViewIos : SKCanvasView
         }
 
         PaintSurface -= OnPaintSurface;
+    }
+}
+
+internal sealed class MaudeSheetView : UIView
+{
+    private readonly UILabel titleLabel;
+    private readonly UIButton overlayButton;
+    private readonly UIButton? copyButton;
+    private readonly MaudeNativeChartViewIos chart;
+    private readonly UITableView table;
+
+    private static readonly nfloat ChartHeight = new nfloat(220);
+    private static readonly nfloat HorizontalPadding = new nfloat(12);
+    private static readonly nfloat VerticalPadding = new nfloat(12);
+    private static readonly nfloat SectionSpacing = new nfloat(8);
+    private static readonly nfloat ButtonHeight = new nfloat(34);
+
+    internal MaudeSheetView(CGRect frame, IMaudeDataSink dataSink, MaudeOptions options) : base(frame)
+    {
+        BackgroundColor = UIColor.SystemBackground;
+        AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
+
+        titleLabel = new UILabel
+        {
+            Text = "MEMORY OVERVIEW",
+            Font = UIFont.BoldSystemFontOfSize(16),
+            TextColor = UIColor.Label,
+            Lines = 1
+        };
+
+        overlayButton = CreatePillButton("OVERLAY");
+        overlayButton.TouchUpInside += (_, _) => ToggleOverlay();
+
+        if (options.SaveSnapshotAction != null)
+        {
+            var action = options.SaveSnapshotAction;
+            var label = string.IsNullOrWhiteSpace(action.Label) ? "COPY" : action.Label;
+            copyButton = CreatePillButton(label);
+            copyButton.TouchUpInside += async (_, _) => await ExecuteSaveSnapshotAsync(dataSink, action);
+            AddSubview(copyButton);
+        }
+
+        chart = new MaudeNativeChartViewIos(new CGRect(0, 0, frame.Width, ChartHeight))
+        {
+            DataSink = dataSink,
+            RenderMode = MaudeChartRenderMode.Inline,
+            WindowDuration = TimeSpan.FromSeconds(60),
+            AutoresizingMask = UIViewAutoresizing.FlexibleWidth
+        };
+
+        table = new UITableView
+        {
+            SeparatorStyle = UITableViewCellSeparatorStyle.SingleLine,
+            Source = new MaudeEventsTableSource(dataSink),
+            AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
+        };
+
+        AddSubview(titleLabel);
+        AddSubview(overlayButton);
+        AddSubview(chart);
+        AddSubview(table);
+    }
+
+    public override void LayoutSubviews()
+    {
+        base.LayoutSubviews();
+
+        var safe = SafeAreaInsets;
+        var width = Bounds.Width;
+        var y = safe.Top + VerticalPadding;
+        var availableRight = width - HorizontalPadding;
+
+        if (copyButton != null)
+        {
+            var copySize = copyButton.SizeThatFits(new CGSize(width, ButtonHeight));
+            var copyWidth = (nfloat)Math.Max(copySize.Width + 12, 80);
+            copyButton.Frame = new CGRect(availableRight - copyWidth, y, copyWidth, ButtonHeight);
+            availableRight -= copyWidth + 8;
+        }
+
+        var overlaySize = overlayButton.SizeThatFits(new CGSize(width, ButtonHeight));
+        var overlayWidth = (nfloat)Math.Max(overlaySize.Width + 12, 90);
+        overlayButton.Frame = new CGRect(availableRight - overlayWidth, y, overlayWidth, ButtonHeight);
+
+        var titleSize = titleLabel.SizeThatFits(new CGSize(width, ButtonHeight));
+        var titleY = y + (ButtonHeight - titleSize.Height) / 2;
+        titleLabel.Frame = new CGRect(HorizontalPadding, titleY, titleSize.Width, titleSize.Height);
+
+        var headerBottom = y + ButtonHeight;
+        y = headerBottom + SectionSpacing;
+
+        chart.Frame = new CGRect(0, y, width, ChartHeight);
+        y += ChartHeight;
+
+        var tableHeight = Bounds.Height - safe.Bottom - y;
+        table.Frame = new CGRect(0, y, width, (nfloat)Math.Max(0, tableHeight));
+    }
+
+    private static UIColor ToUiColor(Color color)
+    {
+        return UIColor.FromRGBA(color.RedNormalized, color.GreenNormalized, color.BlueNormalized, color.AlphaNormalized);
+    }
+
+    private static UIButton CreatePillButton(string text)
+    {
+        var button = new UIButton(UIButtonType.System);
+        button.SetTitle(text, UIControlState.Normal);
+        button.SetTitleColor(UIColor.White, UIControlState.Normal);
+        button.TitleLabel.Font = UIFont.BoldSystemFontOfSize(14);
+        button.BackgroundColor = ToUiColor(MaudeConstants.MaudeBrandColor_Faded);
+        button.Layer.CornerRadius = 10;
+        button.ClipsToBounds = true;
+        button.ContentEdgeInsets = new UIEdgeInsets(6, 12, 6, 12);
+        return button;
+    }
+
+    private static void ToggleOverlay()
+    {
+        if (MaudeRuntime.IsChartOverlayPresented)
+        {
+            MaudeRuntime.DismissOverlay();
+        }
+        else
+        {
+            MaudeRuntime.PresentOverlay();
+        }
+    }
+
+    private static async Task ExecuteSaveSnapshotAsync(IMaudeDataSink dataSink, MaudeSaveSnapshotAction action)
+    {
+        try
+        {
+            var snapshot = dataSink.Snapshot();
+            await action.CopyDelegate(snapshot);
+        }
+        catch (Exception ex)
+        {
+            MaudeLogger.Error("Failed to execute save snapshot action.");
+            MaudeLogger.Exception(ex);
+        }
     }
 }
 

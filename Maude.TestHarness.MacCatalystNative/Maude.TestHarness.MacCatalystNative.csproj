@@ -6,8 +6,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
-    <AssemblyName>Maude.TestHarness.MacCatalystNative</AssemblyName>
-    <ApplicationId>com.example.maude.macharness</ApplicationId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,8 +13,5 @@
     <ProjectReference Include="..\Maude.MacCatalyst\Maude.MacCatalyst.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="Info.plist" />
-  </ItemGroup>
 
 </Project>
