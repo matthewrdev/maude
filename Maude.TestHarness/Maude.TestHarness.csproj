@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
+    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
 
         <OutputType>Exe</OutputType>
         <RootNamespace>Maude.TestHarness</RootNamespace>
@@ -46,14 +46,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="SkiaSharp" Version="3.116.1" />
-        <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.116.1" />
+        <PackageReference Include="SkiaSharp" Version="3.119.1" />
+        <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Maude\Maude.csproj" />
+      <ProjectReference Include="..\Maude.Maui\Maude.Maui.csproj" />
     </ItemGroup>
 
 </Project>

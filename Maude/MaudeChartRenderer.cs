@@ -617,7 +617,7 @@ public static class MaudeChartRenderer
                 if (shouldRenderLabels)
                 {
                     var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
-                    var labelWidth = MeasureEventText(visual.Label, eventLabelFont, eventLabelPaint);
+                    var labelWidth = MeasureEventText(visual.Label ?? string.Empty, eventLabelFont, eventLabelPaint);
                     var labelX = visual.X - (labelWidth / 2f);
                     canvas.DrawText(visual.Label,
                         labelX,
@@ -722,15 +722,15 @@ public static class MaudeChartRenderer
 
     private static SKColor ToSkColor(Color color)
     {
-        if (color == default)
+        if (color.Equals(default(Color)))
         {
             return new SKColor(123, 97, 255);
         }
 
-        return new SKColor((byte)(color.Red * 255),
-                           (byte)(color.Green * 255),
-                           (byte)(color.Blue * 255),
-                           (byte)(color.Alpha * 255));
+        return new SKColor(color.Red,
+                           color.Green,
+                           color.Blue,
+                           color.Alpha);
     }
 
     internal static string FormatBytes(long value)

@@ -1,0 +1,408 @@
+#if ANDROID
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using Android.App;
+using Android.Content;
+using Android.Util;
+using Android.Views;
+using Android.Widget;
+using AndroidX.RecyclerView.Widget;
+using Google.Android.Material.BottomSheet;
+using SkiaSharp.Views.Android;
+
+namespace Maude;
+
+internal sealed class AndroidNativePresentationService : IMaudePresentationService
+{
+    private readonly MaudeOptions options;
+    private readonly IMaudeDataSink dataSink;
+    private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+    private BottomSheetDialog? sheet;
+    private NativeOverlayHost? overlayHost;
+
+    public AndroidNativePresentationService(MaudeOptions options, IMaudeDataSink dataSink)
+    {
+        this.options = options ?? throw new ArgumentNullException(nameof(options));
+        this.dataSink = dataSink ?? throw new ArgumentNullException(nameof(dataSink));
+    }
+
+    public bool IsPresentationEnabled => true;
+
+    public bool IsSheetPresented => sheet != null && sheet.IsShowing;
+
+    public bool IsOverlayPresented => overlayHost?.IsVisible == true;
+
+    public void PresentSheet()
+    {
+        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        if (activity == null)
+        {
+            MaudeLogger.Error("PresentSheet failed: no current Activity registered in PlatformContext.");
+            return;
+        }
+
+        activity.RunOnUiThread(async () =>
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                DismissSheetInternal();
+
+                sheet = new BottomSheetDialog(activity, Resource.Style.ThemeOverlay_Material3_BottomSheetDialog);
+                var root = BuildSheetLayout(activity);
+                sheet.SetContentView(root);
+                sheet.SetOnDismissListener(new OnDismissListener(() =>
+                {
+                    CleanupSheet(root);
+                    sheet = null;
+                }));
+
+                sheet.Show();
+                ExpandSheet(sheet);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+    }
+
+    public void DismissSheet()
+    {
+        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        if (activity == null)
+        {
+            return;
+        }
+
+        activity.RunOnUiThread(async () =>
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                DismissSheetInternal();
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+    }
+
+    public void PresentOverlay(MaudeOverlayPosition position)
+    {
+        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        if (activity == null)
+        {
+            MaudeLogger.Error("PresentOverlay failed: no current Activity registered in PlatformContext.");
+            return;
+        }
+
+        activity.RunOnUiThread(() =>
+        {
+            overlayHost ??= new NativeOverlayHost(activity);
+            overlayHost.Show(dataSink, position);
+        });
+    }
+
+    public void DismissOverlay()
+    {
+        var activity = PlatformContext.CurrentActivityProvider?.Invoke();
+        if (activity == null || overlayHost == null)
+        {
+            return;
+        }
+
+        activity.RunOnUiThread(() =>
+        {
+            overlayHost.Hide();
+        });
+    }
+
+    private ViewGroup BuildSheetLayout(Activity activity)
+    {
+        var metrics = activity.Resources?.DisplayMetrics ?? new DisplayMetrics();
+        var paddingPx = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 12, metrics);
+
+        var root = new LinearLayout(activity)
+        {
+            Orientation = Orientation.Vertical,
+            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
+        };
+        root.SetPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+
+        var header = new TextView(activity)
+        {
+            Text = "MAUDE",
+            TextSize = 20,
+        };
+        root.AddView(header);
+
+        var chart = new MaudeNativeChartViewAndroid(activity)
+        {
+            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DpToPx(activity, 220)),
+            RenderMode = MaudeChartRenderMode.Inline,
+            WindowDuration = TimeSpan.FromSeconds(60),
+            DataSink = dataSink
+        };
+        root.AddView(chart);
+
+        var eventsList = new RecyclerView(activity)
+        {
+            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
+        };
+        var adapter = new MaudeEventAdapter(dataSink);
+        eventsList.SetAdapter(adapter);
+        eventsList.SetLayoutManager(new LinearLayoutManager(activity));
+        root.AddView(eventsList);
+
+        return root;
+    }
+
+    private void CleanupSheet(ViewGroup root)
+    {
+        foreach (var view in root.GetChildren())
+        {
+            if (view is MaudeNativeChartViewAndroid chart)
+            {
+                chart.Detach();
+            }
+        }
+    }
+
+    private void DismissSheetInternal()
+    {
+        if (sheet == null)
+        {
+            return;
+        }
+
+        try
+        {
+            sheet.Dismiss();
+        }
+        catch { }
+        finally
+        {
+            sheet = null;
+        }
+    }
+
+    private static void ExpandSheet(BottomSheetDialog dialog)
+    {
+        var sheet = dialog.FindViewById(Resource.Id.design_bottom_sheet);
+        if (sheet is FrameLayout frameLayout)
+        {
+            var behavior = BottomSheetBehavior.From(frameLayout);
+            if (behavior is BottomSheetBehavior b)
+            {
+                b.State = BottomSheetBehavior.StateExpanded;
+                b.SkipCollapsed = true;
+                b.SetPeekHeight(frameLayout.Resources?.DisplayMetrics?.HeightPixels ?? 0, true);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        DismissSheetInternal();
+        overlayHost?.Hide();
+        overlayHost = null;
+        semaphore.Dispose();
+    }
+
+    private static int DpToPx(Context context, float dp) =>
+        (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, dp, context.Resources?.DisplayMetrics);
+
+    private sealed class OnDismissListener : Java.Lang.Object, IDialogInterfaceOnDismissListener
+    {
+        private readonly Action callback;
+        public OnDismissListener(Action callback) => this.callback = callback;
+        public void OnDismiss(IDialogInterface? dialog) => callback();
+    }
+}
+
+internal sealed class NativeOverlayHost
+{
+    private readonly Activity activity;
+    private FrameLayout? overlay;
+    private MaudeNativeChartViewAndroid? chart;
+
+    public NativeOverlayHost(Activity activity) => this.activity = activity;
+
+    public bool IsVisible { get; private set; }
+
+    public void Show(IMaudeDataSink sink, MaudeOverlayPosition position)
+    {
+        if (overlay == null)
+        {
+            overlay = new FrameLayout(activity)
+            {
+                LayoutParameters = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent)
+            };
+            overlay.SetBackgroundColor(Android.Graphics.Color.Transparent);
+            overlay.Clickable = false;
+            overlay.Focusable = false;
+            overlay.Touch += (_, _) => { };
+
+            chart = new MaudeNativeChartViewAndroid(activity)
+            {
+                RenderMode = MaudeChartRenderMode.Overlay,
+                WindowDuration = TimeSpan.FromMinutes(1),
+                DataSink = sink
+            };
+
+            var lp = new FrameLayout.LayoutParams(DpToPx(activity, 320), DpToPx(activity, 180))
+            {
+                Gravity = ToGravity(position),
+                LeftMargin = DpToPx(activity, 12),
+                RightMargin = DpToPx(activity, 12),
+                TopMargin = DpToPx(activity, 12),
+                BottomMargin = DpToPx(activity, 12),
+            };
+
+            overlay.AddView(chart, lp);
+            (activity.Window?.DecorView as ViewGroup)?.AddView(overlay);
+        }
+
+        overlay.Visibility = ViewStates.Visible;
+        IsVisible = true;
+    }
+
+    public void Hide()
+    {
+        if (overlay == null)
+        {
+            return;
+        }
+
+        overlay.Visibility = ViewStates.Gone;
+        chart?.Detach();
+        IsVisible = false;
+    }
+
+    private static int DpToPx(Context context, float dp) =>
+        (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, dp, context.Resources?.DisplayMetrics);
+
+    private static GravityFlags ToGravity(MaudeOverlayPosition position) => position switch
+    {
+        MaudeOverlayPosition.TopLeft => GravityFlags.Top | GravityFlags.Left,
+        MaudeOverlayPosition.TopRight => GravityFlags.Top | GravityFlags.Right,
+        MaudeOverlayPosition.BottomLeft => GravityFlags.Bottom | GravityFlags.Left,
+        _ => GravityFlags.Bottom | GravityFlags.Right
+    };
+}
+
+internal sealed class MaudeEventAdapter : RecyclerView.Adapter
+{
+    private readonly IMaudeDataSink sink;
+    private List<MaudeEventDisplay> cached = new();
+
+    public MaudeEventAdapter(IMaudeDataSink sink)
+    {
+        this.sink = sink;
+        sink.OnEventsUpdated += (_, _) => Refresh();
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        var channelLookup = sink.Channels?.ToDictionary(c => c.Id) ?? new Dictionary<byte, MaudeChannel>();
+        cached = sink.Events
+                     .OrderByDescending(e => e.CapturedAtUtc)
+                     .Take(50)
+                     .Select(e => new MaudeEventDisplay
+                     {
+                         Label = e.Label,
+                         Symbol = MaudeEventLegend.GetSymbol(e.Type),
+                         ChannelColor = channelLookup.TryGetValue(e.Channel, out var channel) ? channel.Color : new Color(0, 0, 0),
+                         Details = e.Details,
+                         HasDetails = !string.IsNullOrWhiteSpace(e.Details),
+                         Timestamp = e.CapturedAtUtc.ToLocalTime().ToString("HH:mm:ss")
+                     })
+                     .ToList();
+
+        NotifyDataSetChanged();
+    }
+
+    public override int ItemCount => cached.Count;
+
+    public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
+    {
+        if (holder is EventViewHolder vh && position < cached.Count)
+        {
+            vh.Bind(cached[position]);
+        }
+    }
+
+    public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
+    {
+        var ctx = parent.Context;
+        var root = new LinearLayout(ctx)
+        {
+            Orientation = Orientation.Vertical,
+            LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
+        };
+        var symbol = new TextView(ctx) { TextSize = 18 };
+        var title = new TextView(ctx) { TextSize = 16, Typeface = Android.Graphics.Typeface.DefaultBold };
+        var details = new TextView(ctx) { TextSize = 14 };
+        var timestamp = new TextView(ctx) { TextSize = 12 };
+
+        root.AddView(symbol);
+        root.AddView(title);
+        root.AddView(details);
+        root.AddView(timestamp);
+
+        return new EventViewHolder(root, title, details, timestamp, symbol);
+    }
+
+    private sealed class EventViewHolder : RecyclerView.ViewHolder
+    {
+        private readonly TextView title;
+        private readonly TextView details;
+        private readonly TextView timestamp;
+        private readonly TextView symbol;
+
+        public EventViewHolder(View itemView, TextView title, TextView details, TextView timestamp, TextView symbol) : base(itemView)
+        {
+            this.title = title;
+            this.details = details;
+            this.timestamp = timestamp;
+            this.symbol = symbol;
+        }
+
+        public void Bind(MaudeEventDisplay display)
+        {
+            title.Text = display.Label;
+            details.Text = display.Details;
+            details.Visibility = display.HasDetails ? ViewStates.Visible : ViewStates.Gone;
+            timestamp.Text = display.Timestamp;
+            symbol.Text = display.Symbol;
+        }
+    }
+}
+
+internal static class ViewGroupExtensions
+{
+    public static IEnumerable<View> GetChildren(this ViewGroup viewGroup)
+    {
+        for (int i = 0; i < viewGroup.ChildCount; i++)
+        {
+            var child = viewGroup.GetChildAt(i);
+            if (child != null)
+            {
+                yield return child;
+                if (child is ViewGroup vg)
+                {
+                    foreach (var nested in vg.GetChildren())
+                    {
+                        yield return nested;
+                    }
+                }
+            }
+        }
+    }
+}
+#endif

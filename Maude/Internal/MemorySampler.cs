@@ -80,13 +80,13 @@ internal static class MemorySampler
         return 0;
     }
 
-#elif IOS
+#elif IOS || MACCATALYST
     public static MemorySnapshot Sample()
     {
         // --- RSS via mach_task_basic_info ---
         var rssBytes = IosMemoryHelper.GetPhysFootprint();
 
-        // iOS has no Java/ART or Android-style native heap counters.
+        // iOS/macOS have no Java/ART or Android-style native heap counters.
         long managedBytes = GC.GetTotalMemory(false);
 
         return new MemorySnapshot(
@@ -99,11 +99,11 @@ internal static class MemorySampler
             CapturedAtUtc: DateTime.UtcNow);
     }
 #else
-    public static Snapshot Sample()
+    public static MemorySnapshot Sample()
     {
         long managedBytes = GC.GetTotalMemory(false);
 
-        return new Snapshot(
+        return new MemorySnapshot(
             TotalPssBytes: 0,
             RssBytes: 0,
             JavaHeapUsedBytes: 0,

@@ -1,4 +1,6 @@
-using SkiaSharp.Views.Maui.Controls.Hosting;
+using System.Linq;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Hosting;
 
 namespace Maude;
 
@@ -14,6 +16,37 @@ public static class MaudeAppBuilderExtensions
     /// </summary>
     public static MauiAppBuilder UseMaude(this MauiAppBuilder builder, MaudeOptions? maudeOptions = null)
     {
+#if ANDROID
+        MaudeAndroidPlatform.Configure(() => Platform.CurrentActivity);
+#elif IOS
+        MaudeIosPlatform.Configure(() =>
+        {
+            return UIKit.UIApplication.SharedApplication
+                       ?.ConnectedScenes
+                       ?.OfType<UIKit.UIWindowScene>()
+                       ?.SelectMany(scene => scene.Windows)
+                       ?.FirstOrDefault(w => w.IsKeyWindow)
+                   ?? UIKit.UIApplication.SharedApplication
+                       ?.ConnectedScenes
+                       ?.OfType<UIKit.UIWindowScene>()
+                       ?.SelectMany(scene => scene.Windows)
+                       ?.FirstOrDefault();
+        });
+#elif MACCATALYST
+        MaudeMacCatalystPlatform.Configure(() =>
+        {
+            return UIKit.UIApplication.SharedApplication
+                       ?.ConnectedScenes
+                       ?.OfType<UIKit.UIWindowScene>()
+                       ?.SelectMany(scene => scene.Windows)
+                       ?.FirstOrDefault(w => w.IsKeyWindow)
+                   ?? UIKit.UIApplication.SharedApplication
+                       ?.ConnectedScenes
+                       ?.OfType<UIKit.UIWindowScene>()
+                       ?.SelectMany(scene => scene.Windows)
+                       ?.FirstOrDefault();
+        });
+#endif
         if (!MaudeRuntime.IsInitialized)
         {
             MaudeRuntime.Initialize(maudeOptions);
@@ -22,7 +55,7 @@ public static class MaudeAppBuilderExtensions
         builder.Services.AddSingleton<IMaudeRuntime>(_ => MaudeRuntime.Instance);
         builder.Services.AddSingleton<IMaudeDataSink>(_ => MaudeRuntime.Instance.DataSink);
         
-        return builder.UseSkiaSharp();
+        return builder;
     }
     /// <summary>
     /// Set's up the <see cref="MauiAppBuilder"/> to initialise the <see cref="MaudeRuntime"/> and registers required fonts and dependencies.

@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
+    <UseMaui>true</UseMaui>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Maude.Maui</AssemblyName>
+    <RootNamespace>Maude</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Maude.Core\Maude.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net9.0-android'">
+    <ProjectReference Include="..\Maude.Android\Maude.Android.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net9.0-ios'">
+    <ProjectReference Include="..\Maude.iOS\Maude.iOS.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net9.0-maccatalyst'">
+    <ProjectReference Include="..\Maude.MacCatalyst\Maude.MacCatalyst.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Maude\MaudeAppBuilderExtensions.cs" />
+  </ItemGroup>
+
+</Project>

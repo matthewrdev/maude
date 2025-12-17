@@ -1,4 +1,4 @@
-#if IOS
+#if MACCATALYST
 using System;
 using CoreAnimation;
 using Foundation;
@@ -6,10 +6,10 @@ using UIKit;
 
 namespace Maude;
 
-public sealed class IosFrameRateMonitor : NSObject, IFrameRateMonitor
+public sealed class MacCatalystFrameRateMonitor : NSObject, IFrameRateMonitor
 {
     private const double ReportIntervalSeconds = 0.5d;
-    
+
     private readonly object sync = new object();
     private CADisplayLink? displayLink;
     private double lastReportTimestamp;
@@ -98,7 +98,6 @@ public sealed class IosFrameRateMonitor : NSObject, IFrameRateMonitor
     protected override void Dispose(bool disposing)
     {
         Stop();
-        
         base.Dispose(disposing);
     }
 }

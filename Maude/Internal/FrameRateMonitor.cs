@@ -3,7 +3,7 @@ namespace Maude;
 /// <summary>
 /// Platform-specific frame rate monitor.
 /// </summary>
-internal interface IFrameRateMonitor : IDisposable
+public interface IFrameRateMonitor : IDisposable
 {
     void Start();
     void Stop();
@@ -18,13 +18,16 @@ internal static class FrameRateMonitorFactory
 {
     public static IFrameRateMonitor Create()
     {
+        return MaudeRuntimePlatform.CreateFrameRateMonitorFallback(() =>
+        {
 #if ANDROID
-        return new AndroidFrameRateMonitor();
+            return new AndroidFrameRateMonitor();
 #elif IOS
-        return new IosFrameRateMonitor();
+            return new IosFrameRateMonitor();
 #else
-        return new NoopFrameRateMonitor();
+            return new NoopFrameRateMonitor();
 #endif
+        });
     }
 
     private sealed class NoopFrameRateMonitor : IFrameRateMonitor

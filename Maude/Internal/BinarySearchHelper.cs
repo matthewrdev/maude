@@ -1,6 +1,6 @@
 namespace Maude;
 
-internal class BinarySearchHelper
+internal static class BinarySearchHelper
 {
     
     public static int FindFirstIndex(List<MaudeEvent> events, DateTime fromUtc)
@@ -70,5 +70,4 @@ internal class BinarySearchHelper
 
         return hi; // may return -1 if all > toUtc
     }
-
 }

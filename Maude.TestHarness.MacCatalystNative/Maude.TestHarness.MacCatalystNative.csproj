@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-maccatalyst</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <AssemblyName>Maude.TestHarness.MacCatalystNative</AssemblyName>
+    <ApplicationId>com.example.maude.macharness</ApplicationId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Maude.Core\Maude.Core.csproj" />
+    <ProjectReference Include="..\Maude.MacCatalyst\Maude.MacCatalyst.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Info.plist" />
+  </ItemGroup>
+
+</Project>
