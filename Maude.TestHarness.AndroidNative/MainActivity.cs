@@ -22,19 +22,22 @@ public class MainActivity : Activity
             Orientation = Orientation.Vertical
         };
 
-        var presentSheet = new Button(this) { Text = "Present Sheet" };
-        presentSheet.Click += (_, _) => MaudeRuntime.PresentSheet();
-
-        var presentOverlay = new Button(this) { Text = "Present Overlay" };
-        presentOverlay.Click += (_, _) => MaudeRuntime.PresentOverlay();
-
-        var dismissOverlay = new Button(this) { Text = "Dismiss Overlay" };
-        dismissOverlay.Click += (_, _) => MaudeRuntime.DismissOverlay();
-
-        layout.AddView(presentSheet);
-        layout.AddView(presentOverlay);
-        layout.AddView(dismissOverlay);
-
+        layout.AddView(BuildButton("Present Sheet", () => MaudeRuntime.PresentSheet()));
+        layout.AddView(BuildButton("Present Overlay", () => MaudeRuntime.PresentOverlay()));
+        layout.AddView(BuildButton("Dismiss Overlay", () => MaudeRuntime.DismissOverlay()));
+        layout.AddView(BuildButton("Overlay Top-Left", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopLeft)));
+        layout.AddView(BuildButton("Overlay Top-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight)));
+        layout.AddView(BuildButton("Overlay Bottom-Left", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomLeft)));
+        layout.AddView(BuildButton("Overlay Bottom-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomRight)));
+        layout.AddView(BuildButton("Theme: Light", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Light));
+        layout.AddView(BuildButton("Theme: Dark", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Dark));
         SetContentView(layout);
+    }
+
+    private Button BuildButton(string text, Action action)
+    {
+        var button = new Button(this) { Text = text };
+        button.Click += (_, _) => action();
+        return button;
     }
 }

@@ -9,16 +9,26 @@ internal sealed class HarnessViewController : UIViewController
         base.ViewDidLoad();
         View.BackgroundColor = UIColor.SystemBackground;
 
-        var presentSheet = BuildButton("Present Sheet", () => MaudeRuntime.PresentSheet());
-        var presentOverlay = BuildButton("Present Overlay", () => MaudeRuntime.PresentOverlay());
-        var dismissOverlay = BuildButton("Dismiss Overlay", () => MaudeRuntime.DismissOverlay());
+        var buttons = new[]
+        {
+            BuildButton("Present Sheet", () => MaudeRuntime.PresentSheet()),
+            BuildButton("Present Overlay", () => MaudeRuntime.PresentOverlay()),
+            BuildButton("Dismiss Overlay", () => MaudeRuntime.DismissOverlay()),
+            BuildButton("Overlay Top-Left", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopLeft)),
+            BuildButton("Overlay Top-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight)),
+            BuildButton("Overlay Bottom-Left", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomLeft)),
+            BuildButton("Overlay Bottom-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomRight)),
+            BuildButton("Theme: Light", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Light),
+            BuildButton("Theme: Dark", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Dark),
+        };
 
-        var stack = new UIStackView(new[] { presentSheet, presentOverlay, dismissOverlay })
+        var stack = new UIStackView(buttons)
         {
             Axis = UILayoutConstraintAxis.Vertical,
             Distribution = UIStackViewDistribution.FillEqually,
-            Alignment = UIStackViewAlignment.Center,
-            Frame = View.Bounds
+            Alignment = UIStackViewAlignment.Fill,
+            Frame = View.Bounds,
+            Spacing = 8
         };
 
         stack.AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;

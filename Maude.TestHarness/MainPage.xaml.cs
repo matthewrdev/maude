@@ -38,6 +38,7 @@ public partial class MainPage : ContentPage
         var isPresented = MaudeRuntime.IsSheetPresented;
         StatusLabel.Text = $"Runtime {(isActive ? "active" : "inactive")} • {(isPresented ? "presented" : "hidden")}";
         UpdateEventRenderingStatus();
+        UpdateChartThemeStatus();
     }
 
     private void UpdateShakePredicateStatus()
@@ -56,6 +57,11 @@ public partial class MainPage : ContentPage
     private void UpdateEventRenderingStatus()
     {
         EventRenderingStatusLabel.Text = $"Current: {MaudeRuntime.EventRenderingBehaviour}";
+    }
+
+    private void UpdateChartThemeStatus()
+    {
+        ChartThemeStatusLabel.Text = $"Current: {MaudeRuntime.ChartTheme}";
     }
 
     private void OnActivateClicked(object? sender, EventArgs e)
@@ -115,6 +121,19 @@ public partial class MainPage : ContentPage
         MaudeRuntime.EventRenderingBehaviour = behaviour;
         UpdateEventRenderingStatus();
     }
+
+    private void OnLightThemeClicked(object? sender, EventArgs e)
+    {
+        MaudeRuntime.ChartTheme = MaudeChartTheme.Light;
+        UpdateChartThemeStatus();
+    }
+
+    private void OnDarkThemeClicked(object? sender, EventArgs e)
+    {
+        MaudeRuntime.ChartTheme = MaudeChartTheme.Dark;
+        UpdateChartThemeStatus();
+    }
+
 
     private void StartFrameDrop(TimeSpan interval, TimeSpan blockDuration)
     {

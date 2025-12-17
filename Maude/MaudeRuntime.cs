@@ -228,6 +228,31 @@ public static class MaudeRuntime
     }
 
     /// <summary>
+    /// Gets or sets the chart theme applied during rendering.
+    /// </summary>
+    public static MaudeChartTheme ChartTheme
+    {
+        get
+        {
+            if (!IsInitialized)
+            {
+                return MaudeChartTheme.Dark;
+            }
+
+            return Instance.ChartTheme;
+        }
+        set
+        {
+            if (!IsInitialized)
+            {
+                return;
+            }
+
+            Instance.ChartTheme = value;
+        }
+    }
+
+    /// <summary>
     /// Should the slide sheet or overlay be allowed to be presented?
     /// </summary>
     public static bool IsPresentationEnabled

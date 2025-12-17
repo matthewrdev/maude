@@ -1,7 +1,6 @@
+# .NET-native in-app performance tracker for iOS, Android, Mac Catalyst, and MAUI.
 
-# In-app observability for .NET MAUI.
-
-Maude is a plugin for .NET MAUI plugin to monitor and visualise app performance at runtime.
+Maude is a .NET-native, integrated performance tracker that overlays live memory, FPS, and annotated events inside your app. It works with .NET for iOS, Android, Mac Catalyst, and can be hosted inside .NET MAUI via native embedding.
 
 | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
 | --- | --- | --- |
@@ -17,38 +16,48 @@ Always use the native tools and platform specific profilers (Xcode Instruments, 
 
 ## Quickstart
 
-Add Maude to your MAUI app with minimal code.
+Pick the host style that suits your app.
 
-1. Configure the app builder:
+### .NET for iOS, Android, and Mac Catalyst
+
+1) Provide a presentation window (Android requires an `Activity`):
+```csharp
+// Android Activity
+var options = MaudeOptions.CreateBuilder()
+    .WithPresentationWindowProvider(() => this) // required on Android
+    .Build();
+
+MaudeRuntime.InitializeAndActivate(options);
+```
+
+On iOS or Mac Catalyst, the default window provider is used:
+```csharp
+MaudeRuntime.InitializeAndActivate();
+```
+
+2) Present Maude in your UI:
+```csharp
+MaudeRuntime.PresentSheet();   // Slide-in sheet
+MaudeRuntime.PresentOverlay(); // Window overlay
+MaudeRuntime.DismissOverlay();
+```
+
+### .NET MAUI host
+
+MAUI on Android must supply a delegate that returns the current activity so Maude can attach its overlay.
 
 ```csharp
 // MauiProgram.cs
 using Maude;
 
+var maudeOptions = MaudeOptions.CreateBuilder()
+  .WithMauiWindowProvider() // supplies the current Activity on Android
+  .Build();
+
 var builder = MauiApp.CreateBuilder()
   .UseMauiApp<App>()
-  .UseMaude();
+  .UseMaudeAndActivate(maudeOptions); // or .UseMaude(maudeOptions) then MaudeRuntime.Activate()
 ```
-
-2. Start tracking memory usage:
-
-```csharp
-MaudeRuntime.Activate();
-```
-
-3. Show Maude:
-
-```csharp
-// Show Maude as a slide in sheet.
-MaudeRuntime.PresentSheet();
-MaudeRuntime.DismissSheet();
-
-// Show Maude as a window overlay.
-MaudeRuntime.PresentOverlay();
-MaudeRuntime.DismissOverlay();
-```
-
-Prefer a one-liner? Call `.UseMaudeAndActivate()` to register Maude and immediately start sampling.
 
 ## Documentation
 
@@ -75,7 +84,7 @@ Looking for builder options, event recording, FPS sampling, or platform-specific
 
 ### Modal Pages
 
-MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`PresentSheet`) for modal-heavy flows.
+When hosted inside MAUI, `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`PresentSheet`) for modal-heavy flows. 
 
 ### Only Supported on .NET 9 and higher
 

@@ -24,7 +24,8 @@ using System.Threading.Tasks;
             AdditionalLogger = new MaudeConsoleLogger(),
             DefaultOverlayPosition= MaudeOverlayPosition.TopRight,
             EnableFramesPerSecond = true,
-            EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly
+            EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly,
+            ChartTheme = MaudeChartTheme.Dark
         };
         
         /// <summary>
@@ -86,6 +87,11 @@ using System.Threading.Tasks;
         /// Configures how annotated events should appear on the chart.
         /// </summary>
         public MaudeEventRenderingBehaviour EventRenderingBehaviour { get; private set; } = MaudeEventRenderingBehaviour.IconsOnly;
+
+        /// <summary>
+        /// Visual theme used when rendering the chart.
+        /// </summary>
+        public MaudeChartTheme ChartTheme { get; private set; } = MaudeChartTheme.Dark;
 
         /// <summary>
         /// Optional save snapshot action rendered in the slide sheet.
@@ -269,6 +275,19 @@ using System.Threading.Tasks;
                 options.EventRenderingBehaviour = behaviour;
                 return this;
             }
+
+            /// <summary>
+            /// Sets the chart theme.
+            /// </summary>
+            public MaudeOptionsBuilder WithChartTheme(MaudeChartTheme theme)
+            {
+                options.ChartTheme = theme;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the chart theme.
+            /// </summary>
 
             /// <summary>
             /// Provides the native window/activity handle Maude should use for presentation.

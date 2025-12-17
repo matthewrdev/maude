@@ -1,9 +1,8 @@
-
-# In-app observability for .NET MAUI.
+# .NET-native in-app performance tracker for iOS, Android, Mac Catalyst, and MAUI.
 
 [![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
 
-Maude is a plugin for .NET MAUI plugin to monitor and visualise app performance at runtime.
+Maude is a .NET-native, integrated performance tracker that overlays live memory, FPS, and annotated events inside your app. It works with .NET for iOS, Android, Mac Catalyst, and can be hosted inside .NET MAUI via native embedding.
 
 | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
 | --- | --- | --- |
@@ -19,21 +18,53 @@ Always use the native tools and platform specific profilers (Xcode Instruments, 
 
 ## Quickstart
 
-Add Maude to your MAUI app with minimal code.
+Pick the host style that suits your app.
+
+### .NET for iOS, Android, and Mac Catalyst
+
+1) Provide a presentation window (Android requires an `Activity`):
+```csharp
+// Android Activity
+var options = MaudeOptions.CreateBuilder()
+    .WithPresentationWindowProvider(() => this) // required on Android
+    .Build();
+
+MaudeRuntime.InitializeAndActivate(options);
+```
+
+On iOS or Mac Catalyst, the default window provider is used:
+```csharp
+MaudeRuntime.InitializeAndActivate();
+```
+
+2) Present Maude in your UI:
+```csharp
+MaudeRuntime.PresentSheet();   // Slide-in sheet
+MaudeRuntime.PresentOverlay(); // Window overlay
+MaudeRuntime.DismissOverlay();
+```
+
+### .NET MAUI host
+
+MAUI on Android must supply a delegate that returns the current activity so Maude can attach its overlay.
 
 1) Configure the app builder:
 ```csharp
 // MauiProgram.cs
 using Maude;
 
+var maudeOptions = MaudeOptions.CreateBuilder()
+  .WithMauiWindowProvider() // supplies the current Activity on Android
+  .Build();
+
 var builder = MauiApp.CreateBuilder()
   .UseMauiApp<App>()
-  .UseMaude();  
+  .UseMaude(maudeOptions);
 ```
 
 2) Start tracking memory usage:
 ```csharp
-    MaudeRuntime.Activate();
+MaudeRuntime.Activate();
 ```
 
 3) Show Maude:
@@ -53,16 +84,20 @@ If you would prefer a one-liner, add the following to your MAUI app builder:
 // MauiProgram.cs
 using Maude;
 
+var maudeOptions = MaudeOptions.CreateBuilder()
+  .WithMauiWindowProvider() // required on Android
+  .Build();
+
 var builder = MauiApp.CreateBuilder()
   .UseMauiApp<App>()
-  .UseMaudeAndActivate();  // Register Maude and immediately start tracking.
+  .UseMaudeAndActivate(maudeOptions);  // Register Maude and immediately start tracking.
 ```
 
 ## [Documentation](docs.md) 
 
 Looking for integration steps, builder options, and runtime usage guidance beyond the quickstart? 
 
-See [docs.md](docs.md) for the full walkthrough, including event recording, customisation options, platform-specific initialisation, and FPS sampling tips.
+See [docs.md](docs.md) for the full walkthrough, including event recording, customisation options, platform-specific initialisation (including the MAUI Android activity delegate), and FPS sampling tips.
 
 ## What does Maude capture?
 
@@ -86,7 +121,7 @@ See [docs.md](docs.md) for the full walkthrough, including event recording, cust
 
 ### Modal Pages
 
-MAUI’s `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`PresentSheet`) for modal-heavy flows. 
+When hosted inside MAUI, `WindowOverlay` attaches to the root window, so modal pages can obscure the overlay. Use the slide-in sheet (`PresentSheet`) for modal-heavy flows. 
 
 On Android, the overlay is a transparent `FrameLayout` added to the current activity’s decor view; it stays on top of your main content but under system UI and will not be visible on modal pages. 
 
@@ -104,7 +139,7 @@ As such, target frameworks earlier than .NET 9 are unsupported.
 
 Maude *must not* add undue dependencies to the integrating application.
 
-As much as possible, Maude must use the core MAUI and platform APIs. Maudes only current external dependency is SkiaSharp.
+As much as possible, Maude must use the core .NET and platform APIs. Maude’s only current external dependency is SkiaSharp.
 
 **Minimal Overhead**
 
@@ -114,6 +149,6 @@ Maude should capture and present telemetry in the most efficient method possible
 
 **Simple Integration**
 
-Maude *must* be simple for the integrating application to add and use.
+Maude *must* be simple for the integrating application to add and use across .NET for iOS, Android, Mac Catalyst, and MAUI.
 
-Currently, Maude can be added to an applicaton in one line `.UseMaudeAndActivate()`.
+Currently, Maude can be added to an application in one line `.UseMaudeAndActivate()`.

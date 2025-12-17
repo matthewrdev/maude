@@ -16,6 +16,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     private readonly IFrameRateMonitor frameRateMonitor;
     private bool fpsTrackingEnabled;
     private MaudeEventRenderingBehaviour eventRenderingBehaviour;
+    private MaudeChartTheme chartTheme;
     
     private readonly MaudeShakeGestureListener shakeGestureListener;
 
@@ -32,6 +33,7 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
         frameRateMonitor = FrameRateMonitorFactory.Create();
         fpsTrackingEnabled = options.EnableFramesPerSecond;
         eventRenderingBehaviour = options.EventRenderingBehaviour;
+        chartTheme = options.ChartTheme;
         shakeGestureListener = new MaudeShakeGestureListener(this, options);
         MaudeLogger.Info("Shake gesture listener initialised.");
         this.presentationService = presentationService
@@ -51,6 +53,12 @@ internal class MaudeRuntimeImpl : IMaudeRuntime
     {
         get => eventRenderingBehaviour;
         set => eventRenderingBehaviour = value;
+    }
+
+    public MaudeChartTheme ChartTheme
+    {
+        get => chartTheme;
+        set => chartTheme = value;
     }
     
     public bool IsOverlayPresented => presentationService.IsOverlayPresented;

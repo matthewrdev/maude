@@ -14,7 +14,6 @@ public partial class MaudeChartView : SKCanvasView
 {
     private const float ChartCornerRadius = 12f;
     private const float ChartBorderWidth = 2f;
-    private static readonly SKColor ChartBorderColor = new SKColor(0xcc, 0xcc, 0xcc);
 
     private IMaudeDataSink dataSink;
     private IDispatcherTimer redrawTimer;
@@ -110,7 +109,7 @@ public partial class MaudeChartView : SKCanvasView
         this.IsEnabled = !isOverlay;
 
         this.EnableTouchEvents = !isOverlay;
-        var overlayHeight = DeviceInfo.Current.Platform == DevicePlatform.Android ? 180 : 120;
+        var overlayHeight = CalculateOverlayHeight();
         this.HeightRequest = isOverlay ? overlayHeight : 220;
 
         if (isOverlay)
@@ -219,7 +218,8 @@ public partial class MaudeChartView : SKCanvasView
                 CurrentUtc = now,
                 Mode = RenderMode,
                 ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
-                EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour
+                EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour,
+                Theme = MaudeRuntime.ChartTheme
             };
 
             var renderResult = MaudeChartRenderer.Render(canvas, e.Info, sink, renderOptions);
@@ -233,10 +233,16 @@ public partial class MaudeChartView : SKCanvasView
             IsAntialias = true,
             Style = SKPaintStyle.Stroke,
             StrokeWidth = ChartBorderWidth,
-            Color = ChartBorderColor
+            Color = GetBorderColor(MaudeRuntime.ChartTheme)
         };
         canvas.DrawRoundRect(roundRect, borderPaint);
     }
+
+    private static SKColor GetBorderColor(MaudeChartTheme theme) => theme == MaudeChartTheme.Light
+        ? new SKColor(210, 210, 215)
+        : new SKColor(0xcc, 0xcc, 0xcc);
+
+    private double CalculateOverlayHeight() => DeviceInfo.Current.Platform == DevicePlatform.Android ? 180 : 120;
 
     private void UpdateChartBounds(MaudeRenderResult renderResult)
     {

@@ -148,6 +148,7 @@ internal sealed class MacCatalystNativePresentationService : IMaudePresentationS
             overlayView.AddSubview(overlayChart);
         }
     }
+    
 
     private void PositionOverlay(UIWindow window, MaudeOverlayPosition position)
     {
@@ -288,7 +289,8 @@ internal sealed class MaudeNativeChartViewMacCatalyst : SKCanvasView
             CurrentUtc = now,
             Mode = RenderMode,
             ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
-            EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour
+            EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour,
+            Theme = MaudeRuntime.ChartTheme
         };
 
         var renderResult = MaudeChartRenderer.Render(canvas, e.Info, sink, renderOptions);

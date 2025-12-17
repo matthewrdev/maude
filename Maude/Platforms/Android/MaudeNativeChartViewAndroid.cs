@@ -87,7 +87,8 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
             CurrentUtc = now,
             Mode = RenderMode,
             ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
-            EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour
+            EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour,
+            Theme = MaudeRuntime.ChartTheme
         };
 
         var renderResult = MaudeChartRenderer.Render(canvas, e.Info, sink, renderOptions);
@@ -136,6 +137,16 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
                 Invalidate();
                 break;
         }
+    }
+
+    public override bool OnTouchEvent(MotionEvent? e)
+    {
+        if (RenderMode == MaudeChartRenderMode.Overlay)
+        {
+            return false;
+        }
+
+        return base.OnTouchEvent(e);
     }
 
     public void Detach()

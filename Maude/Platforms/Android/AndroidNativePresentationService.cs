@@ -339,6 +339,8 @@ internal sealed class NativeOverlayHost
 
         decor.AddView(chart, lp);
         chart.BringToFront();
+        chart.LayoutParameters = lp;
+        chart.RequestLayout();
         IsVisible = true;
     }
 
@@ -361,6 +363,7 @@ internal sealed class NativeOverlayHost
         MaudeOverlayPosition.BottomLeft => GravityFlags.Bottom | GravityFlags.Left,
         _ => GravityFlags.Bottom | GravityFlags.Right
     };
+
 }
 
 internal sealed class MaudeEventAdapter : RecyclerView.Adapter

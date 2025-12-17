@@ -22,689 +22,700 @@ public static class MaudeChartRenderer
     private const double BytesPerMegabyte = 1024d * 1024d;
 
     public static MaudeRenderResult Render(SKCanvas canvas,
-                                           SKImageInfo info, 
-                                           IMaudeDataSink dataSink,
-                                           MaudeRenderOptions renderOptions)
+        SKImageInfo info,
+        IMaudeDataSink dataSink,
+        MaudeRenderOptions renderOptions)
     {
         if (canvas == null) throw new ArgumentNullException(nameof(canvas));
         if (dataSink == null) throw new ArgumentNullException(nameof(dataSink));
         if (renderOptions.Channels == null) throw new ArgumentNullException(nameof(renderOptions.Channels));
 
         var resources = ThreadResources.Value!;
+        var palette = ChartThemePalette.For(renderOptions.Theme);
+        ApplyPalette(resources, palette);
 
         canvas.Clear(SKColors.Transparent);
 
         var bounds = new SKRect(0, 0, info.Width, info.Height);
         var backgroundColor = renderOptions.Mode == MaudeChartRenderMode.Overlay
-            ? new SKColor(18, 18, 26, 190)
-            : new SKColor(18, 18, 26);
+            ? palette.OverlayBackground
+            : palette.SurfaceBackground;
 
         var surfaceBackground = resources.SurfaceBackgroundPaint;
         surfaceBackground.Color = backgroundColor;
-        canvas.DrawRect(bounds, surfaceBackground);
+        var cornerScale = renderOptions.Mode == MaudeChartRenderMode.Overlay ? 0.65f : 1f;
+        var backgroundCornerRadius = 12f * cornerScale;
+        var backgroundRoundRect = new SKRoundRect(bounds, backgroundCornerRadius, backgroundCornerRadius);
+        canvas.DrawRoundRect(backgroundRoundRect, surfaceBackground);
+        canvas.Save();
+        canvas.ClipRoundRect(backgroundRoundRect, antialias: true);
 
-        var fromUtc = renderOptions.FromUtc;
-        var toUtc = renderOptions.ToUtc <= fromUtc
-            ? fromUtc.AddMilliseconds(1)
-            : renderOptions.ToUtc;
-
-        var visibleChannels = (renderOptions.Channels.Count > 0
-            ? renderOptions.Channels
-            : dataSink.Channels.Select(c => c.Id)).ToArray();
-
-        var channelLookup = resources.ChannelLookup;
-        channelLookup.Clear();
-        if (dataSink.Channels != null)
+        try
         {
-            foreach (var channel in dataSink.Channels)
+
+            var fromUtc = renderOptions.FromUtc;
+            var toUtc = renderOptions.ToUtc <= fromUtc
+                ? fromUtc.AddMilliseconds(1)
+                : renderOptions.ToUtc;
+
+            var visibleChannels = (renderOptions.Channels.Count > 0
+                ? renderOptions.Channels
+                : dataSink.Channels.Select(c => c.Id)).ToArray();
+
+            var channelLookup = resources.ChannelLookup;
+            channelLookup.Clear();
+            if (dataSink.Channels != null)
             {
-                channelLookup[channel.Id] = channel;
-            }
-        }
-
-        var channelSpans = resources.ChannelSpans;
-        channelSpans.Clear();
-        var channelSpanLookup = resources.ChannelSpanLookup;
-        channelSpanLookup.Clear();
-        double maxMemoryValue = 0;
-        double maxFpsValue = 0;
-        var hasMemoryMetrics = false;
-        var hasFpsMetrics = false;
-
-        foreach (var channelId in visibleChannels)
-        {
-            var span = dataSink.GetMetricsChannelSpanForRange(channelId, fromUtc, toUtc);
-            channelSpans.Add(span);
-            channelSpanLookup[channelId] = span;
-
-            if (span.Valid && span.Count > 0)
-            {
-                var isFpsChannel = channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id;
-                if (isFpsChannel)
+                foreach (var channel in dataSink.Channels)
                 {
-                    hasFpsMetrics = true;
-                    if (span.MaxValue > maxFpsValue)
+                    channelLookup[channel.Id] = channel;
+                }
+            }
+
+            var channelSpans = resources.ChannelSpans;
+            channelSpans.Clear();
+            var channelSpanLookup = resources.ChannelSpanLookup;
+            channelSpanLookup.Clear();
+            double maxMemoryValue = 0;
+            double maxFpsValue = 0;
+            var hasMemoryMetrics = false;
+            var hasFpsMetrics = false;
+
+            foreach (var channelId in visibleChannels)
+            {
+                var span = dataSink.GetMetricsChannelSpanForRange(channelId, fromUtc, toUtc);
+                channelSpans.Add(span);
+                channelSpanLookup[channelId] = span;
+
+                if (span.Valid && span.Count > 0)
+                {
+                    var isFpsChannel = channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id;
+                    if (isFpsChannel)
                     {
-                        maxFpsValue = span.MaxValue;
+                        hasFpsMetrics = true;
+                        if (span.MaxValue > maxFpsValue)
+                        {
+                            maxFpsValue = span.MaxValue;
+                        }
+                    }
+                    else
+                    {
+                        hasMemoryMetrics = true;
+                        if (span.MaxValue > maxMemoryValue)
+                        {
+                            maxMemoryValue = span.MaxValue;
+                        }
                     }
                 }
-                else
+            }
+
+            var hasMetrics = hasMemoryMetrics || hasFpsMetrics;
+            if (!hasMetrics)
+            {
+                DrawEmptyState(canvas, info, palette);
+                return MaudeRenderResult.Empty;
+            }
+
+            // Add a 10% buffer on top so lines never touch the top edge.
+            var maxMemoryDisplayValue = Math.Max(1d, (hasMemoryMetrics ? maxMemoryValue : 1d) * 1.1d);
+            var maxFpsDisplayValue = Math.Max(1d, (hasFpsMetrics ? maxFpsValue : 1d) * 1.1d);
+
+            var totalMilliseconds = (toUtc - fromUtc).TotalMilliseconds;
+            if (totalMilliseconds <= 0)
+            {
+                totalMilliseconds = 1;
+            }
+
+            var probeRatio = renderOptions.ProbePosition.HasValue
+                ? Math.Clamp(renderOptions.ProbePosition.Value, 0f, 1f)
+                : (float?)null;
+
+            DateTime? probeUtc = null;
+            if (probeRatio.HasValue)
+            {
+                probeUtc = fromUtc.AddMilliseconds(totalMilliseconds * probeRatio.Value);
+            }
+
+            var axisPaint = resources.AxisPaint;
+            var gridPaint = resources.GridPaint;
+
+            var layoutScale = renderOptions.Mode == MaudeChartRenderMode.Overlay ? 0.65f : 1f;
+            var textPaint = resources.TextPaint;
+            var textFont = resources.TextFont;
+            textFont.Size = 14 * layoutScale;
+
+            var axisLabelFont = resources.AxisLabelFont;
+            axisLabelFont.Size = 12f * layoutScale;
+
+            var axisUnitFont = resources.AxisUnitFont;
+            axisUnitFont.Size = Math.Max(9.5f * layoutScale, axisLabelFont.Size * 0.85f);
+            var axisLabelPadding = 10f * layoutScale;
+            var axisUnitPadding = 10f * layoutScale;
+            const string leftAxisUnitLabel = "(MB)";
+            const string rightAxisUnitLabel = "(FPS)";
+            var leftAxisUnitWidth = axisUnitFont.MeasureText(leftAxisUnitLabel, textPaint);
+            var rightAxisUnitWidth = axisUnitFont.MeasureText(rightAxisUnitLabel, textPaint);
+
+            var legendTextPaint = resources.LegendTextPaint;
+            var legendFont = resources.LegendFont;
+            legendFont.Size = 12 * layoutScale;
+
+            var eventLabelPaint = resources.EventLabelPaint;
+            var eventLabelFont = resources.EventLabelFont;
+            eventLabelFont.Size = 10 * layoutScale;
+
+            var eventIconPaint = resources.EventIconPaint;
+            var eventIconFont = resources.EventIconFont;
+            eventIconFont.Size = 18 * layoutScale;
+
+            var eventLinePaint = resources.EventLinePaint;
+            eventLinePaint.StrokeWidth = 1f * layoutScale;
+
+            var eventVisuals = resources.EventVisuals;
+            eventVisuals.Clear();
+            var eventBehaviour = renderOptions.EventRenderingBehaviour;
+            var shouldRenderEvents = eventBehaviour != MaudeEventRenderingBehaviour.None;
+            var shouldRenderLabels = eventBehaviour == MaudeEventRenderingBehaviour.LabelsAndIcons;
+
+            var gridLines = 4;
+            var labelSamples = resources.LabelSamples;
+            var fpsLabelSamples = resources.FpsLabelSamples;
+
+            // cache key: (maxValue, gridLines, fontSize, isFps)
+            labelSamples.Clear();
+            fpsLabelSamples.Clear();
+
+            float MeasureLabel(string text)
+            {
+                var cacheKey = (text, axisLabelFont.Size);
+                var nowTicks = DateTime.UtcNow.Ticks;
+
+                if (resources.LabelWidthCache.TryGetValue(cacheKey, out var entry))
                 {
-                    hasMemoryMetrics = true;
-                    if (span.MaxValue > maxMemoryValue)
+                    if (nowTicks - entry.LastUseTicks <= AxisLabelCacheTtl.Ticks)
                     {
-                        maxMemoryValue = span.MaxValue;
+                        entry.LastUseTicks = nowTicks;
+                        resources.LabelWidthCache[cacheKey] = entry;
+                        return entry.Width;
                     }
                 }
-            }
-        }
 
-        var hasMetrics = hasMemoryMetrics || hasFpsMetrics;
-        if (!hasMetrics)
-        {
-            DrawEmptyState(canvas, info);
-            return MaudeRenderResult.Empty;
-        }
+                var width = axisLabelFont.MeasureText(text, textPaint);
+                resources.LabelWidthCache[cacheKey] = new LabelMeasureCacheEntry(width, nowTicks);
 
-        // Add a 10% buffer on top so lines never touch the top edge.
-        var maxMemoryDisplayValue = Math.Max(1d, (hasMemoryMetrics ? maxMemoryValue : 1d) * 1.1d);
-        var maxFpsDisplayValue = Math.Max(1d, (hasFpsMetrics ? maxFpsValue : 1d) * 1.1d);
-
-        var totalMilliseconds = (toUtc - fromUtc).TotalMilliseconds;
-        if (totalMilliseconds <= 0)
-        {
-            totalMilliseconds = 1;
-        }
-
-        var probeRatio = renderOptions.ProbePosition.HasValue
-            ? Math.Clamp(renderOptions.ProbePosition.Value, 0f, 1f)
-            : (float?)null;
-
-        DateTime? probeUtc = null;
-        if (probeRatio.HasValue)
-        {
-            probeUtc = fromUtc.AddMilliseconds(totalMilliseconds * probeRatio.Value);
-        }
-
-        var axisPaint = resources.AxisPaint;
-        var gridPaint = resources.GridPaint;
-
-        var layoutScale = renderOptions.Mode == MaudeChartRenderMode.Overlay ? 0.65f : 1f;
-        var textPaint = resources.TextPaint;
-        var textFont = resources.TextFont;
-        textFont.Size = 14 * layoutScale;
-
-        var axisLabelFont = resources.AxisLabelFont;
-        axisLabelFont.Size = 12f * layoutScale;
-
-        var axisUnitFont = resources.AxisUnitFont;
-        axisUnitFont.Size = Math.Max(9.5f * layoutScale, axisLabelFont.Size * 0.85f);
-        var axisLabelPadding = 10f * layoutScale;
-        var axisUnitPadding = 10f * layoutScale;
-        const string leftAxisUnitLabel = "(MB)";
-        const string rightAxisUnitLabel = "(FPS)";
-        var leftAxisUnitWidth = axisUnitFont.MeasureText(leftAxisUnitLabel, textPaint);
-        var rightAxisUnitWidth = axisUnitFont.MeasureText(rightAxisUnitLabel, textPaint);
-
-        var legendTextPaint = resources.LegendTextPaint;
-        var legendFont = resources.LegendFont;
-        legendFont.Size = 12 * layoutScale;
-
-        var eventLabelPaint = resources.EventLabelPaint;
-        var eventLabelFont = resources.EventLabelFont;
-        eventLabelFont.Size = 10 * layoutScale;
-
-        var eventIconPaint = resources.EventIconPaint;
-        var eventIconFont = resources.EventIconFont;
-        eventIconFont.Size = 18 * layoutScale;
-
-        var eventLinePaint = resources.EventLinePaint;
-        eventLinePaint.StrokeWidth = 1f * layoutScale;
-
-        var eventVisuals = resources.EventVisuals;
-        eventVisuals.Clear();
-        var eventBehaviour = renderOptions.EventRenderingBehaviour;
-        var shouldRenderEvents = eventBehaviour != MaudeEventRenderingBehaviour.None;
-        var shouldRenderLabels = eventBehaviour == MaudeEventRenderingBehaviour.LabelsAndIcons;
-
-        var gridLines = 4;
-        var labelSamples = resources.LabelSamples;
-        var fpsLabelSamples = resources.FpsLabelSamples;
-
-        // cache key: (maxValue, gridLines, fontSize, isFps)
-        labelSamples.Clear();
-        fpsLabelSamples.Clear();
-
-        float MeasureLabel(string text)
-        {
-            var cacheKey = (text, axisLabelFont.Size);
-            var nowTicks = DateTime.UtcNow.Ticks;
-
-            if (resources.LabelWidthCache.TryGetValue(cacheKey, out var entry))
-            {
-                if (nowTicks - entry.LastUseTicks <= AxisLabelCacheTtl.Ticks)
+                // Opportunistic cache cleanup
+                if (nowTicks - resources.LastAxisLabelCacheCleanupTicks > AxisLabelCacheTtl.Ticks)
                 {
-                    entry.LastUseTicks = nowTicks;
-                    resources.LabelWidthCache[cacheKey] = entry;
-                    return entry.Width;
+                    CleanupAxisLabelCache(resources, nowTicks);
                 }
+
+                return width;
             }
 
-            var width = axisLabelFont.MeasureText(text, textPaint);
-            resources.LabelWidthCache[cacheKey] = new LabelMeasureCacheEntry(width, nowTicks);
-
-            // Opportunistic cache cleanup
-            if (nowTicks - resources.LastAxisLabelCacheCleanupTicks > AxisLabelCacheTtl.Ticks)
-            {
-                CleanupAxisLabelCache(resources, nowTicks);
-            }
-
-            return width;
-        }
-
-        var maxLabelWidth = 0f;
-        for (int i = 0; i <= gridLines; i++)
-        {
-            var valueRatio = 1f - (float)i / gridLines;
-            var value = (long)Math.Ceiling(maxMemoryDisplayValue * valueRatio);
-            var text = FormatMemoryAxisLabel(value);
-            labelSamples.Add(text);
-            var width = MeasureLabel(text);
-            if (width > maxLabelWidth)
-            {
-                maxLabelWidth = width;
-            }
-        }
-
-        var maxRightLabelWidth = 0f;
-        if (hasFpsMetrics)
-        {
+            var maxLabelWidth = 0f;
             for (int i = 0; i <= gridLines; i++)
             {
                 var valueRatio = 1f - (float)i / gridLines;
-                var value = (long)Math.Ceiling(maxFpsDisplayValue * valueRatio);
-                var text = FormatFps(value, includeUnit: false);
-                fpsLabelSamples.Add(text);
+                var value = (long)Math.Ceiling(maxMemoryDisplayValue * valueRatio);
+                var text = FormatMemoryAxisLabel(value);
+                labelSamples.Add(text);
                 var width = MeasureLabel(text);
-                if (width > maxRightLabelWidth)
+                if (width > maxLabelWidth)
                 {
-                    maxRightLabelWidth = width;
+                    maxLabelWidth = width;
                 }
             }
-        }
 
-        var legendChannels = resources.LegendChannels;
-        legendChannels.Clear();
-        foreach (var span in channelSpans)
-        {
-            if (span.Valid
-                && span.Count > 0
-                && channelLookup.TryGetValue(span.ChannelId, out var channelInfo)
-                && channelInfo != null)
+            var maxRightLabelWidth = 0f;
+            if (hasFpsMetrics)
             {
-                legendChannels.Add(channelInfo);
-            }
-        }
-
-        var baseTopMargin = 24f * layoutScale;
-        var bottomMargin = 48f * layoutScale;
-        var marginPadding = 22f * layoutScale;
-        var rightMargin = Math.Max(24f * layoutScale,
-            Math.Max(maxRightLabelWidth + marginPadding, hasFpsMetrics ? rightAxisUnitWidth + marginPadding : 0f));
-        var leftMargin = Math.Max(60f * layoutScale, Math.Max(maxLabelWidth + marginPadding, leftAxisUnitWidth + marginPadding));
-
-        var legendEntries = resources.LegendEntries;
-        legendEntries.Clear();
-        var legendWidthCache = resources.LegendWidthCache;
-        var legendFontSize = legendFont.Size;
-        foreach (var channel in legendChannels)
-        {
-            var cacheKey = (channel.Id, channel.Name, legendFontSize);
-            if (!legendWidthCache.TryGetValue(cacheKey, out var textWidth))
-            {
-                textWidth = legendFont.MeasureText(channel.Name, legendTextPaint);
-                legendWidthCache[cacheKey] = textWidth;
-            }
-
-            legendEntries.Add(new LegendEntry(channel, textWidth));
-        }
-
-        var legendLineHeight = legendFont.Size + 8f * layoutScale;
-        var legendEntrySpacing = 18f * layoutScale;
-        var availableLegendWidth = Math.Max(20f, info.Width - rightMargin - leftMargin);
-
-        var legendLineStarts = resources.LegendLineStarts;
-        legendLineStarts.Clear();
-
-        if (legendEntries.Count > 0)
-        {
-            legendLineStarts.Add(0);
-            float currentLineWidth = 0;
-
-            for (var i = 0; i < legendEntries.Count; i++)
-            {
-                var entry = legendEntries[i];
-                entry.TotalWidth = (8f * layoutScale * 2) + entry.TextWidth + legendEntrySpacing;
-
-                if (currentLineWidth > 0 && currentLineWidth + entry.TotalWidth > availableLegendWidth)
+                for (int i = 0; i <= gridLines; i++)
                 {
-                    legendLineStarts.Add(i);
-                    currentLineWidth = 0;
-                }
-
-                currentLineWidth += entry.TotalWidth;
-                legendEntries[i] = entry;
-            }
-
-            legendLineStarts.Add(legendEntries.Count);
-        }
-
-        var legendLineCount = legendLineStarts.Count > 0 ? legendLineStarts.Count - 1 : 0;
-        var legendHeight = legendLineCount * legendLineHeight;
-        var legendSpacing = legendLineCount > 0 ? 8f * layoutScale : axisUnitFont.Size + 4f * layoutScale;
-
-        var chartRect = new SKRect(leftMargin,
-                                   baseTopMargin + legendHeight + legendSpacing,
-                                   info.Width - rightMargin,
-                                   info.Height - bottomMargin);
-
-        if (chartRect.Width <= 0 || chartRect.Height <= 0)
-        {
-            return MaudeRenderResult.Empty;
-        }
-
-        float CalculateY(byte channelId, long value)
-        {
-            var max = channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id
-                ? maxFpsDisplayValue
-                : maxMemoryDisplayValue;
-
-            if (max <= 0)
-            {
-                max = 1;
-            }
-
-            return chartRect.Bottom - (float)(value / max) * chartRect.Height;
-        }
-
-        string FormatValue(byte channelId, long value) =>
-            channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id
-                ? FormatFps(value)
-                : FormatBytes(value);
-
-        if (shouldRenderEvents)
-        {
-            // Prepare event visuals so backing lines can render behind the chart data.
-            foreach (var channelId in visibleChannels)
-            {
-                var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
-                    ? channelInfo
-                    : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
-
-                var channelColor = ToSkColor(channel.Color);
-                var isDetached = channelId == MaudeConstants.ReservedChannels.ChannelNotSpecified_Id;
-                var span = channelSpanLookup.TryGetValue(channelId, out var lookupSpan) ? lookupSpan : default;
-                var hasMetricsForChannel = span.Valid;
-
-                dataSink.UseEventsInChannelForRange(channelId, fromUtc, toUtc, eventSpan =>
-                {
-                    if (eventSpan.IsEmpty)
+                    var valueRatio = 1f - (float)i / gridLines;
+                    var value = (long)Math.Ceiling(maxFpsDisplayValue * valueRatio);
+                    var text = FormatFps(value, includeUnit: false);
+                    fpsLabelSamples.Add(text);
+                    var width = MeasureLabel(text);
+                    if (width > maxRightLabelWidth)
                     {
-                        return;
+                        maxRightLabelWidth = width;
+                    }
+                }
+            }
+
+            var legendChannels = resources.LegendChannels;
+            legendChannels.Clear();
+            foreach (var span in channelSpans)
+            {
+                if (span.Valid
+                    && span.Count > 0
+                    && channelLookup.TryGetValue(span.ChannelId, out var channelInfo)
+                    && channelInfo != null)
+                {
+                    legendChannels.Add(channelInfo);
+                }
+            }
+
+            var baseTopMargin = 24f * layoutScale;
+            var bottomMargin = 48f * layoutScale;
+            var marginPadding = 22f * layoutScale;
+            var rightMargin = Math.Max(24f * layoutScale,
+                Math.Max(maxRightLabelWidth + marginPadding, hasFpsMetrics ? rightAxisUnitWidth + marginPadding : 0f));
+            var leftMargin = Math.Max(60f * layoutScale, Math.Max(maxLabelWidth + marginPadding, leftAxisUnitWidth + marginPadding));
+
+            var legendEntries = resources.LegendEntries;
+            legendEntries.Clear();
+            var legendWidthCache = resources.LegendWidthCache;
+            var legendFontSize = legendFont.Size;
+            foreach (var channel in legendChannels)
+            {
+                var cacheKey = (channel.Id, channel.Name, legendFontSize);
+                if (!legendWidthCache.TryGetValue(cacheKey, out var textWidth))
+                {
+                    textWidth = legendFont.MeasureText(channel.Name, legendTextPaint);
+                    legendWidthCache[cacheKey] = textWidth;
+                }
+
+                legendEntries.Add(new LegendEntry(channel, textWidth));
+            }
+
+            var legendLineHeight = legendFont.Size + 8f * layoutScale;
+            var legendEntrySpacing = 18f * layoutScale;
+            var availableLegendWidth = Math.Max(20f, info.Width - rightMargin - leftMargin);
+
+            var legendLineStarts = resources.LegendLineStarts;
+            legendLineStarts.Clear();
+
+            if (legendEntries.Count > 0)
+            {
+                legendLineStarts.Add(0);
+                float currentLineWidth = 0;
+
+                for (var i = 0; i < legendEntries.Count; i++)
+                {
+                    var entry = legendEntries[i];
+                    entry.TotalWidth = (8f * layoutScale * 2) + entry.TextWidth + legendEntrySpacing;
+
+                    if (currentLineWidth > 0 && currentLineWidth + entry.TotalWidth > availableLegendWidth)
+                    {
+                        legendLineStarts.Add(i);
+                        currentLineWidth = 0;
                     }
 
-                    var useMetrics = hasMetricsForChannel && !isDetached;
+                    currentLineWidth += entry.TotalWidth;
+                    legendEntries[i] = entry;
+                }
 
-                    foreach (var maudeEvent in eventSpan)
+                legendLineStarts.Add(legendEntries.Count);
+            }
+
+            var legendLineCount = legendLineStarts.Count > 0 ? legendLineStarts.Count - 1 : 0;
+            var legendHeight = legendLineCount * legendLineHeight;
+            var legendSpacing = legendLineCount > 0 ? 8f * layoutScale : axisUnitFont.Size + 4f * layoutScale;
+
+            var chartRect = new SKRect(leftMargin,
+                baseTopMargin + legendHeight + legendSpacing,
+                info.Width - rightMargin,
+                info.Height - bottomMargin);
+
+            if (chartRect.Width <= 0 || chartRect.Height <= 0)
+            {
+                return MaudeRenderResult.Empty;
+            }
+
+            float CalculateY(byte channelId, long value)
+            {
+                var max = channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id
+                    ? maxFpsDisplayValue
+                    : maxMemoryDisplayValue;
+
+                if (max <= 0)
+                {
+                    max = 1;
+                }
+
+                return chartRect.Bottom - (float)(value / max) * chartRect.Height;
+            }
+
+            string FormatValue(byte channelId, long value) =>
+                channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id
+                    ? FormatFps(value)
+                    : FormatBytes(value);
+
+            if (shouldRenderEvents)
+            {
+                // Prepare event visuals so backing lines can render behind the chart data.
+                foreach (var channelId in visibleChannels)
+                {
+                    var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
+                        ? channelInfo
+                        : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
+
+                    var channelColor = ToSkColor(channel.Color);
+                    var isDetached = channelId == MaudeConstants.ReservedChannels.ChannelNotSpecified_Id;
+                    var span = channelSpanLookup.TryGetValue(channelId, out var lookupSpan) ? lookupSpan : default;
+                    var hasMetricsForChannel = span.Valid;
+
+                    dataSink.UseEventsInChannelForRange(channelId, fromUtc, toUtc, eventSpan =>
                     {
-                        var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                        float y;
-
-                        if (useMetrics)
+                        if (eventSpan.IsEmpty)
                         {
-                            long? metricValue = null;
-                            dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
+                            return;
+                        }
+
+                        var useMetrics = hasMetricsForChannel && !isDetached;
+
+                        foreach (var maudeEvent in eventSpan)
+                        {
+                            var x = chartRect.Left + (float)((maudeEvent.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                            float y;
+
+                            if (useMetrics)
                             {
-                                metricValue = GetMetricValueAt(metricsSpan, maudeEvent.CapturedAtUtc);
+                                long? metricValue = null;
+                                dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan => { metricValue = GetMetricValueAt(metricsSpan, maudeEvent.CapturedAtUtc); });
+
+                                y = metricValue.HasValue
+                                    ? CalculateY(channelId, metricValue.Value)
+                                    : chartRect.Bottom - (8f * layoutScale);
+                            }
+                            else
+                            {
+                                y = chartRect.Bottom - (8f * layoutScale);
+                            }
+
+                            eventVisuals.Add(new EventVisual
+                            {
+                                X = x,
+                                Y = y,
+                                EventType = maudeEvent.Type,
+                                Label = maudeEvent.Label,
+                                Color = channelColor
                             });
-
-                            y = metricValue.HasValue
-                                ? CalculateY(channelId, metricValue.Value)
-                                : chartRect.Bottom - (8f * layoutScale);
                         }
-                        else
-                        {
-                            y = chartRect.Bottom - (8f * layoutScale);
-                        }
-
-                        eventVisuals.Add(new EventVisual
-                        {
-                            X = x,
-                            Y = y,
-                            EventType = maudeEvent.Type,
-                            Label = maudeEvent.Label,
-                            Color = channelColor
-                        });
-                    }
-                });
+                    });
+                }
             }
-        }
 
-        // Axes
-        canvas.DrawLine(chartRect.Left, chartRect.Bottom, chartRect.Right, chartRect.Bottom, axisPaint);
-        canvas.DrawLine(chartRect.Left, chartRect.Top, chartRect.Left, chartRect.Bottom, axisPaint);
-        canvas.DrawLine(chartRect.Right, chartRect.Top, chartRect.Right, chartRect.Bottom, axisPaint);
+            // Axes
+            canvas.DrawLine(chartRect.Left, chartRect.Bottom, chartRect.Right, chartRect.Bottom, axisPaint);
+            canvas.DrawLine(chartRect.Left, chartRect.Top, chartRect.Left, chartRect.Bottom, axisPaint);
+            canvas.DrawLine(chartRect.Right, chartRect.Top, chartRect.Right, chartRect.Bottom, axisPaint);
 
-        // Horizontal grid lines & labels
-        for (int i = 0; i <= gridLines; i++)
-        {
-            var y = chartRect.Top + (chartRect.Height / gridLines) * i;
-            canvas.DrawLine(chartRect.Left, y, chartRect.Right, y, gridPaint);
-
-            var label = labelSamples[i];
-            var leftLabelWidth = axisLabelFont.MeasureText(label, textPaint);
-            canvas.DrawText(label,
-                            chartRect.Left - axisLabelPadding - leftLabelWidth,
-                            y + (axisLabelFont.Size / 3),
-                            SKTextAlign.Left,
-                            axisLabelFont,
-                            textPaint);
-            
-            if (fpsLabelSamples.Count > i)
+            // Horizontal grid lines & labels
+            for (int i = 0; i <= gridLines; i++)
             {
-                var fpsLabel = fpsLabelSamples[i];
-                canvas.DrawText(fpsLabel,
-                    chartRect.Right + axisLabelPadding,
+                var y = chartRect.Top + (chartRect.Height / gridLines) * i;
+                if (i < gridLines)
+                {
+                    canvas.DrawLine(chartRect.Left, y, chartRect.Right, y, gridPaint);
+                }
+
+                var label = labelSamples[i];
+                var leftLabelWidth = axisLabelFont.MeasureText(label, textPaint);
+                canvas.DrawText(label,
+                    chartRect.Left - axisLabelPadding - leftLabelWidth,
                     y + (axisLabelFont.Size / 3),
                     SKTextAlign.Left,
                     axisLabelFont,
                     textPaint);
-            }
-        }
 
-        var legendBaselineY = legendLineCount > 0
-            ? baseTopMargin + legendFont.Size + (legendLineCount - 1) * legendLineHeight
-            : baseTopMargin + axisUnitFont.Size;
-        var axisUnitY = legendBaselineY;
-        canvas.DrawText(leftAxisUnitLabel,
-                        chartRect.Left - axisUnitPadding - leftAxisUnitWidth,
-                        axisUnitY,
-                        SKTextAlign.Left,
-                        axisUnitFont,
-                        textPaint);
-
-        if (hasFpsMetrics)
-        {
-            canvas.DrawText(rightAxisUnitLabel,
-                            chartRect.Right + axisUnitPadding,
-                            axisUnitY,
-                            SKTextAlign.Left,
-                            axisUnitFont,
-                            textPaint);
-        }
-
-        // Time labels
-        var startLabel = fromUtc.ToLocalTime().ToString("HH:mm:ss");
-        var endLabel = toUtc.ToLocalTime().ToString("HH:mm:ss");
-        var midLabel = fromUtc.AddMilliseconds(totalMilliseconds / 2).ToLocalTime().ToString("HH:mm:ss");
-        canvas.DrawText(startLabel,
-                        chartRect.Left,
-                        chartRect.Bottom + axisLabelFont.Size + 4,
+                if (fpsLabelSamples.Count > i)
+                {
+                    var fpsLabel = fpsLabelSamples[i];
+                    canvas.DrawText(fpsLabel,
+                        chartRect.Right + axisLabelPadding,
+                        y + (axisLabelFont.Size / 3),
                         SKTextAlign.Left,
                         axisLabelFont,
                         textPaint);
-        canvas.DrawText(midLabel,
-                        chartRect.MidX - axisLabelFont.MeasureText(midLabel, textPaint) / 2,
-                        chartRect.Bottom + axisLabelFont.Size + 4,
+                }
+            }
+
+            var legendBaselineY = legendLineCount > 0
+                ? baseTopMargin + legendFont.Size + (legendLineCount - 1) * legendLineHeight
+                : baseTopMargin + axisUnitFont.Size;
+            var axisUnitY = legendBaselineY;
+            canvas.DrawText(leftAxisUnitLabel,
+                chartRect.Left - axisUnitPadding - leftAxisUnitWidth,
+                axisUnitY,
+                SKTextAlign.Left,
+                axisUnitFont,
+                textPaint);
+
+            if (hasFpsMetrics)
+            {
+                canvas.DrawText(rightAxisUnitLabel,
+                    chartRect.Right + axisUnitPadding,
+                    axisUnitY,
+                    SKTextAlign.Left,
+                    axisUnitFont,
+                    textPaint);
+            }
+
+            // Time labels
+            var startLabel = fromUtc.ToLocalTime().ToString("HH:mm:ss");
+            var endLabel = toUtc.ToLocalTime().ToString("HH:mm:ss");
+            var midLabel = fromUtc.AddMilliseconds(totalMilliseconds / 2).ToLocalTime().ToString("HH:mm:ss");
+            canvas.DrawText(startLabel,
+                chartRect.Left,
+                chartRect.Bottom + axisLabelFont.Size + 4,
+                SKTextAlign.Left,
+                axisLabelFont,
+                textPaint);
+            canvas.DrawText(midLabel,
+                chartRect.MidX - axisLabelFont.MeasureText(midLabel, textPaint) / 2,
+                chartRect.Bottom + axisLabelFont.Size + 4,
+                SKTextAlign.Left,
+                axisLabelFont,
+                textPaint);
+            canvas.DrawText(endLabel,
+                chartRect.Right - axisLabelFont.MeasureText(endLabel, textPaint),
+                chartRect.Bottom + axisLabelFont.Size + 4,
+                SKTextAlign.Left,
+                axisLabelFont,
+                textPaint);
+
+            // Legend
+            var legendY = baseTopMargin + legendFont.Size;
+            for (var lineIndex = 0; lineIndex < legendLineCount; lineIndex++)
+            {
+                var startIndex = legendLineStarts[lineIndex];
+                var endIndex = legendLineStarts[lineIndex + 1];
+                var legendX = leftMargin;
+
+                for (var entryIndex = startIndex; entryIndex < endIndex; entryIndex++)
+                {
+                    var entry = legendEntries[entryIndex];
+                    var channelColor = ToSkColor(entry.Channel.Color);
+                    var iconRadius = 4f * layoutScale;
+                    var iconCenterY = legendY - (legendFont.Size / 3);
+
+                    var legendPaint = resources.LegendPaint;
+                    legendPaint.Color = channelColor;
+                    canvas.DrawCircle(legendX + iconRadius, iconCenterY, iconRadius, legendPaint);
+                    canvas.DrawText(entry.Channel.Name,
+                        legendX + iconRadius * 2 + 4f * layoutScale,
+                        legendY,
                         SKTextAlign.Left,
-                        axisLabelFont,
-                        textPaint);
-        canvas.DrawText(endLabel,
-                        chartRect.Right - axisLabelFont.MeasureText(endLabel, textPaint),
-                        chartRect.Bottom + axisLabelFont.Size + 4,
-                        SKTextAlign.Left,
-                        axisLabelFont,
-                        textPaint);
+                        legendFont,
+                        legendTextPaint);
+                    legendX += entry.TotalWidth;
+                }
 
-        // Legend
-        var legendY = baseTopMargin + legendFont.Size;
-        for (var lineIndex = 0; lineIndex < legendLineCount; lineIndex++)
-        {
-            var startIndex = legendLineStarts[lineIndex];
-            var endIndex = legendLineStarts[lineIndex + 1];
-            var legendX = leftMargin;
-
-            for (var entryIndex = startIndex; entryIndex < endIndex; entryIndex++)
-            {
-                var entry = legendEntries[entryIndex];
-                var channelColor = ToSkColor(entry.Channel.Color);
-                var iconRadius = 4f * layoutScale;
-                var iconCenterY = legendY - (legendFont.Size / 3);
-
-                var legendPaint = resources.LegendPaint;
-                legendPaint.Color = channelColor;
-                canvas.DrawCircle(legendX + iconRadius, iconCenterY, iconRadius, legendPaint);
-                canvas.DrawText(entry.Channel.Name,
-                                legendX + iconRadius * 2 + 4f * layoutScale,
-                                legendY,
-                                SKTextAlign.Left,
-                                legendFont,
-                                legendTextPaint);
-                legendX += entry.TotalWidth;
+                legendY += legendLineHeight;
             }
 
-            legendY += legendLineHeight;
-        }
-
-        if (shouldRenderEvents)
-        {
-            foreach (var visual in eventVisuals)
+            if (shouldRenderEvents)
             {
-                eventLinePaint.Color = visual.Color.WithAlpha(120);
-                canvas.DrawLine(visual.X, chartRect.Top, visual.X, chartRect.Bottom, eventLinePaint);
-            }
-        }
-
-        var linePaint = resources.LinePaint;
-        linePaint.StrokeWidth = 1f * layoutScale;
-        var linePath = resources.LinePath;
-
-        // Lines
-        foreach (var span in channelSpans)
-        {
-            if (!span.Valid)
-            {
-                continue;
-            }
-
-            var channelId = span.ChannelId;
-            var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
-                ? channelInfo
-                : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
-            var channelColor = ToSkColor(channel.Color);
-
-            linePaint.Color = channelColor;
-
-            dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
-            {
-                if (metricsSpan.IsEmpty)
+                foreach (var visual in eventVisuals)
                 {
-                    return;
-                }
-
-                if (channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id)
-                {
-                    DrawFpsGradientLine(metricsSpan);
-                    return;
-                }
-
-                linePath.Reset();
-                var firstPoint = true;
-                foreach (var metric in metricsSpan)
-                {
-                    var x = chartRect.Left + (float)((metric.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                    var y = CalculateY(channelId, metric.Value);
-
-                    if (firstPoint)
-                    {
-                        linePath.MoveTo(x, y);
-                        firstPoint = false;
-                    }
-                    else
-                    {
-                        linePath.LineTo(x, y);
-                    }
-                }
-
-                canvas.DrawPath(linePath, linePaint);
-            });
-
-            void DrawFpsGradientLine(ReadOnlySpan<MaudeMetric> metricsSpan)
-            {
-                if (metricsSpan.Length < 2)
-                {
-                    return;
-                }
-
-                for (var i = 1; i < metricsSpan.Length; i++)
-                {
-                    var start = metricsSpan[i - 1];
-                    var end = metricsSpan[i];
-
-                    var startX = chartRect.Left + (float)((start.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                    var endX = chartRect.Left + (float)((end.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-                    var startY = CalculateY(channelId, start.Value);
-                    var endY = CalculateY(channelId, end.Value);
-
-                    var startColor = GetFpsColor(start.Value);
-                    var endColor = GetFpsColor(end.Value);
-
-                    if (startColor == endColor)
-                    {
-                        linePaint.Shader = null;
-                        linePaint.Color = startColor;
-                    }
-                    else
-                    {
-                        using var shader = SKShader.CreateLinearGradient(
-                            new SKPoint(startX, startY),
-                            new SKPoint(endX, endY),
-                            new[] { startColor, endColor },
-                            null,
-                            SKShaderTileMode.Clamp);
-                        linePaint.Shader = shader;
-                    }
-
-                    canvas.DrawLine(startX, startY, endX, endY, linePaint);
-                    linePaint.Shader = null;
-                }
-
-                linePaint.Color = GetFpsColor(metricsSpan[^1].Value);
-            }
-        }
-
-        // Events
-        if (shouldRenderEvents)
-        {
-            foreach (var visual in eventVisuals)
-            {
-                var iconText = MaudeEventLegend.GetSymbol(visual.EventType);
-                var iconMetrics = eventIconFont.Metrics;
-                var _ = MeasureEventText(iconText, eventIconFont, eventIconPaint); // cache measurement even if not used
-                var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
-                canvas.DrawText(iconText, visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
-
-                if (shouldRenderLabels)
-                {
-                    var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
-                    var labelWidth = MeasureEventText(visual.Label ?? string.Empty, eventLabelFont, eventLabelPaint);
-                    var labelX = visual.X - (labelWidth / 2f);
-                    canvas.DrawText(visual.Label,
-                        labelX,
-                        visual.Y - labelOffset,
-                        SKTextAlign.Left,
-                        eventLabelFont,
-                        eventLabelPaint);
+                    eventLinePaint.Color = visual.Color.WithAlpha(120);
+                    canvas.DrawLine(visual.X, chartRect.Top, visual.X, chartRect.Bottom, eventLinePaint);
                 }
             }
-        }
 
-        // Probe marker (touch indicator)
-        if (probeUtc.HasValue
-            && probeUtc.Value >= fromUtc
-            && probeUtc.Value <= toUtc)
-        {
-            var x = chartRect.Left + (float)((probeUtc.Value - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
-            var markerPaint = resources.MarkerPaint;
-            canvas.DrawLine(x, chartRect.Top, x, chartRect.Bottom, markerPaint);
-        }
+            var linePaint = resources.LinePaint;
+            linePaint.StrokeWidth = 1f * layoutScale;
+            var linePath = resources.LinePath;
 
-        if (probeUtc.HasValue)
-        {
-            var highlightLines = resources.HighlightLines;
-            highlightLines.Clear();
-            foreach (var channelInfo in legendChannels)
+            // Lines
+            foreach (var span in channelSpans)
             {
-                if (!channelSpanLookup.TryGetValue(channelInfo.Id, out var channelSpan) || !channelSpan.Valid)
+                if (!span.Valid)
                 {
                     continue;
                 }
 
-                long? value = null;
-                dataSink.UseMetricsInChannelForRange(channelInfo.Id, fromUtc, toUtc, metricsSpan =>
+                var channelId = span.ChannelId;
+                var channel = channelLookup.TryGetValue(channelId, out var channelInfo)
+                    ? channelInfo
+                    : new MaudeChannel(channelId, $"Channel {channelId}", Colors.Purple);
+                var channelColor = ToSkColor(channel.Color);
+
+                linePaint.Color = channelColor;
+
+                dataSink.UseMetricsInChannelForRange(channelId, fromUtc, toUtc, metricsSpan =>
                 {
-                    value = GetMetricValueAt(metricsSpan, probeUtc.Value);
+                    if (metricsSpan.IsEmpty)
+                    {
+                        return;
+                    }
+
+                    if (channelId == MaudeConstants.ReservedChannels.FramesPerSecond_Id)
+                    {
+                        DrawFpsGradientLine(metricsSpan);
+                        return;
+                    }
+
+                    linePath.Reset();
+                    var firstPoint = true;
+                    foreach (var metric in metricsSpan)
+                    {
+                        var x = chartRect.Left + (float)((metric.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                        var y = CalculateY(channelId, metric.Value);
+
+                        if (firstPoint)
+                        {
+                            linePath.MoveTo(x, y);
+                            firstPoint = false;
+                        }
+                        else
+                        {
+                            linePath.LineTo(x, y);
+                        }
+                    }
+
+                    canvas.DrawPath(linePath, linePaint);
                 });
-                if (value.HasValue)
+
+                void DrawFpsGradientLine(ReadOnlySpan<MaudeMetric> metricsSpan)
                 {
-                    highlightLines.Add(($"{channelInfo.Name}: {FormatValue(channelInfo.Id, value.Value)}", ToSkColor(channelInfo.Color)));
+                    if (metricsSpan.Length < 2)
+                    {
+                        return;
+                    }
+
+                    for (var i = 1; i < metricsSpan.Length; i++)
+                    {
+                        var start = metricsSpan[i - 1];
+                        var end = metricsSpan[i];
+
+                        var startX = chartRect.Left + (float)((start.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                        var endX = chartRect.Left + (float)((end.CapturedAtUtc - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                        var startY = CalculateY(channelId, start.Value);
+                        var endY = CalculateY(channelId, end.Value);
+
+                        var startColor = GetFpsColor(start.Value);
+                        var endColor = GetFpsColor(end.Value);
+
+                        if (startColor == endColor)
+                        {
+                            linePaint.Shader = null;
+                            linePaint.Color = startColor;
+                        }
+                        else
+                        {
+                            using var shader = SKShader.CreateLinearGradient(
+                                new SKPoint(startX, startY),
+                                new SKPoint(endX, endY),
+                                new[] { startColor, endColor },
+                                null,
+                                SKShaderTileMode.Clamp);
+                            linePaint.Shader = shader;
+                        }
+
+                        canvas.DrawLine(startX, startY, endX, endY, linePaint);
+                        linePaint.Shader = null;
+                    }
+
+                    linePaint.Color = GetFpsColor(metricsSpan[^1].Value);
                 }
             }
 
-            if (highlightLines.Count > 0)
+            // Events
+            if (shouldRenderEvents)
             {
-                var headerText = probeUtc.Value.ToLocalTime().ToString("HH:mm:ss");
-                var lineHeight = textFont.Size + 4f * layoutScale;
-                var padding = 8f * layoutScale;
-                var maxTextWidth = Math.Max(textFont.MeasureText(headerText, textPaint),
-                    highlightLines.Max(l => textFont.MeasureText(l.Text, textPaint)));
-                var panelWidth = maxTextWidth + padding * 2;
-                var panelHeight = (highlightLines.Count + 1) * lineHeight + padding * 2;
-                var panelRect = new SKRect(
-                    Math.Max(chartRect.Left + 4f, chartRect.Right - panelWidth - 4f),
-                    chartRect.Top + 4f,
-                    chartRect.Right - 4f,
-                    chartRect.Top + 4f + panelHeight);
-
-                var panelFill = resources.HighlightPanelPaint;
-                panelFill.Color = new SKColor(12, 12, 18, 200);
-                canvas.DrawRoundRect(panelRect, 6f * layoutScale, 6f * layoutScale, panelFill);
-
-                var originalColor = textPaint.Color;
-                var textY = panelRect.Top + padding + textFont.Size;
-                textPaint.Color = new SKColor(255, 255, 255);
-                canvas.DrawText(headerText, panelRect.Left + padding, textY, SKTextAlign.Left, textFont, textPaint);
-                textY += lineHeight;
-
-                foreach (var line in highlightLines)
+                foreach (var visual in eventVisuals)
                 {
-                    textPaint.Color = line.Color;
-                    canvas.DrawText(line.Text, panelRect.Left + padding, textY, SKTextAlign.Left, textFont, textPaint);
-                    textY += lineHeight;
+                    var iconText = MaudeEventLegend.GetSymbol(visual.EventType);
+                    var iconMetrics = eventIconFont.Metrics;
+                    var _ = MeasureEventText(iconText, eventIconFont, eventIconPaint); // cache measurement even if not used
+                    var iconBaselineY = visual.Y - (iconMetrics.Ascent + iconMetrics.Descent) / 2f;
+                    canvas.DrawText(iconText, visual.X, iconBaselineY, SKTextAlign.Center, eventIconFont, eventIconPaint);
+
+                    if (shouldRenderLabels)
+                    {
+                        var labelOffset = eventLabelFont.Size + eventIconFont.Size * 0.25f + 4 * layoutScale;
+                        var labelWidth = MeasureEventText(visual.Label ?? string.Empty, eventLabelFont, eventLabelPaint);
+                        var labelX = visual.X - (labelWidth / 2f);
+                        canvas.DrawText(visual.Label,
+                            labelX,
+                            visual.Y - labelOffset,
+                            SKTextAlign.Left,
+                            eventLabelFont,
+                            eventLabelPaint);
+                    }
+                }
+            }
+
+            // Probe marker (touch indicator)
+            if (probeUtc.HasValue
+                && probeUtc.Value >= fromUtc
+                && probeUtc.Value <= toUtc)
+            {
+                var x = chartRect.Left + (float)((probeUtc.Value - fromUtc).TotalMilliseconds / totalMilliseconds) * chartRect.Width;
+                var markerPaint = resources.MarkerPaint;
+                canvas.DrawLine(x, chartRect.Top, x, chartRect.Bottom, markerPaint);
+            }
+
+            if (probeUtc.HasValue)
+            {
+                var highlightLines = resources.HighlightLines;
+                highlightLines.Clear();
+                foreach (var channelInfo in legendChannels)
+                {
+                    if (!channelSpanLookup.TryGetValue(channelInfo.Id, out var channelSpan) || !channelSpan.Valid)
+                    {
+                        continue;
+                    }
+
+                    long? value = null;
+                    dataSink.UseMetricsInChannelForRange(channelInfo.Id, fromUtc, toUtc, metricsSpan => { value = GetMetricValueAt(metricsSpan, probeUtc.Value); });
+                    if (value.HasValue)
+                    {
+                        highlightLines.Add(($"{channelInfo.Name}: {FormatValue(channelInfo.Id, value.Value)}", ToSkColor(channelInfo.Color)));
+                    }
                 }
 
-                textPaint.Color = originalColor;
-            }
-        }
+                if (highlightLines.Count > 0)
+                {
+                    var headerText = probeUtc.Value.ToLocalTime().ToString("HH:mm:ss");
+                    var lineHeight = textFont.Size + 4f * layoutScale;
+                    var padding = 8f * layoutScale;
+                    var maxTextWidth = Math.Max(textFont.MeasureText(headerText, textPaint),
+                        highlightLines.Max(l => textFont.MeasureText(l.Text, textPaint)));
+                    var panelWidth = maxTextWidth + padding * 2;
+                    var panelHeight = (highlightLines.Count + 1) * lineHeight + padding * 2;
+                    var panelRect = new SKRect(
+                        Math.Max(chartRect.Left + 4f, chartRect.Right - panelWidth - 4f),
+                        chartRect.Top + 4f,
+                        chartRect.Right - 4f,
+                        chartRect.Top + 4f + panelHeight);
 
-        return new MaudeRenderResult(chartRect, true);
+                    var panelFill = resources.HighlightPanelPaint;
+                    canvas.DrawRoundRect(panelRect, 6f * layoutScale, 6f * layoutScale, panelFill);
+
+                    var originalColor = textPaint.Color;
+                    var textY = panelRect.Top + padding + textFont.Size;
+                    textPaint.Color = palette.HighlightPanelTextColor;
+                    canvas.DrawText(headerText, panelRect.Left + padding, textY, SKTextAlign.Left, textFont, textPaint);
+                    textY += lineHeight;
+
+                    foreach (var line in highlightLines)
+                    {
+                        textPaint.Color = line.Color;
+                        canvas.DrawText(line.Text, panelRect.Left + padding, textY, SKTextAlign.Left, textFont, textPaint);
+                        textY += lineHeight;
+                    }
+
+                    textPaint.Color = originalColor;
+                }
+            }
+
+            return new MaudeRenderResult(chartRect, true);
+        }
+        finally
+        {
+            canvas.Restore();
+        }
     }
 
-    private static void DrawEmptyState(SKCanvas canvas, SKImageInfo info)
+    private static void DrawEmptyState(SKCanvas canvas, SKImageInfo info, ChartThemePalette palette)
     {
         using var paint = new SKPaint
         {
-            Color = new SKColor(150, 150, 160),
+            Color = palette.EmptyStateTextColor,
             IsAntialias = true
         };
         using var font = new SKFont
@@ -802,6 +813,65 @@ public static class MaudeChartRenderer
         }
 
         return bestIndex >= 0 ? metrics[bestIndex].Value : metrics[0].Value;
+    }
+
+    private static void ApplyPalette(RenderResources resources, ChartThemePalette palette)
+    {
+        resources.AxisPaint.Color = palette.AxisColor;
+        resources.GridPaint.Color = palette.GridColor;
+        resources.TextPaint.Color = palette.TextColor;
+        resources.LegendTextPaint.Color = palette.TextColor;
+        resources.EventLabelPaint.Color = palette.EventLabelColor;
+        resources.EventIconPaint.Color = palette.EventIconColor;
+        resources.EventLinePaint.Color = palette.EventLineColor;
+        resources.HighlightPanelPaint.Color = palette.HighlightPanelColor;
+        resources.MarkerPaint.Color = palette.MarkerColor;
+    }
+
+    private readonly record struct ChartThemePalette(
+        SKColor SurfaceBackground,
+        SKColor OverlayBackground,
+        SKColor AxisColor,
+        SKColor GridColor,
+        SKColor TextColor,
+        SKColor EventLabelColor,
+        SKColor EventIconColor,
+        SKColor EventLineColor,
+        SKColor HighlightPanelColor,
+        SKColor HighlightPanelTextColor,
+        SKColor MarkerColor,
+        SKColor EmptyStateTextColor)
+    {
+        public static ChartThemePalette For(MaudeChartTheme theme)
+        {
+            return theme == MaudeChartTheme.Light
+                ? new ChartThemePalette(
+                    new SKColor(244, 244, 247),
+                    new SKColor(244, 244, 247, 220),
+                    new SKColor(110, 110, 125),
+                    new SKColor(215, 215, 222),
+                    new SKColor(58, 58, 70),
+                    new SKColor(91, 58, 150),
+                    new SKColor(91, 58, 150),
+                    new SKColor(91, 58, 150, 80),
+                    new SKColor(255, 255, 255, 235),
+                    new SKColor(50, 50, 60),
+                    new SKColor(91, 58, 150, 160),
+                    new SKColor(120, 120, 135))
+                : new ChartThemePalette(
+                    new SKColor(18, 18, 26),
+                    new SKColor(18, 18, 26, 190),
+                    new SKColor(70, 70, 85),
+                    new SKColor(40, 40, 50),
+                    new SKColor(210, 210, 224),
+                    new SKColor(230, 230, 230),
+                    SKColors.White,
+                    new SKColor(255, 255, 255, 40),
+                    new SKColor(12, 12, 18, 200),
+                    SKColors.White,
+                    new SKColor(255, 255, 255, 140),
+                    new SKColor(150, 150, 160));
+        }
     }
 
     private sealed class RenderResources

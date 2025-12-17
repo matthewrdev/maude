@@ -18,4 +18,6 @@ public struct MaudeRenderOptions
     public required float? ProbePosition { get; init; }
     
     public required MaudeEventRenderingBehaviour EventRenderingBehaviour { get; init; }
+    
+    public required MaudeChartTheme Theme { get; init; }
 }

@@ -1,6 +1,66 @@
-# Maude Usage and Builder Guide
+# Maude Integration and Builder Guide
 
-This document provides the detailed integration and configuration guidance referenced by the main `README.md`.
+Maude is a .NET-native, in-app performance tracker for .NET for iOS, Android, Mac Catalyst, and .NET MAUI. This guide covers integration details, runtime APIs, and advanced configuration beyond the README quickstart.
+
+## Platform setup
+
+### Native .NET for Android
+
+Provide the activity or window Maude should use for presenting its overlay:
+
+```csharp
+// In your Activity
+var options = MaudeOptions.CreateBuilder()
+    .WithPresentationWindowProvider(() => this) // required on Android
+    .Build();
+
+MaudeRuntime.InitializeAndActivate(options);
+```
+
+The delegate should return the current foreground activity; Maude will throw if `PresentationWindowProvider` is missing on Android.
+
+### Native .NET for iOS / Mac Catalyst
+
+The default window provider uses the key `UIWindow`, so you can initialise without extra configuration:
+
+```csharp
+MaudeRuntime.InitializeAndActivate();
+```
+
+Provide a custom window via `WithPresentationWindowProvider` if you need to target a non-key scene or window.
+
+### .NET MAUI host
+
+MAUI on Android must supply a delegate that returns the current activity; `WithMauiWindowProvider` wires up `Platform.CurrentActivity` for you.
+
+```csharp
+// MauiProgram.cs
+using Maude;
+
+var maudeOptions = MaudeOptions.CreateBuilder()
+    .WithMauiWindowProvider() // required on Android
+    .Build();
+
+var builder = MauiApp.CreateBuilder()
+    .UseMauiApp<App>()
+    .UseMaude(maudeOptions);
+
+MaudeRuntime.Activate(); // or builder.UseMaudeAndActivate(maudeOptions)
+```
+
+If you provide your own delegate, pass it via `WithPresentationWindowProvider(() => Platform.CurrentActivity)`. Without one, MAUI/Android will throw during startup.
+
+### Presenting Maude
+
+Once initialised and activated, present or dismiss Maude from anywhere in your app:
+
+```csharp
+MaudeRuntime.PresentSheet();
+MaudeRuntime.DismissSheet();
+
+MaudeRuntime.PresentOverlay();
+MaudeRuntime.DismissOverlay();
+```
 
 ## Record Events
 
@@ -44,11 +104,19 @@ var options = MaudeOptions.CreateBuilder()
     .WithDefaultOverlayPosition(MaudeOverlayPosition.TopRight) // default anchor when showing overlay without an explicit position
     .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay) // or SlideSheet
     .WithEventRenderingBehaviour(MaudeEventRenderingBehaviour.IconsOnly) // LabelsAndIcons, IconsOnly (default), None
+    .WithChartTheme(MaudeChartTheme.Light)    // Light or Dark (default)
     .WithAdditionalLogger(new MyLogger())     // or .WithBuiltInLogger()
     .Build();
 ```
 
 Use `WithEventRenderingBehaviour` (or change `MaudeRuntime.EventRenderingBehaviour` at runtime) to choose between icons with labels, icons only, or hiding events entirely. This applies to both the slide sheet and overlay chart.
+
+Switch themes on the fly by updating `MaudeRuntime.ChartTheme`:
+
+```csharp
+MaudeRuntime.ChartTheme = MaudeChartTheme.Light; // or Dark
+```
+
 
 ### Control the Default Memory Metrics
 
@@ -79,23 +147,11 @@ var options = MaudeOptions.CreateBuilder()
 
 If the predicate returns `false`, the accelerometer remains registered but shakes are ignored until the predicate later returns `true`. If it throws, Maude logs the exception and suppresses the shake.
 
-### Platform initialisation
+## Eager initialisation
 
-While the `MauiAppBuilder` extension registers and initialises Maude, it may be desireable to ensure that Maude is sampling immediately when your app starts.
+While the MAUI app builder extension registers Maude for you, you may want sampling to start before your UI loads:
 
-To do so:
-
-- **Android**: initialise inside `MainApplication` so the runtime is ready before `CreateMauiApp()`:
-
-```csharp
-public MainApplication(IntPtr handle, JniHandleOwnership ownership)
-    : base(handle, ownership)
-{
-    var options = /* build options as above */;
-    MaudeRuntime.InitializeAndActivate(options);
-}
-```
-
+- **Android**: initialise inside `MainApplication` so the runtime is ready before `CreateMauiApp()` or your first activity starts.
 - **iOS/macOS Catalyst**: initialise before `UIApplication.Main` in `Program.cs`:
 
 ```csharp

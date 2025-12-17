@@ -41,6 +41,11 @@ public interface IMaudeRuntime
     MaudeEventRenderingBehaviour EventRenderingBehaviour { get; set; }
 
     /// <summary>
+    /// Gets or sets the active chart theme.
+    /// </summary>
+    MaudeChartTheme ChartTheme { get; set; }
+
+    /// <summary>
     /// Raised after activation finishes and sampling begins.
     /// </summary>
     event EventHandler OnActivated;
