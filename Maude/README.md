@@ -1,6 +1,6 @@
-# .NET-native in-app performance tracker for iOS, Android, Mac Catalyst, and MAUI.
+# Maude — in-app performance tracker for .NET iOS, Android, Mac Catalyst, and MAUI
 
-Maude is a .NET-native, integrated performance tracker that overlays live memory, FPS, and annotated events inside your app. It works with .NET for iOS, Android, Mac Catalyst, and can be hosted inside .NET MAUI via native embedding.
+Maude overlays live memory, FPS, and annotated events inside your app. It works with .NET for iOS, Android, Mac Catalyst, and drops into .NET MAUI via native embedding. Shake to open, annotate spikes, and keep context while you tune.
 
 | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
 | --- | --- | --- |

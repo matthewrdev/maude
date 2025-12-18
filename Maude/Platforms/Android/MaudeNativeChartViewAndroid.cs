@@ -17,6 +17,8 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
     private Timer? redrawTimer;
     private float? probeRatio;
     private SKRect? chartBounds;
+    private float lastCanvasWidth;
+    private float lastCanvasHeight;
 
     public MaudeNativeChartViewAndroid(Context context) : base(context)
     {
@@ -65,6 +67,8 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
     private void OnPaintSurface(object? sender, SkiaSharp.Views.Android.SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
+        lastCanvasWidth = e.Info.Width;
+        lastCanvasHeight = e.Info.Height;
         var sink = dataSink;
         if (sink == null)
         {
@@ -86,7 +90,7 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
             ToUtc = now,
             CurrentUtc = now,
             Mode = RenderMode,
-            ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
+            ProbePosition = probeRatio,
             EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour,
             Theme = MaudeRuntime.ChartTheme
         };
@@ -105,23 +109,19 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
 
     private void OnCanvasTouch(object? sender, TouchEventArgs e)
     {
-        if (RenderMode != MaudeChartRenderMode.Inline)
-        {
-            probeRatio = null;
-            return;
-        }
-
         switch (e.Event?.Action)
         {
             case MotionEventActions.Down:
             case MotionEventActions.Move:
                 var chartRect = chartBounds;
-                if (!chartRect.HasValue || chartRect.Value.Width <= 0)
+                if (!chartRect.HasValue || chartRect.Value.Width <= 0 || Width == 0)
                 {
                     break;
                 }
 
-                var relativeX = (e.Event.GetX() - chartRect.Value.Left) / chartRect.Value.Width;
+                var scaleX = lastCanvasWidth > 0 ? lastCanvasWidth / Width : 1f;
+                var touchX = e.Event.GetX() * scaleX;
+                var relativeX = (touchX - chartRect.Value.Left) / chartRect.Value.Width;
                 var ratio = (float)Math.Clamp(relativeX, 0d, 1d);
                 if (!float.IsNaN(ratio))
                 {

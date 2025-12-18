@@ -16,7 +16,7 @@ public enum MaudeDefaultMemoryChannels : byte
     All = ManagedHeap | NativeHeap | ResidentSetSize | PhysicalFootprint,
 #if ANDROID
     PlatformDefaults = ManagedHeap | NativeHeap | ResidentSetSize,
-#elif IOS
+#elif IOS || MACCATALYST
     PlatformDefaults = ManagedHeap | PhysicalFootprint,
 #else
     PlatformDefaults = ManagedHeap,

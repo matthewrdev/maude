@@ -26,7 +26,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
         }
         channels[MaudeConstants.ReservedChannels.FramesPerSecond_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.FramesPerSecond_Id, MaudeConstants.ReservedChannels.FramesPerSecond_Name, MaudeConstants.ReservedChannels.FramesPerSecond_Color);
         
-#if IOS
+#if IOS || MACCATALYST
         if (options.DefaultMemoryChannels.HasFlag(MaudeDefaultMemoryChannels.PhysicalFootprint))
         {
             channels[MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id] = new MaudeChannel(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Name, MaudeConstants.ReservedChannels.PlatformMemoryUsage_Color);
@@ -496,7 +496,7 @@ internal class MaudeMutableDataSink : IMaudeDataSink
                 clrMetrics.Add(metric);
             }
             
-#if IOS
+#if IOS || MACCATALYST
             var platform = snapshot.RssBytes;
             if (metrics.TryGetValue(MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id, 
                                     out var platformMetrics))

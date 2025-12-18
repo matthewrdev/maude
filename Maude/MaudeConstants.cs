@@ -44,9 +44,9 @@ public static class MaudeConstants
         public const string FramesPerSecond_Name = "FPS";
         public static readonly Color FramesPerSecond_Color = new Color(35, 181, 115);
     
-#if IOS
+#if IOS || MACCATALYST
         public const byte PlatformMemoryUsage_Id = 1;
-        public const string PlatformMemoryUsage_Name = "iOS";
+        public const string PlatformMemoryUsage_Name = "Physical Footprint";
         public static readonly Color PlatformMemoryUsage_Color = new Color(0, 122, 255);
 #elif ANDROID
         public const byte NativeHeapAllocated_Id = 1;
@@ -71,7 +71,7 @@ public static class MaudeConstants
         
         return channel.Id ==  MaudeConstants.ReservedChannels.ClrMemoryUsage_Id
             || channel.Id == MaudeConstants.ReservedChannels.FramesPerSecond_Id
-#if IOS
+#if IOS || MACCATALYST
             || channel.Id == MaudeConstants.ReservedChannels.PlatformMemoryUsage_Id
 #elif ANDROID
             || channel.Id == MaudeConstants.ReservedChannels.NativeHeapAllocated_Id

@@ -100,12 +100,15 @@ var options = MaudeOptions.CreateBuilder()
     .WithSampleFrequencyMilliseconds(500)     // clamp: 200–2000 ms
     .WithRetentionPeriodSeconds(10 * 60)      // clamp: 60–3600 s
     .WithAdditionalChannels(customChannels)   // extra metric/event series
+    .WithDefaultMemoryChannels(MaudeDefaultMemoryChannels.PlatformDefaults) // iOS/Android sensible defaults
     .WithShakeGesture()                       // enable shake-to-toggle
     .WithDefaultOverlayPosition(MaudeOverlayPosition.TopRight) // default anchor when showing overlay without an explicit position
     .WithShakeGestureBehaviour(MaudeShakeGestureBehaviour.Overlay) // or SlideSheet
     .WithEventRenderingBehaviour(MaudeEventRenderingBehaviour.IconsOnly) // LabelsAndIcons, IconsOnly (default), None
     .WithChartTheme(MaudeChartTheme.Light)    // Light or Dark (default)
     .WithAdditionalLogger(new MyLogger())     // or .WithBuiltInLogger()
+    .WithPresentationWindowProvider(() => /* your Android Activity or window */)
+    .WithSaveSnapshotAction((snapshot) => Persist(snapshot), "SAVE")
     .Build();
 ```
 

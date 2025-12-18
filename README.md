@@ -1,12 +1,14 @@
-# .NET-native in-app performance tracker for iOS, Android, Mac Catalyst, and MAUI.
+# Maude — in-app performance tracker for .NET iOS, Android, Mac Catalyst, and MAUI
 
 [![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
 
-Maude is a .NET-native, integrated performance tracker that overlays live memory, FPS, and annotated events inside your app. It works with .NET for iOS, Android, Mac Catalyst, and can be hosted inside .NET MAUI via native embedding.
+Ship with a live memory + FPS HUD you can pop over any screen. Maude embeds a Skia chart and event rail into your app (sheet or overlay), works on .NET for iOS/Android/Mac Catalyst, and drops straight into MAUI via native embedding. Shake to open, annotate spikes, and keep context while you tune.
 
-| <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/86d2f3f3ec478a815437966dcf0a79c949d11df4/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
-| --- | --- | --- |
-| **Shake to open Maude** | **Memory chart overlay** | **Slide-in events sheet** |
+**Why Maude**
+- Live memory + FPS chart with event markers (detached or channel-specific)
+- Sheet and overlay presentations; shake-to-toggle option
+- Custom channels, saved snapshots, and themeable chart (dark/light)
+- Minimal setup: window provider + builder options, no extra infra
 
 ## Disclaimer ⚠️
 
@@ -55,49 +57,32 @@ using Maude;
 
 var maudeOptions = MaudeOptions.CreateBuilder()
   .WithMauiWindowProvider() // supplies the current Activity on Android
-  .Build();
+    .Build();
 
 var builder = MauiApp.CreateBuilder()
   .UseMauiApp<App>()
-  .UseMaude(maudeOptions);
+  .UseMaudeAndActivate(maudeOptions); // or .UseMaude(maudeOptions) then MaudeRuntime.Activate()
 ```
 
-2) Start tracking memory usage:
+2) Show Maude:
 ```csharp
-MaudeRuntime.Activate();
-```
-
-3) Show Maude:
-```csharp
-// Show Maude as a slide in sheet.
 MaudeRuntime.PresentSheet(); 
-MaudeRuntime.DismissSheet(); 
-
-// Show Maude as a window overlay.
+MaudeRuntime.DismissSheet();
 MaudeRuntime.PresentOverlay();
 MaudeRuntime.DismissOverlay();
 ```
 
-If you would prefer a one-liner, add the following to your MAUI app builder:
+## Builder highlights
+- Sampling + retention: `WithSampleFrequencyMilliseconds`, `WithRetentionPeriodSeconds`
+- Channels: `WithAdditionalChannels`, `WithDefaultMemoryChannels` / `WithoutDefaultMemoryChannels`
+- UI: `WithEventRenderingBehaviour`, `WithChartTheme`, `WithDefaultOverlayPosition`, `WithShakeGestureBehaviour`, `WithShakeGesture`, `WithShakeGesturePredicate`
+- Overlay host: `WithPresentationWindowProvider` (native/MAUI Android) or `WithMauiWindowProvider`
+- Extras: `WithFramesPerSecond`, `WithAdditionalLogger` / `WithBuiltInLogger`, `WithSaveSnapshotAction`
 
-```csharp
-// MauiProgram.cs
-using Maude;
+Runtime toggles include `MaudeRuntime.EventRenderingBehaviour`, `MaudeRuntime.ChartTheme`, FPS enable/disable, and shake gesture enable/disable.
 
-var maudeOptions = MaudeOptions.CreateBuilder()
-  .WithMauiWindowProvider() // required on Android
-  .Build();
-
-var builder = MauiApp.CreateBuilder()
-  .UseMauiApp<App>()
-  .UseMaudeAndActivate(maudeOptions);  // Register Maude and immediately start tracking.
-```
-
-## [Documentation](docs.md) 
-
-Looking for integration steps, builder options, and runtime usage guidance beyond the quickstart? 
-
-See [docs.md](docs.md) for the full walkthrough, including event recording, customisation options, platform-specific initialisation (including the MAUI Android activity delegate), and FPS sampling tips.
+## [Documentation](docs.md)
+Full integration guide, platform notes, and runtime API walkthrough live in [docs.md](docs.md).
 
 ## What does Maude capture?
 

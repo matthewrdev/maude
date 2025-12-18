@@ -128,7 +128,7 @@ internal sealed class MacCatalystNativePresentationService : IMaudePresentationS
             overlayView = new UIView(window.Bounds)
             {
                 BackgroundColor = UIColor.Clear,
-                UserInteractionEnabled = false,
+                UserInteractionEnabled = true,
                 AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
             };
 
@@ -216,11 +216,17 @@ internal sealed class MaudeNativeChartViewMacCatalyst : SKCanvasView
     private NSTimer? timer;
     private float? probeRatio;
     private SKRect? chartBounds;
+    private float lastCanvasWidth;
+    private float lastCanvasHeight;
 
     public MaudeNativeChartViewMacCatalyst(CGRect frame) : base(frame)
     {
         IgnorePixelScaling = true;
         PaintSurface += OnPaintSurface;
+        var recognizer = new UIPanGestureRecognizer(OnPan);
+        AddGestureRecognizer(recognizer);
+        var tapRecognizer = new UITapGestureRecognizer(_ => ResetProbe());
+        AddGestureRecognizer(tapRecognizer);
         timer = NSTimer.CreateRepeatingScheduledTimer(TimeSpan.FromMilliseconds(500), _ => RequestRedraw());
     }
 
@@ -267,6 +273,8 @@ internal sealed class MaudeNativeChartViewMacCatalyst : SKCanvasView
     private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
+        lastCanvasWidth = e.Info.Width;
+        lastCanvasHeight = e.Info.Height;
         var sink = dataSink;
         if (sink == null)
         {
@@ -288,7 +296,7 @@ internal sealed class MaudeNativeChartViewMacCatalyst : SKCanvasView
             ToUtc = now,
             CurrentUtc = now,
             Mode = RenderMode,
-            ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
+            ProbePosition = probeRatio,
             EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour,
             Theme = MaudeRuntime.ChartTheme
         };
@@ -322,6 +330,48 @@ internal sealed class MaudeNativeChartViewMacCatalyst : SKCanvasView
         }
 
         PaintSurface -= OnPaintSurface;
+    }
+
+    private void OnPan(UIPanGestureRecognizer recognizer)
+    {
+        if (RenderMode == MaudeChartRenderMode.Overlay)
+        {
+            probeRatio = null;
+            return;
+        }
+
+        if (recognizer.State == UIGestureRecognizerState.Ended
+            || recognizer.State == UIGestureRecognizerState.Cancelled)
+        {
+            ResetProbe();
+            return;
+        }
+
+        var location = recognizer.LocationInView(this);
+        var chartRect = chartBounds;
+        if (!chartRect.HasValue || chartRect.Value.Width <= 0 || Bounds.Width <= 0)
+        {
+            return;
+        }
+
+        var scaleX = lastCanvasWidth > 0 ? lastCanvasWidth / (float)Bounds.Width : 1f;
+        var touchX = (float)location.X * scaleX;
+        var relativeX = (touchX - chartRect.Value.Left) / chartRect.Value.Width;
+        var ratio = Math.Clamp(relativeX, 0f, 1f);
+        if (!float.IsNaN(ratio))
+        {
+            probeRatio = ratio;
+            SetNeedsDisplay();
+        }
+    }
+
+    private void ResetProbe()
+    {
+        if (RenderMode == MaudeChartRenderMode.Inline)
+        {
+            probeRatio = null;
+            SetNeedsDisplay();
+        }
     }
 }
 

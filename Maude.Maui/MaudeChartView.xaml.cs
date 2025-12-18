@@ -217,10 +217,10 @@ public partial class MaudeChartView : SKCanvasView
                 ToUtc = now,
                 CurrentUtc = now,
                 Mode = RenderMode,
-                ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
-                EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour,
-                Theme = MaudeRuntime.ChartTheme
-            };
+            ProbePosition = RenderMode == MaudeChartRenderMode.Inline ? probeRatio : null,
+            EventRenderingBehaviour = MaudeRuntime.EventRenderingBehaviour,
+            Theme = MaudeRuntime.ChartTheme
+        };
 
             var renderResult = MaudeChartRenderer.Render(canvas, e.Info, sink, renderOptions);
             UpdateChartBounds(renderResult);
@@ -258,12 +258,6 @@ public partial class MaudeChartView : SKCanvasView
 
     private void OnCanvasTouch(object? sender, SKTouchEventArgs e)
     {
-        if (RenderMode != MaudeChartRenderMode.Inline)
-        {
-            probeRatio = null;
-            return;
-        }
-
         switch (e.ActionType)
         {
             case SKTouchAction.Pressed:
