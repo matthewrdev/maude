@@ -142,13 +142,46 @@ using System.Threading.Tasks;
     
     public static MaudeOptionsBuilder CreateBuilder() => new MaudeOptionsBuilder();
 
+    /// <summary>
+    /// Creates a builder seeded with the provided options instance.
+    /// </summary>
+    public static MaudeOptionsBuilder CreateBuilder(MaudeOptions options) => new MaudeOptionsBuilder(options);
+
     
     /// <summary>
     /// Fluent builder for <see cref="MaudeOptions"/>.
     /// </summary>
         public sealed class MaudeOptionsBuilder
         {
-            private readonly MaudeOptions options = new MaudeOptions();
+            private readonly MaudeOptions options;
+
+            public MaudeOptionsBuilder()
+            {
+                options = new MaudeOptions();
+            }
+
+            private MaudeOptionsBuilder(MaudeOptions initialOptions)
+            {
+                if (initialOptions == null) throw new ArgumentNullException(nameof(initialOptions));
+
+                options = new MaudeOptions
+                {
+                    SampleFrequencyMilliseconds = initialOptions.SampleFrequencyMilliseconds,
+                    RetentionPeriodSeconds = initialOptions.RetentionPeriodSeconds,
+                    AdditionalChannels = initialOptions.AdditionalChannels?.ToList() ?? new List<MaudeChannel>(),
+                    DefaultMemoryChannels = initialOptions.DefaultMemoryChannels,
+                    AllowShakeGesture = initialOptions.AllowShakeGesture,
+                    ShakeGesturePredicate = initialOptions.ShakeGesturePredicate,
+                    ShakeGestureBehaviour = initialOptions.ShakeGestureBehaviour,
+                    EnableFramesPerSecond = initialOptions.EnableFramesPerSecond,
+                    DefaultOverlayPosition = initialOptions.DefaultOverlayPosition,
+                    AdditionalLogger = initialOptions.AdditionalLogger,
+                    EventRenderingBehaviour = initialOptions.EventRenderingBehaviour,
+                    ChartTheme = initialOptions.ChartTheme,
+                    SaveSnapshotAction = initialOptions.SaveSnapshotAction,
+                    PresentationWindowProvider = initialOptions.PresentationWindowProvider
+                };
+            }
 
             /// <summary>
             /// Sets the sampling cadence in milliseconds.

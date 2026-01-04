@@ -16,9 +16,16 @@ public static class MaudeAppBuilderExtensions
     /// </summary>
     public static MauiAppBuilder UseMaude(this MauiAppBuilder builder, MaudeOptions? maudeOptions = null)
     {
-        maudeOptions ??= MaudeOptions.CreateBuilder()
-            .WithMauiWindowProvider()
-            .Build();
+        var maudeOptionsBuilder = maudeOptions == null
+            ? MaudeOptions.CreateBuilder()
+            : MaudeOptions.CreateBuilder(maudeOptions);
+
+        if (maudeOptions?.PresentationWindowProvider == null)
+        {
+            maudeOptionsBuilder.WithMauiWindowProvider();
+        }
+
+        maudeOptions = maudeOptionsBuilder.Build();
 
 #if ANDROID
         if (maudeOptions.PresentationWindowProvider == null)
