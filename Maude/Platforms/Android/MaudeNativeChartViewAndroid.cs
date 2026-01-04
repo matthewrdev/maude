@@ -109,6 +109,13 @@ internal sealed class MaudeNativeChartViewAndroid : SKCanvasView
 
     private void OnCanvasTouch(object? sender, TouchEventArgs e)
     {
+        if (RenderMode == MaudeChartRenderMode.Overlay)
+        {
+            // Overlay should be input-transparent: let touches fall through.
+            e.Handled = false;
+            return;
+        }
+
         switch (e.Event?.Action)
         {
             case MotionEventActions.Down:

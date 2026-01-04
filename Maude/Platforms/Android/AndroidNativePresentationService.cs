@@ -323,6 +323,7 @@ internal sealed class NativeOverlayHost
             RenderMode = MaudeChartRenderMode.Overlay,
             WindowDuration = TimeSpan.FromMinutes(1)
         };
+        chart.Enabled = false;
         chart.DataSink = sink;
 
         var decor = activity.Window?.DecorView as ViewGroup;
