@@ -194,6 +194,7 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
             LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 0, 1f)
         };
         var adapter = new MaudeEventAdapter(dataSink);
+        adapter.BindEvents();
         eventsList.SetAdapter(adapter);
         eventsList.SetLayoutManager(new LinearLayoutManager(activity));
         root.AddView(eventsList);
@@ -205,9 +206,16 @@ internal sealed class AndroidNativePresentationService : IMaudePresentationServi
     {
         foreach (var view in root.GetChildren())
         {
-            if (view is MaudeNativeChartViewAndroid chart)
+            switch (view)
             {
-                chart.Detach();
+                case MaudeNativeChartViewAndroid chart:
+                    chart.Detach();
+                    break;
+                case RecyclerView recyclerView when recyclerView.GetAdapter() is MaudeEventAdapter adapter:
+                    adapter.UnbindEvents();
+                    adapter.Dispose();
+                    recyclerView.SetAdapter(null);
+                    break;
             }
         }
     }
@@ -366,7 +374,7 @@ internal sealed class NativeOverlayHost
 
 }
 
-internal sealed class MaudeEventAdapter : RecyclerView.Adapter
+internal sealed class MaudeEventAdapter : RecyclerView.Adapter, IDisposable
 {
     private readonly IMaudeDataSink sink;
     private List<MaudeEventDisplay> cached = new();
@@ -374,9 +382,21 @@ internal sealed class MaudeEventAdapter : RecyclerView.Adapter
     public MaudeEventAdapter(IMaudeDataSink sink)
     {
         this.sink = sink;
-        sink.OnEventsUpdated += (_, _) => Refresh();
+    }
+
+    public void BindEvents()
+    {
+        UnbindEvents();
+        sink.OnEventsUpdated += OnEventsUpdated;
         Refresh();
     }
+
+    public void UnbindEvents()
+    {
+        sink.OnEventsUpdated -= OnEventsUpdated;
+    }
+
+    private void OnEventsUpdated(object? sender, MaudeEventsUpdatedEventArgs e) => Refresh();
 
     private void Refresh()
     {
@@ -406,6 +426,11 @@ internal sealed class MaudeEventAdapter : RecyclerView.Adapter
         {
             vh.Bind(cached[position]);
         }
+    }
+
+    public void Dispose()
+    {
+        UnbindEvents();
     }
 
     public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)

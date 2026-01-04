@@ -141,8 +141,12 @@ internal sealed class MacCatalystNativePresentationService : IMaudePresentationS
             {
                 DataSink = dataSink,
                 RenderMode = MaudeChartRenderMode.Overlay,
-                WindowDuration = TimeSpan.FromMinutes(1)
+                WindowDuration = TimeSpan.FromMinutes(1),
+                BackgroundColor = UIColor.Clear,
+                Opaque = false
             };
+            overlayChart.Layer.CornerRadius = 12;
+            overlayChart.Layer.MasksToBounds = true;
 
             overlayView.Subviews?.FirstOrDefault()?.RemoveFromSuperview();
             overlayView.AddSubview(overlayChart);
@@ -383,6 +387,7 @@ internal sealed class MaudeSheetView : UIView
     private readonly UIButton? copyButton;
     private readonly MaudeNativeChartViewMacCatalyst chart;
     private readonly UITableView table;
+    private readonly MaudeEventsTableSource eventsSource;
 
     private static readonly nfloat ChartHeight = new nfloat(220);
     private static readonly nfloat HorizontalPadding = new nfloat(12);
@@ -429,9 +434,10 @@ internal sealed class MaudeSheetView : UIView
         table = new UITableView
         {
             SeparatorStyle = UITableViewCellSeparatorStyle.SingleLine,
-            Source = new MaudeEventsTableSource(dataSink),
             AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
         };
+        eventsSource = new MaudeEventsTableSource(dataSink, table);
+        table.Source = eventsSource;
 
         AddSubview(titleLabel);
         AddSubview(overlayButton);
@@ -523,19 +529,56 @@ internal sealed class MaudeSheetView : UIView
             MaudeLogger.Exception(ex);
         }
     }
+
+    public override void WillMoveToWindow(UIWindow? window)
+    {
+        base.WillMoveToWindow(window);
+
+        if (window != null)
+        {
+            eventsSource.BindEvents();
+        }
+        else
+        {
+            eventsSource.UnbindEvents();
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            eventsSource.Dispose();
+        }
+        base.Dispose(disposing);
+    }
 }
 
-internal sealed class MaudeEventsTableSource : UITableViewSource
+internal sealed class MaudeEventsTableSource : UITableViewSource, IDisposable
 {
     private readonly IMaudeDataSink sink;
+    private readonly UITableView table;
     private List<MaudeEventDisplay> cache = new();
 
-    public MaudeEventsTableSource(IMaudeDataSink sink)
+    public MaudeEventsTableSource(IMaudeDataSink sink, UITableView table)
     {
         this.sink = sink;
-        sink.OnEventsUpdated += (_, _) => Refresh();
+        this.table = table;
+    }
+
+    public void BindEvents()
+    {
+        UnbindEvents();
+        sink.OnEventsUpdated += OnEventsUpdated;
         Refresh();
     }
+
+    public void UnbindEvents()
+    {
+        sink.OnEventsUpdated -= OnEventsUpdated;
+    }
+
+    private void OnEventsUpdated(object? sender, MaudeEventsUpdatedEventArgs e) => Refresh();
 
     private void Refresh()
     {
@@ -553,6 +596,8 @@ internal sealed class MaudeEventsTableSource : UITableViewSource
                         Timestamp = e.CapturedAtUtc.ToLocalTime().ToString("HH:mm:ss")
                     })
                     .ToList();
+
+        UIApplication.SharedApplication.InvokeOnMainThread(table.ReloadData);
     }
 
     public override nint RowsInSection(UITableView tableView, nint section) => cache.Count;
@@ -567,6 +612,11 @@ internal sealed class MaudeEventsTableSource : UITableViewSource
             cell.DetailTextLabel.Text = display.HasDetails ? $"{display.Timestamp} • {display.Details}" : display.Timestamp;
         }
         return cell;
+    }
+
+    public void Dispose()
+    {
+        UnbindEvents();
     }
 }
 

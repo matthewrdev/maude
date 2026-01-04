@@ -8,101 +8,101 @@ using System.Threading.Tasks;
 /// <summary>
 /// Configures how Maude samples, retains, logs, and presents runtime data.
 /// </summary>
-    public class MaudeOptions
+public class MaudeOptions
+{
+    /// <summary>
+    /// Default options instance: 500ms sampling, 10-minute retention, no shake gesture, overlay top right, FPS off.
+    /// </summary>
+    public static readonly MaudeOptions Default = new MaudeOptions()
     {
-        /// <summary>
-        /// Default options instance: 500ms sampling, 10-minute retention, no shake gesture, overlay top right, FPS off.
-        /// </summary>
-        public static readonly MaudeOptions Default = new MaudeOptions()
-        {
-            SampleFrequencyMilliseconds = MaudeConstants.DefaultSampleFrequencyMilliseconds,
-            RetentionPeriodSeconds = MaudeConstants.DefaultRetentionPeriodSeconds,
-            AdditionalChannels = new List<MaudeChannel>(),
-            DefaultMemoryChannels = MaudeDefaultMemoryChannels.PlatformDefaults,
-            AllowShakeGesture = false,
-            ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
-            AdditionalLogger = new MaudeConsoleLogger(),
-            DefaultOverlayPosition= MaudeOverlayPosition.TopRight,
-            EnableFramesPerSecond = true,
-            EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly,
-            ChartTheme = MaudeChartTheme.Dark
-        };
-        
-        /// <summary>
-        /// Sampling cadence in milliseconds.
-        /// </summary>
-        public ushort SampleFrequencyMilliseconds { get; private set; } =  MaudeConstants.DefaultSampleFrequencyMilliseconds;
-        
-        /// <summary>
-        /// How long metric/event samples are retained before trim, in seconds.
-        /// </summary>
-        public ushort RetentionPeriodSeconds { get; private set; } =  MaudeConstants.DefaultRetentionPeriodSeconds;
-        
-        /// <summary>
-        /// Maximum buffered samples calculated from retention and frequency.
-        /// </summary>
-        public int MaximumBufferSize => RetentionPeriodSeconds * (int)Math.Ceiling(1000f / (float)SampleFrequencyMilliseconds);
-        
-        /// <summary>
-        /// Additional metric/event channels to plot besides the built-in ones.
-        /// </summary>
-        public List<MaudeChannel> AdditionalChannels { get; private set; } = new();
-        
-        /// <summary>
-        /// Controls which of the built-in memory channels should be exposed.
-        /// </summary>
-        public MaudeDefaultMemoryChannels DefaultMemoryChannels { get; private set; } = MaudeDefaultMemoryChannels.PlatformDefaults;
+        SampleFrequencyMilliseconds = MaudeConstants.DefaultSampleFrequencyMilliseconds,
+        RetentionPeriodSeconds = MaudeConstants.DefaultRetentionPeriodSeconds,
+        AdditionalChannels = new List<MaudeChannel>(),
+        DefaultMemoryChannels = MaudeDefaultMemoryChannels.PlatformDefaults,
+        AllowShakeGesture = false,
+        ShakeGestureBehaviour = MaudeShakeGestureBehaviour.SlideSheet,
+        AdditionalLogger = new MaudeConsoleLogger(),
+        DefaultOverlayPosition= MaudeOverlayPosition.TopRight,
+        EnableFramesPerSecond = true,
+        EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly,
+        ChartTheme = MaudeChartTheme.Dark
+    };
+    
+    /// <summary>
+    /// Sampling cadence in milliseconds.
+    /// </summary>
+    public ushort SampleFrequencyMilliseconds { get; private set; } =  MaudeConstants.DefaultSampleFrequencyMilliseconds;
+    
+    /// <summary>
+    /// How long metric/event samples are retained before trim, in seconds.
+    /// </summary>
+    public ushort RetentionPeriodSeconds { get; private set; } =  MaudeConstants.DefaultRetentionPeriodSeconds;
+    
+    /// <summary>
+    /// Maximum buffered samples calculated from retention and frequency.
+    /// </summary>
+    public int MaximumBufferSize => RetentionPeriodSeconds * (int)Math.Ceiling(1000f / (float)SampleFrequencyMilliseconds);
+    
+    /// <summary>
+    /// Additional metric/event channels to plot besides the built-in ones.
+    /// </summary>
+    public List<MaudeChannel> AdditionalChannels { get; private set; } = new();
+    
+    /// <summary>
+    /// Controls which of the built-in memory channels should be exposed.
+    /// </summary>
+    public MaudeDefaultMemoryChannels DefaultMemoryChannels { get; private set; } = MaudeDefaultMemoryChannels.PlatformDefaults;
 
-        /// <summary>
-        /// Allow shake gesture to present the UI.
-        /// </summary>
-        public bool AllowShakeGesture { get; private set; } = false;
-        
-        /// <summary>
-        /// Optional predicate that determines whether the shake gesture should be considered active.
-        /// </summary>
-        public Func<bool>? ShakeGesturePredicate { get; private set; }
-        
-        /// <summary>
-        /// Behaviour applied when a shake is detected.
-        /// </summary>
-        public MaudeShakeGestureBehaviour ShakeGestureBehaviour { get; private set; } = MaudeShakeGestureBehaviour.SlideSheet;
+    /// <summary>
+    /// Allow shake gesture to present the UI.
+    /// </summary>
+    public bool AllowShakeGesture { get; private set; } = false;
+    
+    /// <summary>
+    /// Optional predicate that determines whether the shake gesture should be considered active.
+    /// </summary>
+    public Func<bool>? ShakeGesturePredicate { get; private set; }
+    
+    /// <summary>
+    /// Behaviour applied when a shake is detected.
+    /// </summary>
+    public MaudeShakeGestureBehaviour ShakeGestureBehaviour { get; private set; } = MaudeShakeGestureBehaviour.SlideSheet;
 
-        /// <summary>
-        /// Enable capturing and rendering frames-per-second metrics at startup.
-        /// </summary>
-        public bool EnableFramesPerSecond { get; private set; } = false;
-        
-        /// <summary>
-        /// Default overlay anchor position when presented without an explicit position.
-        /// </summary>
-        public MaudeOverlayPosition DefaultOverlayPosition { get; private set; } = MaudeOverlayPosition.TopRight;
-        
-        /// <summary>
-        /// Optional additional logger to receive Maude log messages.
-        /// </summary>
-        public IMaudeLogCallback? AdditionalLogger { get; private set; }
-        
-        /// <summary>
-        /// Configures how annotated events should appear on the chart.
-        /// </summary>
-        public MaudeEventRenderingBehaviour EventRenderingBehaviour { get; private set; } = MaudeEventRenderingBehaviour.IconsOnly;
+    /// <summary>
+    /// Enable capturing and rendering frames-per-second metrics at startup.
+    /// </summary>
+    public bool EnableFramesPerSecond { get; private set; } = false;
+    
+    /// <summary>
+    /// Default overlay anchor position when presented without an explicit position.
+    /// </summary>
+    public MaudeOverlayPosition DefaultOverlayPosition { get; private set; } = MaudeOverlayPosition.TopRight;
+    
+    /// <summary>
+    /// Optional additional logger to receive Maude log messages.
+    /// </summary>
+    public IMaudeLogCallback? AdditionalLogger { get; private set; }
+    
+    /// <summary>
+    /// Configures how annotated events should appear on the chart.
+    /// </summary>
+    public MaudeEventRenderingBehaviour EventRenderingBehaviour { get; private set; } = MaudeEventRenderingBehaviour.IconsOnly;
 
-        /// <summary>
-        /// Visual theme used when rendering the chart.
-        /// </summary>
-        public MaudeChartTheme ChartTheme { get; private set; } = MaudeChartTheme.Dark;
+    /// <summary>
+    /// Visual theme used when rendering the chart.
+    /// </summary>
+    public MaudeChartTheme ChartTheme { get; private set; } = MaudeChartTheme.Dark;
 
-        /// <summary>
-        /// Optional save snapshot action rendered in the slide sheet.
-        /// </summary>
-        public MaudeSaveSnapshotAction? SaveSnapshotAction { get; internal set; }
+    /// <summary>
+    /// Optional save snapshot action rendered in the slide sheet.
+    /// </summary>
+    public MaudeSaveSnapshotAction? SaveSnapshotAction { get; internal set; }
 
-        /// <summary>
-        /// Provides the native window/activity handle Maude should use for presentation.
-        /// On iOS/Mac Catalyst this can default to the key window. On Android this must be provided.
-        /// </summary>
-        public Func<object?>? PresentationWindowProvider { get; private set; }
+    /// <summary>
+    /// Provides the native window/activity handle Maude should use for presentation.
+    /// On iOS/Mac Catalyst this can default to the key window. On Android this must be provided.
+    /// </summary>
+    public Func<object?>? PresentationWindowProvider { get; private set; }
 
     public void Validate()
     {
@@ -151,219 +151,219 @@ using System.Threading.Tasks;
     /// <summary>
     /// Fluent builder for <see cref="MaudeOptions"/>.
     /// </summary>
-        public sealed class MaudeOptionsBuilder
+    public sealed class MaudeOptionsBuilder
+    {
+        private readonly MaudeOptions options;
+
+        public MaudeOptionsBuilder()
         {
-            private readonly MaudeOptions options;
+            options = new MaudeOptions();
+        }
 
-            public MaudeOptionsBuilder()
+        internal MaudeOptionsBuilder(MaudeOptions initialOptions)
+        {
+            if (initialOptions == null) throw new ArgumentNullException(nameof(initialOptions));
+
+            options = new MaudeOptions
             {
-                options = new MaudeOptions();
-            }
+                SampleFrequencyMilliseconds = initialOptions.SampleFrequencyMilliseconds,
+                RetentionPeriodSeconds = initialOptions.RetentionPeriodSeconds,
+                AdditionalChannels = initialOptions.AdditionalChannels?.ToList() ?? new List<MaudeChannel>(),
+                DefaultMemoryChannels = initialOptions.DefaultMemoryChannels,
+                AllowShakeGesture = initialOptions.AllowShakeGesture,
+                ShakeGesturePredicate = initialOptions.ShakeGesturePredicate,
+                ShakeGestureBehaviour = initialOptions.ShakeGestureBehaviour,
+                EnableFramesPerSecond = initialOptions.EnableFramesPerSecond,
+                DefaultOverlayPosition = initialOptions.DefaultOverlayPosition,
+                AdditionalLogger = initialOptions.AdditionalLogger,
+                EventRenderingBehaviour = initialOptions.EventRenderingBehaviour,
+                ChartTheme = initialOptions.ChartTheme,
+                SaveSnapshotAction = initialOptions.SaveSnapshotAction,
+                PresentationWindowProvider = initialOptions.PresentationWindowProvider
+            };
+        }
 
-            private MaudeOptionsBuilder(MaudeOptions initialOptions)
-            {
-                if (initialOptions == null) throw new ArgumentNullException(nameof(initialOptions));
+        /// <summary>
+        /// Sets the sampling cadence in milliseconds.
+        /// </summary>
+        public MaudeOptionsBuilder WithSampleFrequencyMilliseconds(ushort sampleFrequencyMilliseconds)
+        {
+            options.SampleFrequencyMilliseconds = sampleFrequencyMilliseconds;
+            return this;
+        }
 
-                options = new MaudeOptions
-                {
-                    SampleFrequencyMilliseconds = initialOptions.SampleFrequencyMilliseconds,
-                    RetentionPeriodSeconds = initialOptions.RetentionPeriodSeconds,
-                    AdditionalChannels = initialOptions.AdditionalChannels?.ToList() ?? new List<MaudeChannel>(),
-                    DefaultMemoryChannels = initialOptions.DefaultMemoryChannels,
-                    AllowShakeGesture = initialOptions.AllowShakeGesture,
-                    ShakeGesturePredicate = initialOptions.ShakeGesturePredicate,
-                    ShakeGestureBehaviour = initialOptions.ShakeGestureBehaviour,
-                    EnableFramesPerSecond = initialOptions.EnableFramesPerSecond,
-                    DefaultOverlayPosition = initialOptions.DefaultOverlayPosition,
-                    AdditionalLogger = initialOptions.AdditionalLogger,
-                    EventRenderingBehaviour = initialOptions.EventRenderingBehaviour,
-                    ChartTheme = initialOptions.ChartTheme,
-                    SaveSnapshotAction = initialOptions.SaveSnapshotAction,
-                    PresentationWindowProvider = initialOptions.PresentationWindowProvider
-                };
-            }
+        /// <summary>
+        /// Enables frames-per-second sampling and charting at startup.
+        /// </summary>
+        public MaudeOptionsBuilder WithFramesPerSecond()
+        {
+            options.EnableFramesPerSecond = true;
+            return this;
+        }
+        
+        /// <summary>
+        /// Sets the retention period, in seconds, for buffered samples.
+        /// </summary>
+        public MaudeOptionsBuilder WithRetentionPeriodSeconds(ushort retentionPeriodSeconds)
+        {
+            options.RetentionPeriodSeconds = retentionPeriodSeconds;
+            return this;
+        }
 
-            /// <summary>
-            /// Sets the sampling cadence in milliseconds.
-            /// </summary>
-            public MaudeOptionsBuilder WithSampleFrequencyMilliseconds(ushort sampleFrequencyMilliseconds)
-            {
-                options.SampleFrequencyMilliseconds = sampleFrequencyMilliseconds;
-                return this;
-            }
-
-            /// <summary>
-            /// Enables frames-per-second sampling and charting at startup.
-            /// </summary>
-            public MaudeOptionsBuilder WithFramesPerSecond()
-            {
-                options.EnableFramesPerSecond = true;
-                return this;
-            }
+        /// <summary>
+        /// Replaces the additional channel's collection.
+        /// </summary>
+        public MaudeOptionsBuilder WithAdditionalChannels(IEnumerable<MaudeChannel> additionalChannels)
+        {
+            if (additionalChannels == null) throw new ArgumentNullException(nameof(additionalChannels));
             
-            /// <summary>
-            /// Sets the retention period, in seconds, for buffered samples.
-            /// </summary>
-            public MaudeOptionsBuilder WithRetentionPeriodSeconds(ushort retentionPeriodSeconds)
-            {
-                options.RetentionPeriodSeconds = retentionPeriodSeconds;
-                return this;
-            }
+            options.AdditionalChannels = additionalChannels.ToList();
+            return this;
+        }
 
-            /// <summary>
-            /// Replaces the additional channels collection.
-            /// </summary>
-            public MaudeOptionsBuilder WithAdditionalChannels(IEnumerable<MaudeChannel> additionalChannels)
-            {
-                if (additionalChannels == null) throw new ArgumentNullException(nameof(additionalChannels));
-                
-                options.AdditionalChannels = additionalChannels.ToList();
-                return this;
-            }
+        /// <summary>
+        /// Adds a single additional channel to the collection.
+        /// </summary>
+        public MaudeOptionsBuilder AddAdditionalChannel(MaudeChannel additionalChannel)
+        {
+            if (additionalChannel == null) throw new ArgumentNullException(nameof(additionalChannel));
 
-            /// <summary>
-            /// Adds a single additional channel to the collection.
-            /// </summary>
-            public MaudeOptionsBuilder AddAdditionalChannel(MaudeChannel additionalChannel)
-            {
-                if (additionalChannel == null) throw new ArgumentNullException(nameof(additionalChannel));
+            options.AdditionalChannels ??= new List<MaudeChannel>();
+            options.AdditionalChannels.Add(additionalChannel);
+            return this;
+        }
 
-                options.AdditionalChannels ??= new List<MaudeChannel>();
-                options.AdditionalChannels.Add(additionalChannel);
-                return this;
-            }
+        /// <summary>
+        /// Specifies which of the built-in memory channels should be displayed.
+        /// </summary>
+        public MaudeOptionsBuilder WithDefaultMemoryChannels(MaudeDefaultMemoryChannels memoryChannels)
+        {
+            options.DefaultMemoryChannels = memoryChannels;
+            return this;
+        }
 
-            /// <summary>
-            /// Specifies which of the built-in memory channels should be displayed.
-            /// </summary>
-            public MaudeOptionsBuilder WithDefaultMemoryChannels(MaudeDefaultMemoryChannels memoryChannels)
-            {
-                options.DefaultMemoryChannels = memoryChannels;
-                return this;
-            }
+        /// <summary>
+        /// Removes the provided built-in memory channels from the configuration.
+        /// </summary>
+        public MaudeOptionsBuilder WithoutDefaultMemoryChannels(MaudeDefaultMemoryChannels memoryChannels)
+        {
+            options.DefaultMemoryChannels &= ~memoryChannels;
+            return this;
+        }
 
-            /// <summary>
-            /// Removes the provided built-in memory channels from the configuration.
-            /// </summary>
-            public MaudeOptionsBuilder WithoutDefaultMemoryChannels(MaudeDefaultMemoryChannels memoryChannels)
-            {
-                options.DefaultMemoryChannels &= ~memoryChannels;
-                return this;
-            }
+        /// <summary>
+        /// Configures the shake gesture behaviour.
+        /// </summary>
+        public MaudeOptionsBuilder WithShakeGestureBehaviour(MaudeShakeGestureBehaviour  shakeGestureBehaviour)
+        {
+            options.ShakeGestureBehaviour = shakeGestureBehaviour;
+            return this;
+        }
+        
+        /// <summary>
+        /// Enables handling of device shake gestures.
+        /// </summary>
+        public MaudeOptionsBuilder WithShakeGesture()
+        {
+            options.AllowShakeGesture = true;
+            return this;
+        }
 
-            /// <summary>
-            /// Configures the shake gesture behaviour.
-            /// </summary>
-            public MaudeOptionsBuilder WithShakeGestureBehaviour(MaudeShakeGestureBehaviour  shakeGestureBehaviour)
-            {
-                options.ShakeGestureBehaviour = shakeGestureBehaviour;
-                return this;
-            }
+        /// <summary>
+        /// Configures a predicate evaluated before enabling or responding to shake gestures.
+        /// </summary>
+        public MaudeOptionsBuilder WithShakeGesturePredicate(Func<bool> predicate)
+        {
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             
-            /// <summary>
-            /// Enables handling of device shake gestures.
-            /// </summary>
-            public MaudeOptionsBuilder WithShakeGesture()
-            {
-                options.AllowShakeGesture = true;
-                return this;
-            }
+            options.ShakeGesturePredicate = predicate;
+            return this;
+        }
 
-            /// <summary>
-            /// Configures a predicate evaluated before enabling or responding to shake gestures.
-            /// </summary>
-            public MaudeOptionsBuilder WithShakeGesturePredicate(Func<bool> predicate)
-            {
-                if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-                
-                options.ShakeGesturePredicate = predicate;
-                return this;
-            }
+        /// <summary>
+        /// Sets the default overlay anchor position used when none is specified.
+        /// </summary>
+        public MaudeOptionsBuilder WithDefaultOverlayPosition(MaudeOverlayPosition position)
+        {
+            options.DefaultOverlayPosition = position;
+            return this;
+        }
 
-            /// <summary>
-            /// Sets the default overlay anchor position used when none is specified.
-            /// </summary>
-            public MaudeOptionsBuilder WithDefaultOverlayPosition(MaudeOverlayPosition position)
-            {
-                options.DefaultOverlayPosition = position;
-                return this;
-            }
-
-            /// <summary>
-            /// Adds an external logger for Maude logs.
-            /// </summary>
-            public MaudeOptionsBuilder WithAdditionalLogger(IMaudeLogCallback logger)
-            {
-                if (logger == null) throw new ArgumentNullException(nameof(logger));
-                
-                options.AdditionalLogger = logger;
-                return this;
-            }
+        /// <summary>
+        /// Adds an external logger for Maude logs.
+        /// </summary>
+        public MaudeOptionsBuilder WithAdditionalLogger(IMaudeLogCallback logger)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
             
-            /// <summary>
-            /// Configures how events are rendered on the chart.
-            /// </summary>
-            public MaudeOptionsBuilder WithEventRenderingBehaviour(MaudeEventRenderingBehaviour behaviour)
-            {
-                options.EventRenderingBehaviour = behaviour;
-                return this;
-            }
+            options.AdditionalLogger = logger;
+            return this;
+        }
+        
+        /// <summary>
+        /// Configures how events are rendered on the chart.
+        /// </summary>
+        public MaudeOptionsBuilder WithEventRenderingBehaviour(MaudeEventRenderingBehaviour behaviour)
+        {
+            options.EventRenderingBehaviour = behaviour;
+            return this;
+        }
 
-            /// <summary>
-            /// Sets the chart theme.
-            /// </summary>
-            public MaudeOptionsBuilder WithChartTheme(MaudeChartTheme theme)
-            {
-                options.ChartTheme = theme;
-                return this;
-            }
+        /// <summary>
+        /// Sets the chart theme.
+        /// </summary>
+        public MaudeOptionsBuilder WithChartTheme(MaudeChartTheme theme)
+        {
+            options.ChartTheme = theme;
+            return this;
+        }
 
-            /// <summary>
-            /// Sets the chart theme.
-            /// </summary>
+        /// <summary>
+        /// Sets the chart theme.
+        /// </summary>
 
-            /// <summary>
-            /// Provides the native window/activity handle Maude should use for presentation.
-            /// On Android this is required. On iOS/Mac Catalyst you may omit to fall back to the key window lookup.
-            /// </summary>
-            public MaudeOptionsBuilder WithPresentationWindowProvider(Func<object?> provider)
-            {
-                if (provider == null) throw new ArgumentNullException(nameof(provider));
-                options.PresentationWindowProvider = provider;
-                return this;
-            }
+        /// <summary>
+        /// Provides the native window/activity handle Maude should use for presentation.
+        /// On Android this is required. On iOS/Mac Catalyst you may omit to fall back to the key window lookup.
+        /// </summary>
+        public MaudeOptionsBuilder WithPresentationWindowProvider(Func<object?> provider)
+        {
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
+            options.PresentationWindowProvider = provider;
+            return this;
+        }
 
-            /// <summary>
-            /// Enables a custom save snapshot action in the slide sheet.
-            /// </summary>
-            /// <param name="copyDelegate">Delegate invoked with the captured <see cref="MaudeSnapshot"/>.</param>
-            /// <param name="label">Text displayed on the action button.</param>
-            public MaudeOptionsBuilder WithSaveSnapshotAction(Func<MaudeSnapshot, Task> copyDelegate, string label)
-            {
-                if (copyDelegate == null) throw new ArgumentNullException(nameof(copyDelegate));
-                if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
+        /// <summary>
+        /// Enables a custom save snapshot action in the slide sheet.
+        /// </summary>
+        /// <param name="copyDelegate">Delegate invoked with the captured <see cref="MaudeSnapshot"/>.</param>
+        /// <param name="label">Text displayed on the action button.</param>
+        public MaudeOptionsBuilder WithSaveSnapshotAction(Func<MaudeSnapshot, Task> copyDelegate, string label)
+        {
+            if (copyDelegate == null) throw new ArgumentNullException(nameof(copyDelegate));
+            if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(label));
 
-                options.SaveSnapshotAction = new MaudeSaveSnapshotAction(label, copyDelegate);
-                return this;
-            }
-            
-            /// <summary>
-            /// Enables the built-in console logger.
-            /// </summary>
-            public MaudeOptionsBuilder WithBuiltInLogger()
-            {
-                options.AdditionalLogger = new MaudeConsoleLogger();
-                return this;
-            }
+            options.SaveSnapshotAction = new MaudeSaveSnapshotAction(label, copyDelegate);
+            return this;
+        }
+        
+        /// <summary>
+        /// Enables the built-in console logger.
+        /// </summary>
+        public MaudeOptionsBuilder WithBuiltInLogger()
+        {
+            options.AdditionalLogger = new MaudeConsoleLogger();
+            return this;
+        }
 
-            /// <summary>
-            /// Validates and returns the configured options.
-            /// </summary>
-            public MaudeOptions Build()
-            {
-                options.Validate();
-                return options;
-            }
+        /// <summary>
+        /// Validates and returns the configured options.
+        /// </summary>
+        public MaudeOptions Build()
+        {
+            options.Validate();
+            return options;
+        }
     }
 
 }
