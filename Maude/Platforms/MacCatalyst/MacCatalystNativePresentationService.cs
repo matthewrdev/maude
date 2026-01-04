@@ -128,7 +128,7 @@ internal sealed class MacCatalystNativePresentationService : IMaudePresentationS
             overlayView = new UIView(window.Bounds)
             {
                 BackgroundColor = UIColor.Clear,
-                UserInteractionEnabled = true,
+                UserInteractionEnabled = false,
                 AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
             };
 
