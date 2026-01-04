@@ -2,7 +2,7 @@
 
 [![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
 
-Ship with a live memory + FPS HUD you can pop over any screen. Maude embeds a Skia chart and event rail into your app (sheet or overlay), works on .NET for iOS/Android/Mac Catalyst, and drops straight into MAUI via native embedding. Shake to open, annotate spikes, and keep context while you tune.
+A plugin for .NET MAUI plugin to monitor and visualise app performance at runtime.
 
 **Why Maude**
 - Live memory + FPS chart with event markers (detached or channel-specific)
