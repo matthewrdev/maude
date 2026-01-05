@@ -1,18 +1,25 @@
-# Maude — in-app performance tracker for .NET iOS, Android, Mac Catalyst, and MAUI
+# Maude — In-app performance monitoring for .NET mobile apps
 
 [![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
 
-A plugin for .NET MAUI plugin to monitor and visualise app performance at runtime.
+Monitor and visualise your .NET apps performance at runtime.
 
 **Why Maude**
-- Live memory + FPS chart with event markers (detached or channel-specific)
-- Sheet and overlay presentations; shake-to-toggle option
-- Custom channels, saved snapshots, and themeable chart (dark/light)
-- Minimal setup: window provider + builder options, no extra infra
+- View native memory usage, in app, while your app is running.
+- Track your apps frame rate and detect performance drops.
+- Simple, one liner integration.
+- Natively integrated with very few dependencies (only SkiaSharp).
+  
+**Supported Platforms**
+
+ * Android
+ * iOS
+ * MacCatalyst
+ * .NET MAUI
 
 ## Disclaimer ⚠️
 
-Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
+Best effort has been made for performance and correctness, but Maude continuously snapshots memory + FPS and stores recent samples in-memory; expect a small observer effect.
 
 *Please treat Maude’s numbers as a guidance, a heuristic.*
 
@@ -46,9 +53,9 @@ MaudeRuntime.PresentOverlay(); // Window overlay
 MaudeRuntime.DismissOverlay();
 ```
 
-### .NET MAUI host
+### .NET MAUI
 
-MAUI on Android must supply a delegate that returns the current activity so Maude can attach its overlay.
+On Android you must supply a delegate that returns the current activity so Maude can attach its overlay.
 
 1) Configure the app builder:
 ```csharp
@@ -72,17 +79,9 @@ MaudeRuntime.PresentOverlay();
 MaudeRuntime.DismissOverlay();
 ```
 
-## Builder highlights
-- Sampling + retention: `WithSampleFrequencyMilliseconds`, `WithRetentionPeriodSeconds`
-- Channels: `WithAdditionalChannels`, `WithDefaultMemoryChannels` / `WithoutDefaultMemoryChannels`
-- UI: `WithEventRenderingBehaviour`, `WithChartTheme`, `WithDefaultOverlayPosition`, `WithShakeGestureBehaviour`, `WithShakeGesture`, `WithShakeGesturePredicate`
-- Overlay host: `WithPresentationWindowProvider` (native/MAUI Android) or `WithMauiWindowProvider`
-- Extras: `WithFramesPerSecond`, `WithAdditionalLogger` / `WithBuiltInLogger`, `WithSaveSnapshotAction`
-
-Runtime toggles include `MaudeRuntime.EventRenderingBehaviour`, `MaudeRuntime.ChartTheme`, FPS enable/disable, and shake gesture enable/disable.
-
 ## [Documentation](docs.md)
-Full integration guide, platform notes, and runtime API walkthrough live in [docs.md](docs.md).
+
+Full integration guide, platform notes, and runtime API walkthrough here: [docs.md](docs.md).
 
 ## What does Maude capture?
 
@@ -94,7 +93,7 @@ Full integration guide, platform notes, and runtime API walkthrough live in [doc
 | **Native Heap** | Memory allocated through native allocators (`malloc`, `new`) used by the ART runtime and native libraries. [`Debug.getNativeHeapAllocatedSize`](https://developer.android.com/reference/android/os/Debug#getNativeHeapAllocatedSize) |
 | **CLR (Managed Heap)** | Managed heap consumed by the .NET/Mono runtime (GC generations, LOH, objects, metadata). [.NET GC Fundamentals](https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals) |
 
-### iOS
+### iOS/MacCatalyst
 
 | Metric | Description + Documentation |
 |--------|-----------------------------|
