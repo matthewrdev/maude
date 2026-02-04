@@ -10,12 +10,38 @@ Monitor and visualise your .NET apps performance at runtime.
 - Simple, one liner integration.
 - Natively integrated with very few dependencies (only SkiaSharp).
   
-**Supported Platforms**
+## Supported Platforms
 
- * Android
- * iOS
- * MacCatalyst
- * .NET MAUI
+| Platform | Status |
+| --- | --- |
+| .NET iOS | ✅ Supported |
+| .NET Android | ✅ Supported |
+| .NET Mac Catalyst | ✅ Supported |
+| .NET MAUI | ✅ Supported |
+| iOS Native | Planned |
+| Android Native | Planned |
+| React Native | Planned |
+| Flutter | Planned |
+
+If you need support for additional platforms, email matthew@red-point.com.au to request support and express interest.
+
+## Planned Platforms
+
+### iOS Native
+
+Planned.
+
+### Android Native
+
+Planned.
+
+### React Native
+
+Planned.
+
+### Flutter
+
+Planned.
 
 ## Disclaimer ⚠️
 
