@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Maude\Maude.csproj" />
+    <ProjectReference Include="..\Maude.Native\Maude.Native.csproj" />
   </ItemGroup>
 
   <ItemGroup>

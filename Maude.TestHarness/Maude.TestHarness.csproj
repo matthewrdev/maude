@@ -54,8 +54,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Maude.Native" Version="0.3.0" />
       <ProjectReference Include="..\Maude\Maude.csproj" />
-      <ProjectReference Include="..\Maude.Maui\Maude.Maui.csproj" />
     </ItemGroup>
 
 </Project>
