@@ -2,46 +2,17 @@
 
 [![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
 
+[![Maude.Native](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude.Native%20nuget)](https://www.nuget.org/packages/Maude.Native)
+
 Monitor and visualise your .NET apps performance at runtime.
+
+Use Maude to identify and correalate memory leaks in your application and to track FPS drops the indicate performance issues.
 
 **Why Maude**
 - View native memory usage, in app, while your app is running.
 - Track your apps frame rate and detect performance drops.
 - Simple, one liner integration.
 - Natively integrated with very few dependencies (only SkiaSharp).
-  
-## Supported Platforms
-
-| Platform | Status |
-| --- | --- |
-| .NET iOS | ✅ Supported |
-| .NET Android | ✅ Supported |
-| .NET Mac Catalyst | ✅ Supported |
-| .NET MAUI | ✅ Supported |
-| iOS Native | Planned |
-| Android Native | Planned |
-| React Native | Planned |
-| Flutter | Planned |
-
-If you need support for additional platforms, email matthew@red-point.com.au to request support and express interest.
-
-## Planned Platforms
-
-### iOS Native
-
-Planned.
-
-### Android Native
-
-Planned.
-
-### React Native
-
-Planned.
-
-### Flutter
-
-Planned.
 
 ## Disclaimer ⚠️
 
@@ -61,7 +32,7 @@ Pick the host style that suits your app.
 ```csharp
 // Android Activity
 var options = MaudeOptions.CreateBuilder()
-    .WithPresentationWindowProvider(() => this) // required on Android
+    .WithPresentationWindowProvider(() => this) // required on Android (where 'this' is the current Activity)
     .Build();
 
 MaudeRuntime.InitializeAndActivate(options);
@@ -142,6 +113,21 @@ On iOS, a non-interactive `UIView` is injected into every active `UIWindow` (per
 Maude is explicitly built for .NET 9+ to leverage [`Span<T>` optimisations](https://learn.microsoft.com/en-us/dotnet/api/system.span-1?view=net-9.0), which enables some performance oriented code in the chart rendering, and [MAUI native embedding](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-9?view=net-maui-10.0&utm_source=chatgpt.com#native-embedding), which enables Maude's UIs to be built in MAUI but rendered inside native views.
 
 As such, target frameworks earlier than .NET 9 are unsupported.
+  
+## Supported Platforms
+
+| Platform | Status |
+| --- | --- |
+| .NET iOS | ✅ Supported |
+| .NET Android | ✅ Supported |
+| .NET Mac Catalyst | ✅ Supported |
+| .NET MAUI | ✅ Supported |
+| iOS Native | Planned |
+| Android Native | Planned |
+| React Native | Planned |
+| Flutter | Planned |
+
+If you would like support for additional platforms, email matthew@red-point.com.au to request support and express interest.
 
 ## Design Goals
 
