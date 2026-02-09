@@ -6,4 +6,4 @@ cd "$(dirname "$0")"
 
 # Build and pack the Maude.Native NuGet package.
 dotnet build Maude.Native/Maude.Native.csproj -c Release
-dotnet pack Maude.Native/Maude.Native.csproj -c Release -o ./artifacts/nuget
+dotnet pack Maude.Native/Maude.Native.csproj -c Release -o ./products

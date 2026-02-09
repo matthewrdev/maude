@@ -11,12 +11,13 @@
 
     <!-- NuGet packaging -->
     <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <!-- Avoid packing when referenced by app/test projects; pack explicitly when needed -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Maude</PackageId>
     <Authors>Matthew Robbins</Authors>
     <Company>Matthew Robbins</Company>
     <Product>Maude</Product>
-    <Description>A .NET MAUI package to monitor and visualise app performance at runtime.</Description>
+    <Description>Monitor and visualise your .NET MAUIs apps memory usage and FPS at runtime. Supports Android, iOS and MacCatalyst.</Description>
     <PackageProjectUrl>https://github.com/matthewrdev/maude</PackageProjectUrl>
     <RepositoryUrl>https://github.com/matthewrdev/maude</RepositoryUrl>
     <PackageTags>MAUI;observability;memory;metrics;debugging;fps;telemetry;charting;mobile;android;ios;mac;maccatalyst;performance</PackageTags>

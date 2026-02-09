@@ -1,18 +1,16 @@
 # Maude.Native — in-app performance tracker for .NET iOS, Android, and Mac Catalyst
 
-Maude overlays live memory, FPS, and annotated events inside your app. It works with .NET for iOS, Android, and Mac Catalyst. Shake to open, annotate spikes, and keep context while you tune.
+Maude overlays live memory, FPS, and annotated events inside your app.
 
-| <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
-| --- | --- | --- |
-| **Shake to open Maude** | **Memory chart overlay** | **Slide-in events sheet** |
+Maude is a powerful, lightweight tool to help you in your debugging battles.
 
 ## Disclaimer ⚠️
 
 Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
 
-*Please treat Maude’s numbers as a guidance, a heuristic.*
+*Please treat Maude’s numbers as guidance, a heuristic.*
 
-Always use the native tools and platform specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
+Always use the native tools and platform-specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
 
 ## Quickstart
 

@@ -15,10 +15,10 @@
     <Authors>Matthew Robbins</Authors>
     <Company>Matthew Robbins</Company>
     <Product>Maude.Native</Product>
-    <Description>A .NET plugin for iOS, Android, MacCatalyst and .NET MAUI to monitor and visualise app performance at runtime.</Description>
+    <Description>Monitor and visualise your iOS, Android and MacCatalyst apps memory usage and FPS at runtime.</Description>
     <PackageProjectUrl>https://github.com/matthewrdev/maude</PackageProjectUrl>
     <RepositoryUrl>https://github.com/matthewrdev/maude</RepositoryUrl>
-    <PackageTags>MAUI;observability;memory;metrics;debugging;fps;telemetry;charting;mobile;android;ios;mac;maccatalyst;performance</PackageTags>
+    <PackageTags>observability;memory;metrics;debugging;fps;telemetry;charting;mobile;android;ios;mac;maccatalyst;performance</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>maude_small.png</PackageIcon>

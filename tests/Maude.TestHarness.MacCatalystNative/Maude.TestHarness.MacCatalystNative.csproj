@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Maude.Native\Maude.Native.csproj" />
+    <ProjectReference Include="..\..\Maude.Native\Maude.Native.csproj" />
   </ItemGroup>
 
 

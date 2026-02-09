@@ -2,9 +2,7 @@
 
 Maude overlays live memory, FPS, and annotated events inside your .NET MAUI app.
 
-| <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
-| --- | --- | --- |
-| **Shake to open Maude** | **Memory chart overlay** | **Slide-in events sheet** |
+Maude is a powerful, lightweight tool to help you in your debugging battles.
 
 ## Disclaimer ⚠️
 
@@ -50,6 +48,10 @@ Looking for builder options, event recording, FPS sampling, or platform-specific
 ## What does Maude capture?
 
 Maude surfaces platform-native memory metrics and managed heap usage across Android, iOS, and Mac Catalyst. See the docs for details and references.
+
+## Using .NET Native?
+
+Please install and use the [Maude.Native](https://www.nuget.org/packages/Maude.Native/) NuGet package.
 
 ## Limitations and Known Issues
 
