@@ -29,8 +29,12 @@ public class MainActivity : Activity
         layout.AddView(BuildButton("Overlay Top-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight)));
         layout.AddView(BuildButton("Overlay Bottom-Left", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomLeft)));
         layout.AddView(BuildButton("Overlay Bottom-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomRight)));
+        layout.AddView(BuildButton("Annotations: Labels + Icons", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.LabelsAndIcons));
+        layout.AddView(BuildButton("Annotations: Icons Only", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly));
+        layout.AddView(BuildButton("Annotations: None", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.None));
         layout.AddView(BuildButton("Theme: Light", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Light));
         layout.AddView(BuildButton("Theme: Dark", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Dark));
+        layout.AddView(BuildButton("Create Test Annotation", () => MaudeRuntime.Event("Test Annotation")));
         SetContentView(layout);
     }
 

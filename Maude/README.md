@@ -1,6 +1,6 @@
 # Maude — in-app performance tracker for .NET MAUI
 
-Maude overlays live memory, FPS, and annotated events inside your MAUI app. Shake to open, annotate spikes, and keep context while you tune.
+Maude overlays live memory, FPS, and annotated events inside your .NET MAUI app.
 
 | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-animation.gif" alt="Shake gesture demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-overlay.PNG" alt="Overlay demo" style="max-height:200px; width:auto;"> | <img src="https://github.com/matthewrdev/maude/blob/main/img/demo-slidesheet.jpeg" alt="Slide-sheet demo" style="max-height:200px; width:auto;"> |
 | --- | --- | --- |
@@ -10,9 +10,9 @@ Maude overlays live memory, FPS, and annotated events inside your MAUI app. Shak
 
 Best effort has been made for performance and correctness, but Maude continuously snapshots memory and stores recent samples in-memory; expect a small observer effect.
 
-*Please treat Maude’s numbers as a guidance, a heuristic.*
+*Please treat Maude’s numbers as guidance, a heuristic.*
 
-Always use the native tools and platform specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
+Always use the native tools and platform-specific profilers (Xcode Instruments, Android Studio profiler) or `dotnet trace` for authoritative measurements.
 
 ## Quickstart
 
@@ -20,7 +20,7 @@ Install the package and hook Maude into your MAUI app startup.
 
 ### Setup
 
-Android requires a window provider so Maude can attach its overlay to the current activity.
+Android requires a window provider, so Maude can attach its overlay to the current activity.
 
 ```csharp
 // MauiProgram.cs

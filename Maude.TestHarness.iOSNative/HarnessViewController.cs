@@ -18,8 +18,12 @@ internal sealed class HarnessViewController : UIViewController
             BuildButton("Overlay Top-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight)),
             BuildButton("Overlay Bottom-Left", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomLeft)),
             BuildButton("Overlay Bottom-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomRight)),
+            BuildButton("Annotations: Labels + Icons", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.LabelsAndIcons),
+            BuildButton("Annotations: Icons Only", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly),
+            BuildButton("Annotations: None", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.None),
             BuildButton("Theme: Light", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Light),
             BuildButton("Theme: Dark", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Dark),
+            BuildButton("Create Test Annotation", () => MaudeRuntime.Event("Test Annotation")),
         };
 
         var stack = new UIStackView(buttons)

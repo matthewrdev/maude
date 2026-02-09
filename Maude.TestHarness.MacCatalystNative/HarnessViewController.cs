@@ -19,8 +19,12 @@ internal sealed class HarnessViewController : UIViewController
             BuildButton("Overlay Top-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.TopRight)),
             BuildButton("Overlay Bottom-Left", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomLeft)),
             BuildButton("Overlay Bottom-Right", () => MaudeRuntime.PresentOverlay(MaudeOverlayPosition.BottomRight)),
+            BuildButton("Annotations: Labels + Icons", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.LabelsAndIcons),
+            BuildButton("Annotations: Icons Only", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.IconsOnly),
+            BuildButton("Annotations: None", () => MaudeRuntime.EventRenderingBehaviour = MaudeEventRenderingBehaviour.None),
             BuildButton("Theme: Light", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Light),
             BuildButton("Theme: Dark", () => MaudeRuntime.ChartTheme = MaudeChartTheme.Dark),
+            BuildButton("Create Test Annotation", () => MaudeRuntime.Event("Test Annotation")),
         };
 
         var stack = new UIStackView(buttons)
@@ -28,12 +32,29 @@ internal sealed class HarnessViewController : UIViewController
             Axis = UILayoutConstraintAxis.Vertical,
             Distribution = UIStackViewDistribution.FillEqually,
             Alignment = UIStackViewAlignment.Fill,
-            Spacing = 8,
-            Frame = View.Bounds
+            Spacing = 8
         };
 
-        stack.AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
-        View.AddSubview(stack);
+        var scrollView = new UIScrollView();
+        scrollView.TranslatesAutoresizingMaskIntoConstraints = false;
+        stack.TranslatesAutoresizingMaskIntoConstraints = false;
+
+        scrollView.AddSubview(stack);
+        View.AddSubview(scrollView);
+
+        NSLayoutConstraint.ActivateConstraints(new[]
+        {
+            scrollView.TopAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TopAnchor),
+            scrollView.BottomAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.BottomAnchor),
+            scrollView.LeadingAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.LeadingAnchor),
+            scrollView.TrailingAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TrailingAnchor),
+
+            stack.TopAnchor.ConstraintEqualTo(scrollView.ContentLayoutGuide.TopAnchor),
+            stack.BottomAnchor.ConstraintEqualTo(scrollView.ContentLayoutGuide.BottomAnchor),
+            stack.LeadingAnchor.ConstraintEqualTo(scrollView.ContentLayoutGuide.LeadingAnchor),
+            stack.TrailingAnchor.ConstraintEqualTo(scrollView.ContentLayoutGuide.TrailingAnchor),
+            stack.WidthAnchor.ConstraintEqualTo(scrollView.FrameLayoutGuide.WidthAnchor)
+        });
     }
 
     private UIButton BuildButton(string text, Action action)
