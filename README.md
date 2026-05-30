@@ -4,13 +4,17 @@
 
 [![Maude.Native](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude.Native%20nuget)](https://www.nuget.org/packages/Maude.Native)
 
-<p>
+## Looking to Profile .NET MAUI Apps? Try Ansight
+
+<p align="center">
   <a href="https://www.ansight.ai/">
-    <img src="https://www.ansight.ai/assets/logo.png" alt="Ansight" width="180" />
+    <img src="https://www.ansight.ai/assets/logo.png" alt="Ansight" width="320" />
   </a>
 </p>
 
-Looking to profile .NET MAUI apps with live runtime context? Try [Ansight](https://www.ansight.ai/), a local-first inspection layer for .NET MAUI that lets you and your AI agent capture screenshots, inspect the visual tree, read logs and telemetry, query SQLite, push files, and drive your running app through one MCP bridge.
+**Ansight gives you live runtime context for .NET MAUI apps.** Capture screenshots, inspect the visual tree, read logs and telemetry, query SQLite, push files, and drive your running app through one local-first MCP bridge.
+
+Use it when Maude shows you something is wrong and you want to dig into what the app is actually doing. [Try Ansight](https://www.ansight.ai/).
 
 Monitor and visualise your .NET apps performance at runtime.
 
