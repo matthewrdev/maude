@@ -1,10 +1,4 @@
-# Maude — In-app performance monitoring for .NET mobile apps
-
-[![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
-
-[![Maude.Native](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude.Native%20nuget)](https://www.nuget.org/packages/Maude.Native)
-
-## Looking to Profile .NET MAUI Apps? Try Ansight
+# Looking to Profile .NET MAUI Apps? Try Ansight
 
 <p align="center">
   <a href="https://www.ansight.ai/">
@@ -12,9 +6,23 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://www.ansight.ai/docs/studio/telemetry-review">
+    <img src="https://www.ansight.ai/assets/studio-docs/telemetry-review.png" alt="Ansight Studio telemetry review showing FPS, memory, and battery telemetry aligned to session evidence" width="860" />
+  </a>
+</p>
+
 **Ansight gives you live runtime context for .NET MAUI apps.** Capture screenshots, inspect the visual tree, read logs and telemetry, query SQLite, push files, and drive your running app through one local-first MCP bridge.
 
 Use it when Maude shows you something is wrong and you want to dig into what the app is actually doing. [Try Ansight](https://www.ansight.ai/).
+
+---
+
+# Maude — In-app performance monitoring for .NET mobile apps
+
+[![Maude](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude%20nuget)](https://www.nuget.org/packages/Maude)
+
+[![Maude.Native](https://img.shields.io/nuget/vpre/Maude.svg?cacheSeconds=3600&label=Maude.Native%20nuget)](https://www.nuget.org/packages/Maude.Native)
 
 Monitor and visualise your .NET apps performance at runtime.
 
